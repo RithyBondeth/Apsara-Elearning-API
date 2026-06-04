@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AuthServiceController } from './auth-service.controller';
-import { AuthServiceService } from './auth-service.service';
-
+import { ClientsModule, Transport } from '@nestjs/microservices';
 @Module({
-  imports: [],
-  controllers: [AuthServiceController],
-  providers: [AuthServiceService],
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'AUTH_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL!],
+          queue: process.env.AUTH_QUEUE!,
+        },
+      },
+    ]),
+  ],
 })
 export class AuthServiceModule {}

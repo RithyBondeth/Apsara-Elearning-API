@@ -1,12 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
-import { AuthServiceService } from './auth-service.service';
 
-@Controller()
+@Controller('auth-service')
 export class AuthServiceController {
-  constructor(private readonly authServiceService: AuthServiceService) {}
+  constructor() {}
 
-  @Get()
-  getHello(): string {
-    return this.authServiceService.getHello();
+  @Get('ping')
+  ping(): string {
+    return 'Ping from auth-service!';
   }
 }

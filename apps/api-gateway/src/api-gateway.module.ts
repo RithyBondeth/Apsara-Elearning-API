@@ -1,10 +1,29 @@
 import { Module } from '@nestjs/common';
 import { ApiGatewayController } from './api-gateway.controller';
-import { ApiGatewayService } from './api-gateway.service';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
-  imports: [],
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'AUTH_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL!],
+          queue: process.env.AUTH_QUEUE!,
+        },
+      },
+      {
+        name: 'USER_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL!],
+          queue: process.env.USER_QUEUE!,
+        },
+      },
+    ]),
+  ],
   controllers: [ApiGatewayController],
-  providers: [ApiGatewayService],
+  exports: [ClientsModule],
 })
 export class ApiGatewayModule {}
