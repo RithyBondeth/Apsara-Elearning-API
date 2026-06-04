@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { UserServiceController } from './user-service.controller';
 @Module({
   imports: [
     ClientsModule.register([
@@ -13,5 +14,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       },
     ]),
   ],
+  controllers: [UserServiceController],
 })
 export class UserServiceModule {}

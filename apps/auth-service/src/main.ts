@@ -15,5 +15,6 @@ async function bootstrap() {
     },
   });
   await app.listen();
+  console.log(`Auth service is listening on queue ${process.env.AUTH_QUEUE}`);
 }
 bootstrap();

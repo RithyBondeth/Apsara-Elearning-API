@@ -15,5 +15,6 @@ async function bootstrap() {
     },
   });
   await app.listen();
+  console.log(`User service is listening on queue ${process.env.USER_QUEUE}`);
 }
 bootstrap();
