@@ -1,10 +1,11 @@
 export const AUTH_SERVICE = {
-  QUEUE: 'auth_queue',
+  NAME: 'AUTH_SERVICE',
   ACTIONS: {
-    REGISTER: 'register',
-    LOGIN: 'login',
-    LOGOUT: 'logout',
-    REFRESH_TOKEN: 'refresh_token',
-    VERIFY_TOKEN: 'verify_token',
+    PING: 'auth.ping',
+    REGISTER: 'auth.register',
+    LOGIN: 'auth.login',
+    LOGOUT: 'auth.logout',
+    REFRESH_TOKEN: 'auth.refresh_token',
+    VERIFY_TOKEN: 'auth.verify_token',
   },
 };
