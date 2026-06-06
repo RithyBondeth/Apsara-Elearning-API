@@ -7,7 +7,7 @@ export class ApiGatewayController {
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
     @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
   ) {}
-  
+
   @Get('auth/ping')
   async pingAuth(): Promise<any> {
     return this.authClient.send('auth.ping', {});
