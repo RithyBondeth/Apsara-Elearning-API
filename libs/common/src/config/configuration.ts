@@ -13,11 +13,12 @@ export default () => ({
     secret: process.env.JWT_SECRET,
     expires: process.env.JWT_EXPIRES,
     refreshExpires: process.env.JWT_REFRESH_EXPIRES,
-    emailExpires: process.env.JWT_EMAIL_EXPIRES,
   },
 
   // RabbitMQ
   rabbitmq: {
     url: process.env.RABBITMQ_URL,
+    authQueue: process.env.AUTH_QUEUE,
+    userQueue: process.env.USER_QUEUE,
   },
 });
