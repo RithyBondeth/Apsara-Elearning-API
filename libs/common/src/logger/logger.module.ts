@@ -16,6 +16,8 @@ import { ConfigService } from '@nestjs/config';
                   target: 'pino-pretty',
                   options: {
                     singleLine: true,
+                    mkdir: true,
+                    destination: './logs/api-gateway.log',
                   },
                 },
             level: isProduction ? 'info' : 'debug',
