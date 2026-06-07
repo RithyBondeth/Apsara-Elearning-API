@@ -2,6 +2,9 @@ export default () => ({
   // Node Environment
   nodeEnv: process.env.NODE_ENV,
 
+  // Ports
+  apiGatewayPort: parseInt(process.env.API_GATEWAY_PORT ?? '3000', 10),
+
   // Database
   database: {
     url: process.env.DATABASE_URL,

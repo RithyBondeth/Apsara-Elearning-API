@@ -2,22 +2,38 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { UserServiceModule } from './user-service.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { Logger } from 'nestjs-pino';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
+  const appContext =
+    await NestFactory.createApplicationContext(UserServiceModule);
+  const configService = appContext.get(ConfigService);
+
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     UserServiceModule,
     {
+      bufferLogs: true,
       transport: Transport.RMQ,
       options: {
-        urls: [process.env.RABBITMQ_URL!],
-        queue: process.env.USER_QUEUE!,
+        urls: [configService.get<string>('rabbitmq.url')!],
+        queue: configService.get<string>('rabbitmq.userQueue')!,
         queueOptions: {
           durable: true,
         },
       },
     },
   );
+
+  const logger = app.get(Logger);
+  app.useLogger(logger);
+
   await app.listen();
-  console.log(`User service is listening on queue ${process.env.USER_QUEUE}`);
+  logger.log(
+    `User service is listening on queue ${configService.get<string>('rabbitmq.userQueue')}`,
+  );
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

@@ -3,15 +3,17 @@ import { NestFactory } from '@nestjs/core';
 import { AuthServiceModule } from './auth-service.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   const appContext =
     await NestFactory.createApplicationContext(AuthServiceModule);
-  const configService = appContext.get<ConfigService>(ConfigService);
+  const configService = appContext.get(ConfigService);
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AuthServiceModule,
     {
+      bufferLogs: true,
       transport: Transport.RMQ,
       options: {
         urls: [configService.get<string>('rabbitmq.url')!],
@@ -22,9 +24,16 @@ async function bootstrap() {
       },
     },
   );
+
+  const logger = app.get(Logger);
+  app.useLogger(logger);
+
   await app.listen();
-  console.log(
+  logger.log(
     `Auth service is listening on queue ${configService.get<string>('rabbitmq.authQueue')}`,
   );
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
