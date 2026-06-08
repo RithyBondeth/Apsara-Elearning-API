@@ -15,6 +15,7 @@ import * as quizSchema from './schemas/course/quizzes/quiz.schema';
 import * as quizQuestionSchema from './schemas/course/quizzes/quiz-question.schema';
 import * as quizOptionSchema from './schemas/course/quizzes/quiz-option.schema';
 import * as quizAttemptSchema from './schemas/course/quizzes/quiz-attempt.schema';
+import * as quizAttemptAnswerSchema from './schemas/course/quizzes/quiz-attempt-answer.schema';
 import * as challengeSchema from './schemas/challenge/coding-challenge.schema';
 import * as challengeTestCaseSchema from './schemas/challenge/challenge-test-case.schema';
 import * as challengeSubmissionSchema from './schemas/challenge/challenge-submission.schema';
@@ -39,6 +40,7 @@ const schema = {
   ...quizQuestionSchema,
   ...quizOptionSchema,
   ...quizAttemptSchema,
+  ...quizAttemptAnswerSchema,
   ...challengeSchema,
   ...challengeTestCaseSchema,
   ...challengeSubmissionSchema,
