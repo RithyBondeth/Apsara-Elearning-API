@@ -7,7 +7,8 @@ export const validationSchema = Joi.object({
     .default('development'),
 
   // Ports
-  API_GATEWAY_PORT: Joi.number().port().default(3000),
+  API_GATEWAY_PORT: Joi.number().port().default(1111),
+  ADMIN_GATEWAY_PORT: Joi.number().port().default(2222),
 
   // Database
   DATABASE_URL: Joi.string().required(),
@@ -22,4 +23,8 @@ export const validationSchema = Joi.object({
   RABBITMQ_URL: Joi.string().required(),
   AUTH_QUEUE: Joi.string().required(),
   USER_QUEUE: Joi.string().required(),
+  COURSE_QUEUE: Joi.string().required(),
+  ASSESSMENT_QUEUE: Joi.string().required(),
+  SUBSCRIPTION_QUEUE: Joi.string().required(),
+  AI_QUEUE: Joi.string().required(),
 });

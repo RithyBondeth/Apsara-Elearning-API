@@ -14,5 +14,6 @@ export const user = pgTable('users', {
   streak: integer('streak').default(0),
   xp: integer('xp').default(0),
   isVerified: boolean('is_verified').default(false),
+  isAdmin: boolean('is_admin').notNull().default(false),
   ...timestamps,
 });

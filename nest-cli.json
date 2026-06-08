@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/user-service/tsconfig.app.json"
       }
+    },
+    "admin-gateway": {
+      "type": "application",
+      "root": "apps/admin-gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/admin-gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/admin-gateway/tsconfig.app.json"
+      }
     }
   }
 }
