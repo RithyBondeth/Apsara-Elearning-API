@@ -6,7 +6,7 @@ import { user } from '../user/user.schema';
 export const aiConversations = pgTable('ai_conversations', {
   ...id,
   userId: uuid('user_id')
-    .references(() => user.id)
+    .references(() => user.id, { onDelete: 'cascade' })
     .notNull(),
   title: text('title').notNull(),
   ...timestamps,

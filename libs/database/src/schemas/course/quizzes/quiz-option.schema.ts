@@ -5,7 +5,9 @@ import { quizQuestions } from './quiz-question.schema';
 
 export const quizOptions = pgTable('quiz_options', {
   ...id,
-  questionId: uuid('question_id').references(() => quizQuestions.id),
+  questionId: uuid('question_id')
+    .references(() => quizQuestions.id, { onDelete: 'cascade' })
+    .notNull(),
   answer: text('answer').notNull(),
   isCorrect: boolean('is_correct').default(false),
   ...timestamps,

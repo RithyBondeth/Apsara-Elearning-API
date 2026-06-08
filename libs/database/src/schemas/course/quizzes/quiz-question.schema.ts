@@ -5,8 +5,11 @@ import { quizzes } from './quiz.schema';
 
 export const quizQuestions = pgTable('quiz_questions', {
   ...id,
-  quizId: uuid('quiz_id').references(() => quizzes.id),
+  quizId: uuid('quiz_id')
+    .references(() => quizzes.id, { onDelete: 'cascade' })
+    .notNull(),
   question: text('question').notNull(),
   explanation: text('explanation'),
+  order: integer('order').notNull().default(0),
   ...timestamps,
 });

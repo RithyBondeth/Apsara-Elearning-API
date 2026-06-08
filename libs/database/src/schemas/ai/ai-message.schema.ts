@@ -6,7 +6,7 @@ import { aiConversations } from './ai-conversation.schema';
 export const aiMessages = pgTable('ai_messages', {
   ...id,
   conversationId: uuid('conversation_id')
-    .references(() => aiConversations.id)
+    .references(() => aiConversations.id, { onDelete: 'cascade' })
     .notNull(),
   role: varchar('role', { length: 50 }).notNull(),
   content: text('content'),

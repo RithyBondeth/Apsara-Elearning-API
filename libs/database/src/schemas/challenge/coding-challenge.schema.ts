@@ -5,7 +5,9 @@ import { lessons } from '../course/lessons/lesson.schema';
 
 export const codingChallenges = pgTable('coding_challenges', {
   ...id,
-  lessonId: uuid('lesson_id').references(() => lessons.id),
+  lessonId: uuid('lesson_id')
+    .references(() => lessons.id, { onDelete: 'cascade' })
+    .notNull(),
   title: text('title').notNull(),
   description: text('description'),
   starterCode: text('starter_code'),

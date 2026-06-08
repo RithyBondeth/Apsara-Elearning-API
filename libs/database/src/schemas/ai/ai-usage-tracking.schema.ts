@@ -6,7 +6,7 @@ import { user } from '../user/user.schema';
 export const aiUsageTracking = pgTable('ai_usage_tracking', {
   ...id,
   userId: uuid('user_id')
-    .references(() => user.id)
+    .references(() => user.id, { onDelete: 'cascade' })
     .notNull(),
   feature: varchar('feature'),
   promptTokens: integer('prompt_tokens'),
