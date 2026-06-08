@@ -3,7 +3,7 @@ export default () => ({
   nodeEnv: process.env.NODE_ENV,
 
   // Ports
-  apiGatewayPort: parseInt(process.env.API_GATEWAY_PORT ?? '3000', 10),
+  apiGatewayPort: parseInt(process.env.API_GATEWAY_PORT ?? '1111', 10),
 
   // Database
   database: {

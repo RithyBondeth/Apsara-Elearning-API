@@ -1,5 +1,5 @@
 import { AUTH_SERVICE } from '@app/contracts/constants/services/auth-service.constant';
-import { Body, Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { rpcCall } from '../utils/rpc-call';
 

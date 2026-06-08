@@ -1,23 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AuthServiceController } from './auth-service.controller';
 import { ConfigModule, LoggerModule } from '@app/common';
+import { DatabaseModule } from '@app/database';
 
 @Module({
-  imports: [
-    ConfigModule,
-    LoggerModule,
-    ClientsModule.register([
-      {
-        name: 'AUTH_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL!],
-          queue: process.env.AUTH_QUEUE!,
-        },
-      },
-    ]),
-  ],
+  imports: [ConfigModule, LoggerModule, DatabaseModule],
   controllers: [AuthServiceController],
 })
 export class AuthServiceModule {}
