@@ -1,16 +1,34 @@
 import { AUTH_SERVICE } from '@app/contracts/constants/services/auth-service.constant';
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { rpcCall } from '../utils/rpc-call';
+import {
+  RegisterDTO,
+  RegisterResponseDTO,
+  LoginDTO,
+  LoginResponseDTO,
+} from '@app/contracts';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     @Inject(AUTH_SERVICE.NAME) private readonly authClient: ClientProxy,
   ) {}
+  @Post('register')
+  register(@Body() registerDTO: RegisterDTO): Promise<RegisterResponseDTO> {
+    return rpcCall<RegisterResponseDTO>(
+      this.authClient,
+      AUTH_SERVICE.ACTIONS.REGISTER,
+      registerDTO,
+    );
+  }
 
-  @Get('ping')
-  ping() {
-    return rpcCall(this.authClient, AUTH_SERVICE.ACTIONS.PING, {});
+  @Post('login')
+  login(@Body() loginDTO: LoginDTO): Promise<LoginResponseDTO> {
+    return rpcCall<LoginResponseDTO>(
+      this.authClient,
+      AUTH_SERVICE.ACTIONS.LOGIN,
+      loginDTO,
+    );
   }
 }

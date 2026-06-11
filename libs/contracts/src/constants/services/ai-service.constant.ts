@@ -1,8 +1,6 @@
 export const AI_SERVICE = {
   NAME: 'AI_SERVICE',
   ACTIONS: {
-    PING: 'ai.ping',
-
     // Conversations
     CONVERSATION_CREATE: 'ai.conversation.create',
     CONVERSATION_FIND_ALL: 'ai.conversation.find_all', // by userId

@@ -1,8 +1,6 @@
 export const USER_SERVICE = {
   NAME: 'USER_SERVICE',
   ACTIONS: {
-    PING: 'user.ping',
-
     // Profile
     CREATE: 'user.create',
     FIND_ALL: 'user.find_all',

@@ -1,8 +1,6 @@
 export const AUTH_SERVICE = {
   NAME: 'AUTH_SERVICE',
   ACTIONS: {
-    PING: 'auth.ping',
-
     // Registration & Login
     REGISTER: 'auth.register',
     LOGIN: 'auth.login',

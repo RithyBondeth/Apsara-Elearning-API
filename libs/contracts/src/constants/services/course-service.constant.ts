@@ -1,8 +1,6 @@
 export const COURSE_SERVICE = {
   NAME: 'COURSE_SERVICE',
   ACTIONS: {
-    PING: 'course.ping',
-
     // Categories
     CATEGORY_CREATE: 'course.category.create',
     CATEGORY_FIND_ALL: 'course.category.find_all',

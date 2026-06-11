@@ -1,15 +1,25 @@
+import {
+  LoginDTO,
+  LoginResponseDTO,
+  RegisterDTO,
+  RegisterResponseDTO,
+} from '@app/contracts';
 import { AUTH_SERVICE } from '@app/contracts/constants/services/auth-service.constant';
 import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
-import { Logger } from 'nestjs-pino';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { AuthServiceService } from './auth-service.service';
 
 @Controller()
 export class AuthServiceController {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly authService: AuthServiceService) {}
 
-  @MessagePattern(AUTH_SERVICE.ACTIONS.PING)
-  ping(): string {
-    this.logger.log('Ping action called in auth-service');
-    return 'Ping from auth-service!';
+  @MessagePattern(AUTH_SERVICE.ACTIONS.REGISTER)
+  register(@Payload() registerDTO: RegisterDTO): Promise<RegisterResponseDTO> {
+    return this.authService.register(registerDTO);
+  }
+
+  @MessagePattern(AUTH_SERVICE.ACTIONS.LOGIN)
+  login(@Payload() loginDTO: LoginDTO): Promise<LoginResponseDTO> {
+    return this.authService.login(loginDTO);
   }
 }
