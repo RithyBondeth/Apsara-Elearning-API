@@ -1,2 +1,3 @@
-export * from './config/config.module';
-export * from './logger/logger.module';
+export * from './config';
+export * from './logger';
+export * from './rabbitmq';
