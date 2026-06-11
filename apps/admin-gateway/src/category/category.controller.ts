@@ -11,7 +11,10 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
 import { rpcCall } from '../utils/rpc-call';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Categories')
+@ApiBearerAuth()
 @Controller('categories')
 export class CategoryController {
   constructor(

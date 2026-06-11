@@ -3,6 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { AdminGatewayModule } from './admin-gateway.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -12,6 +13,21 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const logger = app.get(Logger);
+
+  // Swagger configuration
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('ADMIN GATEWAY')
+    .setDescription('KHODE KH PLATFORM ADMIN GATEWAY')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('admin/docs', app, swaggerDocument, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   app.useLogger(logger);
   app.setGlobalPrefix('admin');

@@ -2,7 +2,10 @@ import { Controller, Delete, Get, Inject, Param } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { USER_SERVICE } from '@app/contracts/constants/services/user-service.constant';
 import { rpcCall } from '../utils/rpc-call';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 export class UserController {
   constructor(

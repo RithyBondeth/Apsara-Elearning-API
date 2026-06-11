@@ -28,13 +28,6 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, swaggerDocument, {
     swaggerOptions: {
       persistAuthorization: true,
-      authAction: {
-        default: {
-          name: 'default',
-          schema: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
     },
   });
 
