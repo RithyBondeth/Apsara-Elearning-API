@@ -1,15 +1,17 @@
 import {
-  LoginDTO,
+  LoginRequestDTO,
   LoginResponseDTO,
-  RegisterDTO,
+  RegisterRequestDTO,
   RegisterResponseDTO,
 } from '@app/contracts';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AuthServiceService {
-  async register(registerDTO: RegisterDTO): Promise<RegisterResponseDTO> {
-    console.log(registerDTO);
+  async register(
+    registerRequestDTO: RegisterRequestDTO,
+  ): Promise<RegisterResponseDTO> {
+    console.log(registerRequestDTO);
     return {
       message: 'User registered successfully',
       accessToken: 'access-token',
@@ -17,8 +19,8 @@ export class AuthServiceService {
     };
   }
 
-  async login(loginDTO: LoginDTO): Promise<LoginResponseDTO> {
-    console.log(loginDTO);
+  async login(loginRequestDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
+    console.log(loginRequestDTO);
     return {
       message: 'User logged in successfully',
       accessToken: 'access-token',

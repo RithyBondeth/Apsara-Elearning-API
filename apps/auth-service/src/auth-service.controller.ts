@@ -1,7 +1,7 @@
 import {
-  LoginDTO,
+  LoginRequestDTO,
   LoginResponseDTO,
-  RegisterDTO,
+  RegisterRequestDTO,
   RegisterResponseDTO,
 } from '@app/contracts';
 import { AUTH_SERVICE } from '@app/contracts/constants/services/auth-service.constant';
@@ -14,12 +14,14 @@ export class AuthServiceController {
   constructor(private readonly authService: AuthServiceService) {}
 
   @MessagePattern(AUTH_SERVICE.ACTIONS.REGISTER)
-  register(@Payload() registerDTO: RegisterDTO): Promise<RegisterResponseDTO> {
+  register(
+    @Payload() registerDTO: RegisterRequestDTO,
+  ): Promise<RegisterResponseDTO> {
     return this.authService.register(registerDTO);
   }
 
   @MessagePattern(AUTH_SERVICE.ACTIONS.LOGIN)
-  login(@Payload() loginDTO: LoginDTO): Promise<LoginResponseDTO> {
+  login(@Payload() loginDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
     return this.authService.login(loginDTO);
   }
 }

@@ -3,9 +3,9 @@ import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { rpcCall } from '../utils/rpc-call';
 import {
-  RegisterDTO,
+  RegisterRequestDTO,
   RegisterResponseDTO,
-  LoginDTO,
+  LoginRequestDTO,
   LoginResponseDTO,
 } from '@app/contracts';
 
@@ -15,7 +15,9 @@ export class AuthController {
     @Inject(AUTH_SERVICE.NAME) private readonly authClient: ClientProxy,
   ) {}
   @Post('register')
-  register(@Body() registerDTO: RegisterDTO): Promise<RegisterResponseDTO> {
+  register(
+    @Body() registerDTO: RegisterRequestDTO,
+  ): Promise<RegisterResponseDTO> {
     return rpcCall<RegisterResponseDTO>(
       this.authClient,
       AUTH_SERVICE.ACTIONS.REGISTER,
@@ -24,7 +26,7 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() loginDTO: LoginDTO): Promise<LoginResponseDTO> {
+  login(@Body() loginDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
     return rpcCall<LoginResponseDTO>(
       this.authClient,
       AUTH_SERVICE.ACTIONS.LOGIN,
