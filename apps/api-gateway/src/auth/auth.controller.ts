@@ -16,23 +16,24 @@ export class AuthController {
   constructor(
     @Inject(AUTH_SERVICE.NAME) private readonly authClient: ClientProxy,
   ) {}
+
   @Post('register')
   register(
-    @Body() registerDTO: RegisterRequestDTO,
+    @Body() registerRequestDTO: RegisterRequestDTO,
   ): Promise<RegisterResponseDTO> {
     return rpcCall<RegisterResponseDTO>(
       this.authClient,
       AUTH_SERVICE.ACTIONS.REGISTER,
-      registerDTO,
+      registerRequestDTO,
     );
   }
 
   @Post('login')
-  login(@Body() loginDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
+  login(@Body() loginRequestDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
     return rpcCall<LoginResponseDTO>(
       this.authClient,
       AUTH_SERVICE.ACTIONS.LOGIN,
-      loginDTO,
+      loginRequestDTO,
     );
   }
 }

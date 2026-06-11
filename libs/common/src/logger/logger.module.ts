@@ -17,7 +17,6 @@ import { ConfigService } from '@nestjs/config';
                   options: {
                     singleLine: true,
                     mkdir: true,
-                    destination: './logs/api-gateway.log',
                   },
                 },
             level: isProduction ? 'info' : 'debug',
