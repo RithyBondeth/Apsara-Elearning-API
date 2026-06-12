@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE } from '@app/contracts';
 import { EmailService, IJWTPayload, JwtService } from '@app/common';
-import * as ms from 'ms';
+import ms from 'ms';
 
 @Injectable()
 export class RegisterService {
@@ -49,12 +49,14 @@ export class RegisterService {
     const emailExpiresStr =
       this.configService.get<string>('jwt.emailExpires') ?? '1h';
     const emailVerificationTokenExpiresAt = new Date(
-      Date.now() + ms(emailExpiresStr),
+      Date.now() + ms(emailExpiresStr as any),
     );
 
     const refreshExpiresStr =
       this.configService.get<string>('jwt.refreshExpires') ?? '7d';
-    const refreshTokenExpiresAt = new Date(Date.now() + ms(refreshExpiresStr));
+    const refreshTokenExpiresAt = new Date(
+      Date.now() + ms(refreshExpiresStr as any),
+    );
 
     try {
       return await this.db.transaction(async (tx) => {

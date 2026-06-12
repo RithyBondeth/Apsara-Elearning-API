@@ -26,7 +26,6 @@ export class AuthServiceController {
 
   @MessagePattern(AUTH_SERVICE.ACTIONS.LOGIN)
   login(@Payload() loginDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
-    // return this.loginService.login(loginDTO);
-    return null as any; // TODO: Implement login
+    return this.loginService.login(loginDTO);
   }
 }
