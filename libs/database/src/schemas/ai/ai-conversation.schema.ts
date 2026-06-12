@@ -10,10 +10,12 @@ export const aiConversations = pgTable('ai_conversations', {
   userId: uuid('user_id')
     .references(() => user.id, { onDelete: 'cascade' })
     .notNull(),
-  courseId: uuid('course_id')
-    .references(() => courses.id, { onDelete: 'set null' }),
-  lessonId: uuid('lesson_id')
-    .references(() => lessons.id, { onDelete: 'set null' }),
+  courseId: uuid('course_id').references(() => courses.id, {
+    onDelete: 'set null',
+  }),
+  lessonId: uuid('lesson_id').references(() => lessons.id, {
+    onDelete: 'set null',
+  }),
   title: text('title').notNull(),
   ...timestamps,
 });

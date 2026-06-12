@@ -15,9 +15,13 @@ export const validationSchema = Joi.object({
   DATABASE_SYNCHRONIZE: Joi.boolean().default(false),
 
   // JWT
-  JWT_SECRET: Joi.string().required(),
-  JWT_EXPIRES: Joi.string().required(),
+  JWT_ACCESS_SECRET: Joi.string().required(),
+  JWT_ACCESS_EXPIRES: Joi.string().required(),
+  JWT_REFRESH_SECRET: Joi.string().required(),
   JWT_REFRESH_EXPIRES: Joi.string().required(),
+
+  // Bcrypt
+  BCRYPT_SALT: Joi.number().default(10),
 
   // RabbitMQ
   RABBITMQ_URL: Joi.string().required(),

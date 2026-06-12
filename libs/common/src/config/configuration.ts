@@ -14,9 +14,15 @@ export default () => ({
 
   // JWT
   jwt: {
-    secret: process.env.JWT_SECRET,
-    expires: process.env.JWT_EXPIRES,
+    accessSecret: process.env.JWT_ACCESS_SECRET,
+    accessExpires: process.env.JWT_ACCESS_EXPIRES,
+    refreshSecret: process.env.JWT_REFRESH_SECRET,
     refreshExpires: process.env.JWT_REFRESH_EXPIRES,
+  },
+
+  // Bcrypt
+  bcrypt: {
+    salt: parseInt(process.env.BCRYPT_SALT ?? '10', 10),
   },
 
   // RabbitMQ

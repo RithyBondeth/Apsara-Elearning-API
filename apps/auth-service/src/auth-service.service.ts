@@ -12,11 +12,12 @@ import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { DRIZZLE } from '@app/contracts';
 
 @Injectable()
 export class AuthServiceService {
   constructor(
-    @Inject('DRIZZLE') private readonly db: NeonHttpDatabase<any>,
+    @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -24,14 +25,8 @@ export class AuthServiceService {
   async register(
     registerRequestDTO: RegisterRequestDTO,
   ): Promise<RegisterResponseDTO> {
-    const {
-      email,
-      password,
-      firstName,
-      lastName,
-      phone,
-      dateOfBirth,
-    } = registerRequestDTO;
+    const { email, password, firstName, lastName, phone, dateOfBirth } =
+      registerRequestDTO;
 
     // Check if user already exists
     const existingUser = await this.db
@@ -45,7 +40,8 @@ export class AuthServiceService {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const saltRounds = this.configService.get<number>('bcrypt.salt') ?? 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user
     const [newUser] = await this.db
@@ -72,6 +68,7 @@ export class AuthServiceService {
         email: newUser.email,
       },
       {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
         expiresIn: this.configService.get<any>('jwt.refreshExpires'),
       },
     );

@@ -1,4 +1,11 @@
-import { boolean, integer, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  pgTable,
+  text,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { id } from '../common/id.schema';
 import { timestamps } from '../common/timestap.schema';
 import { codingChallenges } from './coding-challenge.schema';
