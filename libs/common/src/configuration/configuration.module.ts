@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
-import configuration from './configuration';
-import { validationSchema } from './validation.schema';
+import configuration from './config/configuration';
+import { validationSchema } from './validation/validation.schema';
 
 @Module({
   imports: [
@@ -18,4 +18,4 @@ import { validationSchema } from './validation.schema';
   ],
   exports: [NestConfigModule],
 })
-export class ConfigModule {}
+export class ConfigurationModule {}

@@ -7,7 +7,7 @@ import {
 import { AUTH_SERVICE } from '@app/contracts/constants/services/auth-service.constant';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { AuthServiceService } from './auth-service.service';
+import { AuthServiceService } from '../services/register.service';
 
 @Controller()
 export class AuthServiceController {

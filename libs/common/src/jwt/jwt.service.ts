@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { StringValue } from 'ms';
-import { IPayload } from './interfaces/payload.interface';
+import { IJWTPayload } from './interfaces/jwt-payload.interface';
 @Injectable()
 export class JwtService {
   private readonly logger = new Logger(JwtService.name);
@@ -12,7 +12,7 @@ export class JwtService {
     private readonly configService: ConfigService,
   ) {}
 
-  async generateToken(payload: IPayload): Promise<string> {
+  async generateToken(payload: IJWTPayload): Promise<string> {
     const token = await this.jwtService.signAsync(payload);
     return token;
   }
@@ -73,9 +73,9 @@ export class JwtService {
     }
   }
 
-  decodeToken(token: string): IPayload {
+  decodeToken(token: string): IJWTPayload {
     const decode = this.jwtService.decode(token);
     if (!decode) throw new Error('Failed to decode token');
-    return decode as IPayload;
+    return decode as IJWTPayload;
   }
 }

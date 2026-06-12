@@ -1,9 +1,4 @@
-import {
-  LoginRequestDTO,
-  LoginResponseDTO,
-  RegisterRequestDTO,
-  RegisterResponseDTO,
-} from '@app/contracts';
+import { RegisterRequestDTO, RegisterResponseDTO } from '@app/contracts';
 import { Inject, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { JwtService } from '@nestjs/jwt';
@@ -15,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { DRIZZLE } from '@app/contracts';
 
 @Injectable()
-export class AuthServiceService {
+export class RegisterService {
   constructor(
     @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
     private readonly jwtService: JwtService,
@@ -28,7 +23,7 @@ export class AuthServiceService {
     const { email, password, firstName, lastName, phone, dateOfBirth } =
       registerRequestDTO;
 
-    // Check if user already exists
+    // Check existing credentials
     const existingUser = await this.db
       .select()
       .from(user)
@@ -79,19 +74,10 @@ export class AuthServiceService {
       .set({ refreshToken })
       .where(eq(user.id, newUser.id));
 
-    return {
+    return new RegisterResponseDTO({
       message: 'User registered successfully',
       accessToken,
       refreshToken,
-    };
-  }
-
-  async login(loginRequestDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
-    console.log(loginRequestDTO);
-    return {
-      message: 'User logged in successfully',
-      accessToken: 'access-token',
-      refreshToken: 'refresh-token',
-    };
+    });
   }
 }

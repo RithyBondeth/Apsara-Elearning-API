@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AuthServiceController } from './auth-service.controller';
-import { ConfigModule, JwtModule, LoggerModule } from '@app/common';
+import { AuthServiceController } from './controllers/auth-service.controller';
+import { ConfigurationModule, JwtModule, LoggerModule } from '@app/common';
 import { DatabaseModule } from '@app/database';
-import { AuthServiceService } from './auth-service.service';
+import { RegisterService } from './services/register.service';
+import { LoginService } from './services/login.service';
 
 @Module({
-  imports: [ConfigModule, LoggerModule, DatabaseModule, JwtModule],
+  imports: [ConfigurationModule, LoggerModule, DatabaseModule, JwtModule],
   controllers: [AuthServiceController],
-  providers: [AuthServiceService],
+  providers: [RegisterService, LoginService],
 })
 export class AuthServiceModule {}
