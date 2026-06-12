@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   integer,
   pgTable,
   text,
@@ -14,7 +15,7 @@ export const user = pgTable('users', {
   firstName: text('first_name'),
   lastName: text('last_name'),
   gender: text('gender'),
-  dateOfBirth: text('date_of_birth'),
+  dateOfBirth: date('date_of_birth'),
   avatar: text('avatar'),
   streak: integer('streak').default(0),
   xp: integer('xp').default(0),

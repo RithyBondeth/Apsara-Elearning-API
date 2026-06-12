@@ -21,7 +21,8 @@ export class JwtService {
     const refreshToken = await this.jwtService.signAsync(
       { id: userId, type: 'refresh' },
       {
-        expiresIn: this.configService.get<StringValue>('jwt.refreshExpiresIn'),
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+        expiresIn: this.configService.get<StringValue>('jwt.refreshExpires'),
       },
     );
     return refreshToken;
@@ -30,7 +31,10 @@ export class JwtService {
   async generateEmailVerificationToken(email: string): Promise<string> {
     const token = await this.jwtService.signAsync(
       { email, type: 'email-verification' },
-      { expiresIn: this.configService.get<StringValue>('jwt.emailExpiresIn') },
+      {
+        secret: this.configService.get<string>('jwt.accessSecret'),
+        expiresIn: this.configService.get<StringValue>('jwt.emailExpires'),
+      },
     );
     return token;
   }

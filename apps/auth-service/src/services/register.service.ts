@@ -1,5 +1,5 @@
 import { RegisterRequestDTO, RegisterResponseDTO } from '@app/contracts';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { user } from '@app/database/schemas/user/user.schema';
@@ -8,9 +8,12 @@ import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE } from '@app/contracts';
 import { EmailService, IJWTPayload, JwtService } from '@app/common';
+import * as ms from 'ms';
 
 @Injectable()
 export class RegisterService {
+  private readonly logger = new Logger(RegisterService.name);
+
   constructor(
     @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
     private readonly jwtService: JwtService,
@@ -21,17 +24,10 @@ export class RegisterService {
   async register(
     registerRequestDTO: RegisterRequestDTO,
   ): Promise<RegisterResponseDTO> {
-    const {
-      email,
-      password,
-      firstName,
-      lastName,
-      gender,
-      phone,
-      dateOfBirth,
-    } = registerRequestDTO;
+    const { email, password, firstName, lastName, gender, phone, dateOfBirth } =
+      registerRequestDTO;
 
-    // Check existing credentials
+    // 1. Check existing credentials (fast path)
     const existingUsers = await this.db
       .select()
       .from(user)
@@ -42,77 +38,93 @@ export class RegisterService {
       throw new RpcException('User with this email already exists');
     }
 
-    // Generate email verification token
-    const emailVerificationToken =
-      await this.jwtService.generateEmailVerificationToken(email);
-
-    // Set expiration for email token (default 1 hour)
-    const emailVerificationTokenExpiresAt = new Date();
-    emailVerificationTokenExpiresAt.setHours(
-      emailVerificationTokenExpiresAt.getHours() + 1,
-    );
-
-    // Hash password
+    // 2. Prepare security data
     const saltRounds = this.configService.get<number>('bcrypt.salt') ?? 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    return await this.db.transaction(async (tx) => {
-      // Create user
-      const [newUser] = await tx
-        .insert(user)
-        .values({
+    const emailVerificationToken =
+      await this.jwtService.generateEmailVerificationToken(email);
+
+    // Calculate expiration based on config
+    const emailExpiresStr =
+      this.configService.get<string>('jwt.emailExpires') ?? '1h';
+    const emailVerificationTokenExpiresAt = new Date(
+      Date.now() + ms(emailExpiresStr),
+    );
+
+    const refreshExpiresStr =
+      this.configService.get<string>('jwt.refreshExpires') ?? '7d';
+    const refreshTokenExpiresAt = new Date(Date.now() + ms(refreshExpiresStr));
+
+    try {
+      return await this.db.transaction(async (tx) => {
+        // 3. Create user
+        const [newUser] = await tx
+          .insert(user)
+          .values({
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            gender,
+            phone,
+            dateOfBirth:
+              dateOfBirth instanceof Date
+                ? dateOfBirth.toISOString().split('T')[0]
+                : dateOfBirth,
+            emailVerificationToken,
+            emailVerificationTokenExpiresAt,
+          })
+          .returning();
+
+        // 4. Generate tokens
+        const jwtPayload: IJWTPayload = {
+          id: newUser.id,
+          info: newUser.email,
+        };
+
+        const [accessToken, refreshToken] = await Promise.all([
+          this.jwtService.generateToken(jwtPayload),
+          this.jwtService.generateRefreshToken(newUser.id),
+        ]);
+
+        // 5. Update user with refresh token
+        await tx
+          .update(user)
+          .set({
+            refreshToken,
+            refreshTokenExpiresAt,
+          })
+          .where(eq(user.id, newUser.id));
+
+        // 6. Send email verification (Inside transaction to ensure token delivery if committed)
+        // Warning: If email service is slow, it blocks the DB transaction.
+        await this.emailService.sendVerificationEmail(
           email,
-          password: hashedPassword,
-          firstName,
-          lastName,
-          gender,
-          phone,
-          dateOfBirth:
-            dateOfBirth instanceof Date
-              ? dateOfBirth.toISOString()
-              : dateOfBirth,
           emailVerificationToken,
-          emailVerificationTokenExpiresAt,
-        })
-        .returning();
+        );
 
-      // Generate tokens
-      const jwtPayload: IJWTPayload = {
-        id: newUser.id,
-        info: newUser.email,
-      };
+        this.logger.log(`User registered: ${email}`);
 
-      const [accessToken, refreshToken] = await Promise.all([
-        this.jwtService.generateToken(jwtPayload),
-        this.jwtService.generateRefreshToken(newUser.id),
-      ]);
-
-      // Set refresh token expiration (default 7 days)
-      const refreshTokenExpiresAt = new Date();
-      refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
-
-      // Update user with refresh token and expiration
-      await tx
-        .update(user)
-        .set({
+        return new RegisterResponseDTO({
+          message: 'User registered successfully',
+          accessToken,
           refreshToken,
-          refreshTokenExpiresAt,
-        })
-        .where(eq(user.id, newUser.id));
-
-      // Send email verification
-      // Note: In a production environment, you might want to handle email failure gracefully
-      // or move it to a background worker to avoid blocking the transaction/request.
-      await this.emailService.sendVerificationEmail(
-        email,
-        emailVerificationToken,
-      );
-
-      return new RegisterResponseDTO({
-        message: 'User registered successfully',
-        accessToken,
-        refreshToken,
+        });
       });
-    });
+    } catch (error) {
+      this.logger.error(`Registration failed for ${email}:`, error);
+
+      // Handle duplicate key error from Postgres (race condition)
+      if (
+        error.message?.includes('unique constraint') ||
+        error.code === '23505'
+      ) {
+        throw new RpcException('User with this email already exists');
+      }
+
+      if (error instanceof RpcException) throw error;
+      throw new RpcException('An error occurred during registration');
+    }
   }
 }

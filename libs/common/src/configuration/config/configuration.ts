@@ -18,6 +18,7 @@ export default () => ({
     accessExpires: process.env.JWT_ACCESS_EXPIRES,
     refreshSecret: process.env.JWT_REFRESH_SECRET,
     refreshExpires: process.env.JWT_REFRESH_EXPIRES,
+    emailExpires: process.env.JWT_EMAIL_EXPIRES ?? '1h',
   },
 
   // Bcrypt

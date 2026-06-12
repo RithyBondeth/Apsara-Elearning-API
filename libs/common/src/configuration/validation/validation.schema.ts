@@ -19,6 +19,7 @@ export const validationSchema = Joi.object({
   JWT_ACCESS_EXPIRES: Joi.string().required(),
   JWT_REFRESH_SECRET: Joi.string().required(),
   JWT_REFRESH_EXPIRES: Joi.string().required(),
+  JWT_EMAIL_EXPIRES: Joi.string().default('1h'),
 
   // Bcrypt
   BCRYPT_SALT: Joi.number().default(10),
@@ -31,4 +32,8 @@ export const validationSchema = Joi.object({
   ASSESSMENT_QUEUE: Joi.string().required(),
   SUBSCRIPTION_QUEUE: Joi.string().required(),
   AI_QUEUE: Joi.string().required(),
+
+  // Email
+  RESEND_API_KEY: Joi.string().required(),
+  EMAIL_FROM: Joi.string().required(),
 });
