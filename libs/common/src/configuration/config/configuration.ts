@@ -35,4 +35,10 @@ export default () => ({
     subscriptionQueue: process.env.SUBSCRIPTION_QUEUE,
     aiQueue: process.env.AI_QUEUE,
   },
+
+  // Email
+  email: {
+    apiKey: process.env.RESEND_API_KEY,
+    from: process.env.EMAIL_FROM,
+  },
 });
