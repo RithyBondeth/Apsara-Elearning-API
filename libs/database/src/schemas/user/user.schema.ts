@@ -13,6 +13,7 @@ export const user = pgTable('users', {
   // User Info
   firstName: text('first_name'),
   lastName: text('last_name'),
+  gender: text('gender'),
   dateOfBirth: text('date_of_birth'),
   avatar: text('avatar'),
   streak: integer('streak').default(0),
