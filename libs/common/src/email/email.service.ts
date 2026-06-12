@@ -32,9 +32,10 @@ export class EmailService {
       'Verify your email',
       `
       <h2>Verify Email</h2>
-      <p>Your OTP is:</p>
+      <p>Your Token is:</p>
       <h1>${otp}</h1>
-      <p>This OTP expires in 10 minutes.</p>
+      <p>This Token will expire in 10 minutes.</p>
+      <p>Please verify your email to continue.</p>
       `,
     );
   }

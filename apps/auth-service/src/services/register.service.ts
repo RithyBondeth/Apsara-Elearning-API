@@ -1,19 +1,20 @@
 import { RegisterRequestDTO, RegisterResponseDTO } from '@app/contracts';
 import { Inject, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { JwtService } from '@nestjs/jwt';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE } from '@app/contracts';
+import { EmailService, IJWTPayload, JwtService } from '@app/common';
 
 @Injectable()
 export class RegisterService {
   constructor(
     @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -30,9 +31,12 @@ export class RegisterService {
       .where(eq(user.email, email))
       .limit(1);
 
-    if (existingUser.length > 0) {
+    if (existingUser)
       throw new RpcException('User with this email already exists');
-    }
+
+    // Generate email verification token
+    const emailVerificationToken =
+      await this.jwtService.generateEmailVerificationToken(email);
 
     // Hash password
     const saltRounds = this.configService.get<number>('bcrypt.salt') ?? 10;
@@ -48,24 +52,25 @@ export class RegisterService {
         lastName,
         phone,
         dateOfBirth: dateOfBirth.toISOString(),
+        emailVerificationToken,
       })
       .returning();
 
-    // Generate tokens
-    const accessToken = await this.jwtService.signAsync({
-      sub: newUser.id,
-      email: newUser.email,
-    });
+    // Generate accessToken and refreshToken
+    const jwtPayload: IJWTPayload = {
+      id: newUser.id,
+      info: newUser.email,
+    };
 
-    const refreshToken = await this.jwtService.signAsync(
-      {
-        sub: newUser.id,
-        email: newUser.email,
-      },
-      {
-        secret: this.configService.get<string>('jwt.refreshSecret'),
-        expiresIn: this.configService.get<any>('jwt.refreshExpires'),
-      },
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.generateToken(jwtPayload),
+      this.jwtService.generateRefreshToken(newUser.id),
+    ]);
+
+    // Send email verification email
+    await this.emailService.sendVerificationEmail(
+      email,
+      emailVerificationToken,
     );
 
     // Update refresh token in DB
