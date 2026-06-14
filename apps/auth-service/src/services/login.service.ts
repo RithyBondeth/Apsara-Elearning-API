@@ -1,8 +1,4 @@
-import {
-  LoginRequestDTO,
-  LoginResponseDTO,
-  RegisterResponseDTO,
-} from '@app/contracts';
+import { LoginRequestDTO, LoginResponseDTO } from '@app/contracts';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
@@ -44,7 +40,12 @@ export class LoginService {
       throw new RpcException('Invalid credentials');
     }
 
-    // 3. Generate tokens
+    // 3. Check if email is verified
+    if (!foundUser.isEmailVerified) {
+      throw new RpcException('Email not verified');
+    }
+
+    // 4. Generate tokens
     const jwtPayload: IJWTPayload = {
       id: foundUser.id,
       info: foundUser.email,
@@ -55,7 +56,7 @@ export class LoginService {
       this.jwtService.generateRefreshToken(foundUser.id),
     ]);
 
-    // 4. Update refresh token and login info in DB
+    // 5. Update refresh token and login info in DB
     const refreshExpiresStr =
       this.configService.get<string>('jwt.refreshExpires') ?? '7d';
     const refreshTokenExpiresAt = new Date(
@@ -74,7 +75,7 @@ export class LoginService {
 
     this.logger.log(`User logged in: ${email}`);
 
-    return new RegisterResponseDTO({
+    return new LoginResponseDTO({
       message: 'Login successful',
       accessToken,
       refreshToken,

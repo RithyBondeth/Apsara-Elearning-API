@@ -25,7 +25,7 @@ async function bootstrap() {
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, swaggerDocument, {
+  SwaggerModule.setup('api/v1/internal/docs', app, swaggerDocument, {
     swaggerOptions: {
       persistAuthorization: true,
     },
@@ -36,7 +36,7 @@ async function bootstrap() {
   app.useLogger(logger);
 
   // Set global prefix
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1/internal');
 
   // Enable CORS
   app.enableCors({
