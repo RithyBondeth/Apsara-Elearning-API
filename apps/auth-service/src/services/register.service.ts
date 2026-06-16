@@ -89,6 +89,7 @@ export class RegisterService {
         const jwtPayload: IJWTPayload = {
           id: newUser.id,
           info: newUser.email,
+          isAdmin: newUser.isAdmin,
         };
 
         const [accessToken, refreshToken] = await Promise.all([

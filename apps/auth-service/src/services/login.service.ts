@@ -53,6 +53,7 @@ export class LoginService {
     const jwtPayload: IJWTPayload = {
       id: foundUser.id,
       info: foundUser.email,
+      isAdmin: foundUser.isAdmin,
     };
 
     const [accessToken, refreshToken] = await Promise.all([

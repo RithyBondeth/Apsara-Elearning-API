@@ -3,6 +3,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigurationModule, LoggerModule } from '@app/common';
 import { CourseModule } from './course/course.module';
+import { QuizModule } from './quiz/quiz.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { CourseModule } from './course/course.module';
     AuthModule,
     UserModule,
     CourseModule,
+    QuizModule,
+    AiModule,
   ],
 })
 export class ApiGatewayModule {}

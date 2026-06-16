@@ -7,11 +7,19 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
-import { rpcCall } from 'apps/admin-gateway/src/utils/rpc-call';
+import {
+  COURSE_SERVICE,
+  CreateCategoryRequestDTO,
+  UpdateCategoryRequestDTO,
+} from '@app/contracts';
+import { AdminGuard } from '@app/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { rpcCall } from '../../utils/rpc-call';
 
+@ApiTags('Categories')
 @Controller('category')
 export class CategoryController {
   constructor(
@@ -20,7 +28,9 @@ export class CategoryController {
   ) {}
 
   @Post()
-  createCategory(@Body() createCategoryReqDTO: any) {
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
+  createCategory(@Body() createCategoryReqDTO: CreateCategoryRequestDTO) {
     return rpcCall(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.CATEGORY_CREATE,
@@ -37,6 +47,16 @@ export class CategoryController {
     );
   }
 
+  // Must precede `:id` so the literal segment is not captured as an id.
+  @Get('slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return rpcCall(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.CATEGORY_FIND_BY_SLUG,
+      slug,
+    );
+  }
+
   @Get(':id')
   findOneCategory(@Param('id') id: string) {
     return rpcCall(
@@ -46,25 +66,22 @@ export class CategoryController {
     );
   }
 
-  @Get(':slug')
-  findBySlug(@Param('slug') slug: string) {
-    return rpcCall(
-      this.courseClient,
-      COURSE_SERVICE.ACTIONS.CATEGORY_FIND_BY_SLUG,
-      slug,
-    );
-  }
-
   @Put(':id')
-  updateCategory(@Param('id') id: string, @Body() updateCategoryReqDTO: any) {
-    return rpcCall(
-      this.courseClient,
-      COURSE_SERVICE.ACTIONS.CATEGORY_UPDATE,
-      updateCategoryReqDTO,
-    );
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
+  updateCategory(
+    @Param('id') id: string,
+    @Body() updateCategoryReqDTO: UpdateCategoryRequestDTO,
+  ) {
+    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.CATEGORY_UPDATE, {
+      id,
+      ...updateCategoryReqDTO,
+    });
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
   deleteCategory(@Param('id') id: string) {
     return rpcCall(
       this.courseClient,

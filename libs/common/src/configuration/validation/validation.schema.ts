@@ -36,4 +36,8 @@ export const validationSchema = Joi.object({
   // Email
   RESEND_API_KEY: Joi.string().required(),
   EMAIL_FROM: Joi.string().required(),
+
+  // AI (Anthropic) — optional; service runs in mock mode without a key
+  ANTHROPIC_API_KEY: Joi.string().allow('').optional(),
+  ANTHROPIC_MODEL: Joi.string().optional(),
 });

@@ -9,7 +9,11 @@ import {
   Post,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
+import {
+  COURSE_SERVICE,
+  CreateCategoryRequestDTO,
+  UpdateCategoryRequestDTO,
+} from '@app/contracts';
 import { rpcCall } from '../utils/rpc-call';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -22,7 +26,7 @@ export class CategoryController {
   ) {}
 
   @Post()
-  create(@Body() body: unknown) {
+  create(@Body() body: CreateCategoryRequestDTO) {
     return rpcCall(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.CATEGORY_CREATE,
@@ -49,10 +53,10 @@ export class CategoryController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: unknown) {
+  update(@Param('id') id: string, @Body() body: UpdateCategoryRequestDTO) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.CATEGORY_UPDATE, {
       id,
-      ...(body as object),
+      ...body,
     });
   }
 

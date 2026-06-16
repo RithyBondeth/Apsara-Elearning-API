@@ -8,9 +8,16 @@ import {
   Patch,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
+import {
+  COURSE_SERVICE,
+  CreateCourseRequestDTO,
+  UpdateCourseRequestDTO,
+} from '@app/contracts';
+import { AdminGuard } from '@app/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { rpcCall } from '../../utils/rpc-call';
 
 @Controller('course')
@@ -21,7 +28,9 @@ export class CourseController {
   ) {}
 
   @Post()
-  createCourse(@Body() createCourseReqDTO: any) {
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
+  createCourse(@Body() createCourseReqDTO: CreateCourseRequestDTO) {
     return rpcCall(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_CREATE,
@@ -75,7 +84,12 @@ export class CourseController {
   }
 
   @Put(':id')
-  updateCourse(@Param('id') id: string, @Body() updateCourseReqDTO: any) {
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
+  updateCourse(
+    @Param('id') id: string,
+    @Body() updateCourseReqDTO: UpdateCourseRequestDTO,
+  ) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_UPDATE, {
       id,
       ...updateCourseReqDTO,
@@ -83,11 +97,15 @@ export class CourseController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
   deleteCourse(@Param('id') id: string) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_DELETE, id);
   }
 
   @Patch(':id/publish')
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
   publishCourse(@Param('id') id: string) {
     return rpcCall(
       this.courseClient,
@@ -97,6 +115,8 @@ export class CourseController {
   }
 
   @Patch(':id/unpublish')
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
   unpublishCourse(@Param('id') id: string) {
     return rpcCall(
       this.courseClient,

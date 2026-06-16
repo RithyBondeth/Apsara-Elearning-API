@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { ConfigurationModule, LoggerModule, RabbitmqModule } from '@app/common';
+import { DatabaseModule } from '@app/database';
+import { USER_SERVICE } from '@app/contracts';
 import { CourseRpcController } from './controllers/course-rpc.controller';
 import { CourseRpcService } from './services/course-rpc.service';
 import { CategoryRpcController } from './controllers/category-rpc.controller';
@@ -13,7 +16,15 @@ import { LessonProgressRpcController } from './controllers/lesson-progress-rpc.c
 import { LessonProgressRpcService } from './services/lesson-progress-rpc.service';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigurationModule,
+    LoggerModule,
+    DatabaseModule,
+    // Client used to award XP to users on lesson completion.
+    RabbitmqModule.register([
+      { name: USER_SERVICE.NAME, queueKey: 'rabbitmq.userQueue' },
+    ]),
+  ],
   controllers: [
     CourseRpcController,
     CategoryRpcController,

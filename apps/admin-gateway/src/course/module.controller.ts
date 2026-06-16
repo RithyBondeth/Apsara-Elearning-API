@@ -9,7 +9,11 @@ import {
   Post,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
+import {
+  COURSE_SERVICE,
+  CreateModuleRequestDTO,
+  UpdateModuleRequestDTO,
+} from '@app/contracts';
 import { rpcCall } from '../utils/rpc-call';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -22,10 +26,13 @@ export class ModuleController {
   ) {}
 
   @Post()
-  create(@Param('courseId') courseId: string, @Body() body: unknown) {
+  create(
+    @Param('courseId') courseId: string,
+    @Body() body: CreateModuleRequestDTO,
+  ) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_CREATE, {
       courseId,
-      ...(body as object),
+      ...body,
     });
   }
 
@@ -37,10 +44,10 @@ export class ModuleController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: unknown) {
+  update(@Param('id') id: string, @Body() body: UpdateModuleRequestDTO) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_UPDATE, {
       id,
-      ...(body as object),
+      ...body,
     });
   }
 

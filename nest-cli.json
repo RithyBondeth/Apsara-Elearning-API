@@ -28,6 +28,24 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
+    "assessment-service": {
+      "type": "application",
+      "root": "apps/assessment-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/assessment-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/assessment-service/tsconfig.app.json"
+      }
+    },
+    "ai-service": {
+      "type": "application",
+      "root": "apps/ai-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/ai-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ai-service/tsconfig.app.json"
+      }
+    },
     "auth-service": {
       "type": "application",
       "root": "apps/auth-service",

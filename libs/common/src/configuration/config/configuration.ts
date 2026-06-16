@@ -42,4 +42,10 @@ export default () => ({
     apiKey: process.env.RESEND_API_KEY,
     from: process.env.EMAIL_FROM,
   },
+
+  // AI (Anthropic / Claude)
+  ai: {
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+    model: process.env.ANTHROPIC_MODEL ?? 'claude-opus-4-8',
+  },
 });
