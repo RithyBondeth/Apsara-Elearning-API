@@ -40,6 +40,22 @@ export class EmailService {
     );
   }
 
+  async sendPasswordResetEmail(
+    email: string,
+    token: string,
+  ): Promise<CreateEmailResponse> {
+    return this.sendEmail(
+      email,
+      'Reset your password',
+      `
+      <h2>Reset Password</h2>
+      <p>Use the token below to reset your password:</p>
+      <h1>${token}</h1>
+      <p>This token will expire shortly. If you did not request a password reset, you can safely ignore this email.</p>
+      `,
+    );
+  }
+
   async sendWelcomeEmail(
     email: string,
     name: string,

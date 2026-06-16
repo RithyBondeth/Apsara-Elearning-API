@@ -5,6 +5,7 @@ import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { RpcToHttpExceptionFilter } from '@app/common';
 
 async function bootstrap() {
   // Create application context to get configService
@@ -53,6 +54,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Map microservice (RPC) errors to proper HTTP responses
+  app.useGlobalFilters(new RpcToHttpExceptionFilter());
 
   // Start the application
   const port = configService.get<number>('apiGatewayPort') ?? 3000;

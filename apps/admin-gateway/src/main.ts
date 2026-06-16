@@ -4,6 +4,8 @@ import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { AdminGatewayModule } from './admin-gateway.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
+import { RpcToHttpExceptionFilter } from '@app/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -32,6 +34,15 @@ async function bootstrap() {
   app.useLogger(logger);
   app.setGlobalPrefix('admin');
   app.enableCors();
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+  app.useGlobalFilters(new RpcToHttpExceptionFilter());
 
   const port = configService.get<number>('adminGatewayPort') ?? 2222;
   await app.listen(port);

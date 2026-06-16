@@ -1,12 +1,16 @@
 import { LoginRequestDTO, LoginResponseDTO } from '@app/contracts';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { DRIZZLE } from '@app/contracts';
-import { IJWTPayload, JwtService } from '@app/common';
+import {
+  IJWTPayload,
+  JwtService,
+  RpcForbiddenException,
+  RpcUnauthorizedException,
+} from '@app/common';
 import { ConfigService } from '@nestjs/config';
 import ms from 'ms';
 
@@ -31,18 +35,18 @@ export class LoginService {
       .limit(1);
 
     if (!foundUser) {
-      throw new RpcException('Invalid credentials');
+      throw new RpcUnauthorizedException('Invalid credentials');
     }
 
     // 2. Verify password
     const isPasswordValid = await bcrypt.compare(password, foundUser.password);
     if (!isPasswordValid) {
-      throw new RpcException('Invalid credentials');
+      throw new RpcUnauthorizedException('Invalid credentials');
     }
 
     // 3. Check if email is verified
     if (!foundUser.isEmailVerified) {
-      throw new RpcException('Email not verified');
+      throw new RpcForbiddenException('Email not verified');
     }
 
     // 4. Generate tokens

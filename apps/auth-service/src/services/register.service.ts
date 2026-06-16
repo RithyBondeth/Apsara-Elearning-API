@@ -7,7 +7,13 @@ import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE } from '@app/contracts';
-import { EmailService, IJWTPayload, JwtService } from '@app/common';
+import {
+  EmailService,
+  IJWTPayload,
+  JwtService,
+  RpcConflictException,
+  RpcInternalException,
+} from '@app/common';
 import ms from 'ms';
 
 @Injectable()
@@ -35,7 +41,7 @@ export class RegisterService {
       .limit(1);
 
     if (existingUsers.length > 0) {
-      throw new RpcException('User with this email already exists');
+      throw new RpcConflictException('User with this email already exists');
     }
 
     // 2. Prepare security data
@@ -122,11 +128,11 @@ export class RegisterService {
         error.message?.includes('unique constraint') ||
         error.code === '23505'
       ) {
-        throw new RpcException('User with this email already exists');
+        throw new RpcConflictException('User with this email already exists');
       }
 
       if (error instanceof RpcException) throw error;
-      throw new RpcException('An error occurred during registration');
+      throw new RpcInternalException('An error occurred during registration');
     }
   }
 }

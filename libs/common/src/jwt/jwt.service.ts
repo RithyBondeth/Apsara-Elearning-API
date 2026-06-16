@@ -39,6 +39,31 @@ export class JwtService {
     return token;
   }
 
+  async generatePasswordResetToken(email: string): Promise<string> {
+    const token = await this.jwtService.signAsync(
+      { email, type: 'password-reset' },
+      {
+        secret: this.configService.get<string>('jwt.accessSecret'),
+        expiresIn: this.configService.get<StringValue>('jwt.emailExpires'),
+      },
+    );
+    return token;
+  }
+
+  async verifyPasswordResetToken(token: string): Promise<any> {
+    try {
+      const decoded = await this.jwtService.verifyAsync(token);
+      if (decoded.type !== 'password-reset')
+        throw new Error('Invalid token type');
+      return decoded;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
+
   async verifyToken(token: string): Promise<any> {
     try {
       return this.jwtService.verifyAsync(token);
