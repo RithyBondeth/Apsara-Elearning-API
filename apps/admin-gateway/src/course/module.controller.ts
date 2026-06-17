@@ -12,6 +12,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
   CreateModuleRequestDTO,
+  ReorderRequestDTO,
   UpdateModuleRequestDTO,
 } from '@app/contracts';
 import { rpcCall } from '../utils/rpc-call';
@@ -40,6 +41,18 @@ export class ModuleController {
   findAll(@Param('courseId') courseId: string) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_FIND_ALL, {
       courseId,
+    });
+  }
+
+  // Declared before `:id` so the literal path wins.
+  @Patch('reorder')
+  reorder(
+    @Param('courseId') courseId: string,
+    @Body() body: ReorderRequestDTO,
+  ) {
+    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_REORDER, {
+      courseId,
+      orderedIds: body.orderedIds,
     });
   }
 

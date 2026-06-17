@@ -48,4 +48,10 @@ export default () => ({
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     model: process.env.ANTHROPIC_MODEL ?? 'claude-opus-4-8',
   },
+
+  // Code execution (Judge0) — optional; grading runs in mock mode without it
+  judge0: {
+    url: process.env.JUDGE0_URL,
+    token: process.env.JUDGE0_TOKEN,
+  },
 });

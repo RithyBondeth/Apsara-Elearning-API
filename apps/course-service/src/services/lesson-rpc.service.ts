@@ -92,6 +92,22 @@ export class LessonRpcService {
     return { message: 'Lesson deleted successfully', id };
   }
 
+  /** Sets each lesson's `order` to its index in `orderedIds` (scoped to module). */
+  async reorder(moduleId: string, orderedIds: string[]) {
+    await this.ensureModuleExists(moduleId);
+    // Sequential updates — neon-http has no interactive transactions.
+    for (let i = 0; i < orderedIds.length; i++) {
+      await this.db
+        .update(lessons)
+        .set({ order: i, updatedAt: new Date() })
+        .where(
+          and(eq(lessons.id, orderedIds[i]), eq(lessons.moduleId, moduleId)),
+        );
+    }
+    this.logger.log(`Reordered ${orderedIds.length} lessons in ${moduleId}`);
+    return this.findAllByModule(moduleId);
+  }
+
   private async ensureModuleExists(moduleId: string) {
     const [module] = await this.db
       .select()

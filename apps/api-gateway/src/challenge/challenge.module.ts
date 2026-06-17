@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { RabbitmqModule } from '@app/common';
+import { JwtModule, RabbitmqModule } from '@app/common';
 import { ASSESSMENT_SERVICE } from '@app/contracts';
-import { AssessmentController } from './assessment.controller';
 import { ChallengeController } from './challenge.controller';
 
 @Module({
   imports: [
+    JwtModule,
     RabbitmqModule.register([
       { name: ASSESSMENT_SERVICE.NAME, queueKey: 'rabbitmq.assessmentQueue' },
     ]),
   ],
-  controllers: [AssessmentController, ChallengeController],
+  controllers: [ChallengeController],
 })
-export class AssessmentModule {}
+export class ChallengeModule {}

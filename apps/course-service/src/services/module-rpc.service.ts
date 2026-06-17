@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { modules } from '@app/database/schemas/course/module.schema';
 import { courses } from '@app/database/schemas/course/course.schema';
 import {
@@ -68,6 +68,22 @@ export class ModuleRpcService {
     if (!deleted) throw new RpcNotFoundException('Module not found');
     this.logger.log(`Module deleted: ${id}`);
     return { message: 'Module deleted successfully', id };
+  }
+
+  /** Sets each module's `order` to its index in `orderedIds` (scoped to course). */
+  async reorder(courseId: string, orderedIds: string[]) {
+    await this.ensureCourseExists(courseId);
+    // Sequential updates — neon-http has no interactive transactions.
+    for (let i = 0; i < orderedIds.length; i++) {
+      await this.db
+        .update(modules)
+        .set({ order: i, updatedAt: new Date() })
+        .where(
+          and(eq(modules.id, orderedIds[i]), eq(modules.courseId, courseId)),
+        );
+    }
+    this.logger.log(`Reordered ${orderedIds.length} modules in ${courseId}`);
+    return this.findAllByCourse(courseId);
   }
 
   private async ensureCourseExists(courseId: string) {

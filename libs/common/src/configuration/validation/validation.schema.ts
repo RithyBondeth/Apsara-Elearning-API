@@ -40,4 +40,8 @@ export const validationSchema = Joi.object({
   // AI (Anthropic) — optional; service runs in mock mode without a key
   ANTHROPIC_API_KEY: Joi.string().allow('').optional(),
   ANTHROPIC_MODEL: Joi.string().optional(),
+
+  // Judge0 code execution — optional; grading runs in mock mode without it
+  JUDGE0_URL: Joi.string().allow('').optional(),
+  JUDGE0_TOKEN: Joi.string().allow('').optional(),
 });

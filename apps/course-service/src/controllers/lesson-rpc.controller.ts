@@ -45,4 +45,9 @@ export class LessonRpcController {
   remove(@Payload() payload: string | { id: string }) {
     return this.lessonRpcService.remove(idOf(payload));
   }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_REORDER)
+  reorder(@Payload() payload: { moduleId: string; orderedIds: string[] }) {
+    return this.lessonRpcService.reorder(payload.moduleId, payload.orderedIds);
+  }
 }

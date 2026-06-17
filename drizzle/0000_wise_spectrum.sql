@@ -256,20 +256,37 @@ CREATE TABLE "user_badges" (
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"email" text NOT NULL,
-	"password" text NOT NULL,
 	"first_name" text,
 	"last_name" text,
-	"date_of_birth" text,
-	"phone" text,
+	"gender" text,
+	"date_of_birth" date,
 	"avatar" text,
 	"streak" integer DEFAULT 0,
 	"xp" integer DEFAULT 0,
-	"is_verified" boolean DEFAULT false,
 	"is_admin" boolean DEFAULT false NOT NULL,
+	"email" text NOT NULL,
+	"password" text NOT NULL,
+	"reset_password_token" text,
+	"reset_password_token_expires_at" timestamp with time zone,
+	"phone" text,
+	"otp_code" text,
+	"otp_code_expires_at" timestamp with time zone,
+	"is_email_verified" boolean DEFAULT false,
+	"email_verification_token" text,
+	"email_verification_token_expires_at" timestamp with time zone,
+	"refresh_token" text,
+	"refresh_token_expires_at" timestamp with time zone,
+	"google_id" text,
+	"github_id" text,
+	"facebook_id" text,
+	"last_login_at" timestamp with time zone,
+	"last_login_method" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "users_email_unique" UNIQUE("email")
+	CONSTRAINT "users_email_unique" UNIQUE("email"),
+	CONSTRAINT "users_google_id_unique" UNIQUE("google_id"),
+	CONSTRAINT "users_github_id_unique" UNIQUE("github_id"),
+	CONSTRAINT "users_facebook_id_unique" UNIQUE("facebook_id")
 );
 --> statement-breakpoint
 ALTER TABLE "ai_conversations" ADD CONSTRAINT "ai_conversations_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
