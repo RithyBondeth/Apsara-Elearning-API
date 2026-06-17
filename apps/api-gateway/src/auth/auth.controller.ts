@@ -25,6 +25,11 @@ import {
   MessageResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
+import { Throttle } from '@nestjs/throttler';
+
+// Tighter limits on credential-sensitive endpoints (per IP, per minute).
+const STRICT = { default: { limit: 5, ttl: 60_000 } };
+const LOGIN = { default: { limit: 10, ttl: 60_000 } };
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -34,6 +39,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @Throttle(LOGIN)
   register(
     @Body() registerRequestDTO: RegisterRequestDTO,
   ): Promise<RegisterResponseDTO> {
@@ -46,6 +52,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle(LOGIN)
   login(@Body() loginRequestDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
     return rpcCall<LoginResponseDTO>(
       this.authClient,
@@ -92,6 +99,7 @@ export class AuthController {
 
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
+  @Throttle(STRICT)
   resendVerification(
     @Body() resendVerificationRequestDTO: ResendVerificationRequestDTO,
   ): Promise<MessageResponseDTO> {
@@ -104,6 +112,7 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle(STRICT)
   forgotPassword(
     @Body() forgotPasswordRequestDTO: ForgotPasswordRequestDTO,
   ): Promise<MessageResponseDTO> {
@@ -116,6 +125,7 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle(STRICT)
   resetPassword(
     @Body() resetPasswordRequestDTO: ResetPasswordRequestDTO,
   ): Promise<MessageResponseDTO> {

@@ -44,4 +44,11 @@ export const validationSchema = Joi.object({
   // Judge0 code execution — optional; grading runs in mock mode without it
   JUDGE0_URL: Joi.string().allow('').optional(),
   JUDGE0_TOKEN: Joi.string().allow('').optional(),
+
+  // Security — optional
+  CORS_ORIGINS: Joi.string().allow('').optional(),
+  WEBHOOK_SECRET: Joi.string().allow('').optional(),
+
+  // Redis — optional (distributed rate limiting)
+  REDIS_URL: Joi.string().allow('').optional(),
 });

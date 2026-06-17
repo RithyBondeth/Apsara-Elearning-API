@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
+  CreatePaymentRequestDTO,
   CreatePlanRequestDTO,
   SUBSCRIPTION_SERVICE,
   UpdatePlanRequestDTO,
@@ -72,6 +73,19 @@ export class SubscriptionRpcController {
   }
 
   // ---- Payments ----
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_CREATE)
+  createPayment(@Payload() dto: CreatePaymentRequestDTO) {
+    return this.payments.record({
+      userId: dto.userId,
+      subscriptionId: dto.subscriptionId ?? null,
+      amount: dto.amount.toFixed(2),
+      currency: dto.currency ?? 'USD',
+      provider: dto.provider,
+      transactionId: dto.transactionId,
+      status: dto.status,
+    });
+  }
+
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_FIND_BY_USER)
   findPayments(@Payload() payload: { userId: string }) {
     return this.payments.findByUser(payload.userId);

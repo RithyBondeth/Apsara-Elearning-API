@@ -39,11 +39,18 @@ async function bootstrap() {
   // Set global prefix
   app.setGlobalPrefix('api/v1/internal');
 
-  // Enable CORS
+  // Enable CORS — restrict via CORS_ORIGINS (comma-separated); '*' if unset.
+  const corsOrigins = configService.get<string>('cors.origins');
+  const origin = corsOrigins
+    ? corsOrigins.split(',').map((o) => o.trim()).filter(Boolean)
+    : '*';
+  if (origin === '*') {
+    logger.warn('CORS is open to all origins — set CORS_ORIGINS to restrict.');
+  }
   app.enableCors({
-    origin: '*',
+    origin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    credentials: origin !== '*',
   });
 
   // Set up validation pipe

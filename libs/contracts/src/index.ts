@@ -30,5 +30,6 @@ export * from './dtos/ai/conversation.dto';
 export * from './dtos/ai/message.dto';
 export * from './dtos/subscription/plan.dto';
 export * from './dtos/subscription/subscribe.dto';
+export * from './dtos/subscription/payment.dto';
 export * from './constants/domain/database.constant';
 export * from './constants/domain/email.constant';

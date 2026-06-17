@@ -64,63 +64,45 @@ export class RegisterService {
       Date.now() + ms(refreshExpiresStr as any),
     );
 
+    let accessToken: string;
+    let refreshToken: string;
     try {
-      return await this.db.transaction(async (tx) => {
-        // 3. Create user
-        const [newUser] = await tx
-          .insert(user)
-          .values({
-            email,
-            password: hashedPassword,
-            firstName,
-            lastName,
-            gender,
-            phone,
-            dateOfBirth:
-              dateOfBirth instanceof Date
-                ? dateOfBirth.toISOString().split('T')[0]
-                : dateOfBirth,
-            emailVerificationToken,
-            emailVerificationTokenExpiresAt,
-          })
-          .returning();
-
-        // 4. Generate tokens
-        const jwtPayload: IJWTPayload = {
-          id: newUser.id,
-          info: newUser.email,
-          isAdmin: newUser.isAdmin,
-        };
-
-        const [accessToken, refreshToken] = await Promise.all([
-          this.jwtService.generateToken(jwtPayload),
-          this.jwtService.generateRefreshToken(newUser.id),
-        ]);
-
-        // 5. Update user with refresh token
-        await tx
-          .update(user)
-          .set({
-            refreshToken,
-            refreshTokenExpiresAt,
-          })
-          .where(eq(user.id, newUser.id));
-
-        // 6. Send email verification (Inside transaction to ensure token delivery if committed)
-        // Warning: If email service is slow, it blocks the DB transaction.
-        await this.emailService.sendVerificationEmail(
+      // 3. Create the user + issue tokens. The neon-http driver has no
+      // interactive transactions, so these run as sequential auto-committed
+      // statements (the unique email constraint still guards duplicates).
+      const [newUser] = await this.db
+        .insert(user)
+        .values({
           email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          gender,
+          phone,
+          dateOfBirth, // 'YYYY-MM-DD' string (validated by @IsDateString)
           emailVerificationToken,
-        );
+          emailVerificationTokenExpiresAt,
+        })
+        .returning();
 
-        this.logger.log(`User registered: ${email}`);
+      const jwtPayload: IJWTPayload = {
+        id: newUser.id,
+        info: newUser.email,
+        isAdmin: newUser.isAdmin,
+      };
 
-        return new RegisterResponseDTO({
-          message: 'User registered successfully',
-          accessToken,
-          refreshToken,
-        });
-      });
+      const [access, refresh] = await Promise.all([
+        this.jwtService.generateToken(jwtPayload),
+        this.jwtService.generateRefreshToken(newUser.id),
+      ]);
+
+      await this.db
+        .update(user)
+        .set({ refreshToken: refresh, refreshTokenExpiresAt })
+        .where(eq(user.id, newUser.id));
+
+      accessToken = access;
+      refreshToken = refresh;
     } catch (error) {
       this.logger.error(`Registration failed for ${email}:`, error);
 
@@ -135,5 +117,26 @@ export class RegisterService {
       if (error instanceof RpcException) throw error;
       throw new RpcInternalException('An error occurred during registration');
     }
+
+    // 4. Send the verification email AFTER the transaction commits — best
+    // effort, so a slow/failing email provider can't roll back the new user.
+    try {
+      await this.emailService.sendVerificationEmail(
+        email,
+        emailVerificationToken,
+      );
+    } catch (error) {
+      this.logger.error(
+        `User ${email} created, but the verification email failed to send`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
+
+    this.logger.log(`User registered: ${email}`);
+    return new RegisterResponseDTO({
+      message: 'User registered successfully',
+      accessToken,
+      refreshToken,
+    });
   }
 }

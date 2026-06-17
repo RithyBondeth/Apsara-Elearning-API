@@ -54,4 +54,19 @@ export default () => ({
     url: process.env.JUDGE0_URL,
     token: process.env.JUDGE0_TOKEN,
   },
+
+  // CORS — comma-separated allowed origins; falls back to "*" if unset
+  cors: {
+    origins: process.env.CORS_ORIGINS,
+  },
+
+  // Payment provider webhook shared secret — optional (skips check if unset)
+  webhook: {
+    secret: process.env.WEBHOOK_SECRET,
+  },
+
+  // Redis — optional; rate limiting uses it across replicas when set
+  redis: {
+    url: process.env.REDIS_URL,
+  },
 });

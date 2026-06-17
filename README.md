@@ -123,9 +123,9 @@ quiz, a coding challenge, and a "First Steps" badge.
 | **Modules** | `/courses/:courseId/modules` (POST, GET) · `PATCH /…/modules/reorder` · `PATCH/DELETE /…/modules/:id` |
 | **Lessons** | `/modules/:moduleId/lessons` (POST, GET, GET `:id`) · `PATCH /…/lessons/reorder` · `PATCH/DELETE /…/lessons/:id` |
 | **Users / Badges** | `GET /users`, `GET/DELETE /users/:id` · `/badges` CRUD · `POST /badges/:id/award/:userId` |
+| **Plans / Payments** | `/plans` CRUD · `POST /payments` (manual record) |
 | **Quiz authoring** | `/lessons/:lessonId/quizzes`, `/quizzes/:id`, `/quizzes/:quizId/questions`, `PATCH /questions/reorder`, `/questions/:id`, `/questions/:questionId/options`, `/options/:id` |
 | **Challenge authoring** | `/lessons/:lessonId/challenges`, `/challenges/:id`, `/challenges/:challengeId/test-cases`, `/test-cases/:id` |
-| **Plans** | full CRUD under `/plans` |
 
 ## Gamification
 
@@ -147,6 +147,9 @@ completion only. Crossing a badge's `xpRequired` auto-awards it.
 | `ANTHROPIC_API_KEY` | — | enables the real Claude tutor; **mock replies without it** |
 | `ANTHROPIC_MODEL` | — | default `claude-opus-4-8` |
 | `JUDGE0_URL` / `JUDGE0_TOKEN` | — | enables real code execution; **mock grading without it** |
+| `CORS_ORIGINS` | — | comma-separated allowed origins; **`*` (open) if unset** |
+| `WEBHOOK_SECRET` | — | shared secret for the payment webhook (`x-webhook-secret`); check skipped if unset |
+| `REDIS_URL` | — | distributed rate limiting across replicas; in-memory if unset |
 
 > **Mock modes:** without `ANTHROPIC_API_KEY` the AI tutor returns canned replies,
 > and without `JUDGE0_URL` code grading uses a placeholder (a test passes when its
@@ -156,8 +159,10 @@ completion only. Crossing a badge's `xpRequired` auto-awards it.
 
 Schema lives in `libs/database/src/schemas/**`. The dev workflow is **`db:push`**
 (`npm run db:push`) — `drizzle/` holds a generated migration baseline
-(`npm run db:generate` / `db:migrate` for migration-based flows). `npm run db:studio`
-opens Drizzle Studio.
+(`npm run db:generate` / `db:migrate` for migration-based flows). On a database
+created via `db:push`, run **`npm run db:baseline`** once to mark that baseline
+as already-applied so `db:migrate` becomes truthful (a no-op for the baseline,
+applying only future migrations). `npm run db:studio` opens Drizzle Studio.
 
 ## Tooling
 

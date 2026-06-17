@@ -33,7 +33,16 @@ async function bootstrap() {
 
   app.useLogger(logger);
   app.setGlobalPrefix('admin');
-  app.enableCors();
+
+  // CORS — restrict via CORS_ORIGINS (comma-separated); '*' if unset.
+  const corsOrigins = configService.get<string>('cors.origins');
+  const origin = corsOrigins
+    ? corsOrigins.split(',').map((o) => o.trim()).filter(Boolean)
+    : '*';
+  if (origin === '*') {
+    logger.warn('CORS is open to all origins — set CORS_ORIGINS to restrict.');
+  }
+  app.enableCors({ origin, credentials: origin !== '*' });
 
   app.useGlobalPipes(
     new ValidationPipe({

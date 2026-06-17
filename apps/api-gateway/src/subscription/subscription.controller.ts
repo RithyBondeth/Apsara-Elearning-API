@@ -12,8 +12,9 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { SUBSCRIPTION_SERVICE, SubscribeRequestDTO } from '@app/contracts';
-import { CurrentUser, JwtAuthGuard } from '@app/common';
+import { CurrentUser, JwtAuthGuard, WebhookGuard } from '@app/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { rpcCall } from '../utils/rpc-call';
 
 @ApiTags('Subscription')
@@ -36,9 +37,10 @@ export class SubscriptionController {
     });
   }
 
-  // ---- Provider callback (no auth — verify signature in a real integration) ----
+  // ---- Provider callback — verified via shared secret (WebhookGuard) ----
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(WebhookGuard)
   webhook(@Body() body: { transactionId?: string; status?: string }) {
     return rpcCall(
       this.client,
@@ -50,6 +52,7 @@ export class SubscriptionController {
   // ---- Authenticated user actions ----
   @Post('subscribe')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   subscribe(

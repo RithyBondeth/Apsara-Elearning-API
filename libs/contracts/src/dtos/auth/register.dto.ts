@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsDate,
+  IsDateString,
   IsEmail,
   IsNotEmpty,
   IsString,
@@ -39,9 +39,9 @@ export class RegisterRequestDTO {
     type: String,
     format: 'date',
   })
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
-  dateOfBirth: Date;
+  dateOfBirth: string;
 
   @ApiProperty({ example: '0123456789' })
   @IsString()
