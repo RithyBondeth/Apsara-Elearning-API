@@ -8,7 +8,7 @@ docker compose up -d
 for _ in $(seq 1 30); do nc -z localhost 5672 2>/dev/null && break; sleep 1; done
 
 # Consumers before gateways so message handlers are ready.
-APPS=(auth-service user-service course-service assessment-service ai-service api-gateway admin-gateway)
+APPS=(auth-service user-service course-service assessment-service ai-service subscription-service api-gateway admin-gateway)
 PIDS=()
 for app in "${APPS[@]}"; do
   if [[ ! -f "dist/apps/$app/main.js" ]]; then

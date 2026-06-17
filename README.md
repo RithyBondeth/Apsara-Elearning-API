@@ -26,6 +26,7 @@ client ──► admin-gateway (:2222) ──┤──► auth-service
 | `course-service` | RMQ consumer | Categories, courses, modules, lessons, enrollment, progress |
 | `assessment-service` | RMQ consumer | Quizzes (auto-graded) + coding challenges (Judge0) |
 | `ai-service` | RMQ consumer | "Apsara AI" tutor (Anthropic Claude) |
+| `subscription-service` | RMQ consumer | Plans, subscriptions, payments (mock gateway) |
 
 Shared libraries: `@app/common` (config, JWT, guards, email, logger, RabbitMQ,
 RPC exceptions), `@app/contracts` (message patterns + DTOs), `@app/database`
@@ -112,6 +113,7 @@ quiz, a coding challenge, and a "First Steps" badge.
 | **Quiz** 🔒 | `GET /quiz/lesson/:lessonId` · `POST /quiz/:quizId/start` · `POST /quiz/attempt/:attemptId/submit` · `GET /quiz/attempts` · `GET /quiz/attempt/:id[/answers]` |
 | **Challenge** 🔒 | `GET /challenge/lesson/:lessonId` · `GET /challenge/:id[/test-cases]` · `POST /challenge/:id/submit` · `GET /challenge/submissions` · `GET /challenge/submission/:id` |
 | **Apsara AI** 🔒 | `POST/GET /ai/conversations` · `GET/DELETE /ai/conversations/:id` · `POST/GET /ai/conversations/:id/messages` · `GET /ai/usage` · `GET /ai/credits` |
+| **Subscription** | public: `GET /subscription/plans[/:id]`, `POST /subscription/webhook` · 🔒: `POST /subscription/subscribe`, `GET /subscription/me\|check\|history\|payments`, `DELETE /subscription/:id` |
 
 ### admin-gateway (`/admin`, port 2222) — all routes require an **admin** token
 
@@ -123,6 +125,7 @@ quiz, a coding challenge, and a "First Steps" badge.
 | **Users / Badges** | `GET /users`, `GET/DELETE /users/:id` · `/badges` CRUD · `POST /badges/:id/award/:userId` |
 | **Quiz authoring** | `/lessons/:lessonId/quizzes`, `/quizzes/:id`, `/quizzes/:quizId/questions`, `PATCH /questions/reorder`, `/questions/:id`, `/questions/:questionId/options`, `/options/:id` |
 | **Challenge authoring** | `/lessons/:lessonId/challenges`, `/challenges/:id`, `/challenges/:challengeId/test-cases`, `/test-cases/:id` |
+| **Plans** | full CRUD under `/plans` |
 
 ## Gamification
 

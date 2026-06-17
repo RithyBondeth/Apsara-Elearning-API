@@ -6,6 +6,7 @@ import { CourseModule } from './course/course.module';
 import { QuizModule } from './quiz/quiz.module';
 import { AiModule } from './ai/ai.module';
 import { ChallengeModule } from './challenge/challenge.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ChallengeModule } from './challenge/challenge.module';
     QuizModule,
     AiModule,
     ChallengeModule,
+    SubscriptionModule,
   ],
 })
 export class ApiGatewayModule {}
