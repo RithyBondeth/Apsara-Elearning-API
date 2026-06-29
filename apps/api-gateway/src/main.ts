@@ -5,7 +5,7 @@ import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { RpcToHttpExceptionFilter } from '@app/common';
+import { RpcToHttpExceptionFilter, setupSwagger } from '@app/common';
 
 async function bootstrap() {
   // Create application context to get configService
@@ -18,18 +18,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Swagger configuration
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('API GATEWAY')
-    .setDescription('KHODE KH PLATFORM API GATEWAY')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/v1/internal/docs', app, swaggerDocument, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
+  setupSwagger(app, {
+    title: 'API GATEWAY',
+    description: 'KHODE KH PLATFORM API GATEWAY',
+    path: 'api/v1/internal/docs',
   });
 
   // Set up logging

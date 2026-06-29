@@ -10,9 +10,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE } from '@app/contracts';
+import { COURSE_SERVICE, EnrollmentResponseDTO } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { rpcCall } from '../../utils/rpc-call';
 
 @ApiTags('Enrollments')
@@ -26,6 +31,13 @@ export class EnrollmentController {
   ) {}
 
   @Post(':courseId')
+  @ApiOperation({ summary: 'Enroll in a course' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Enrolled successfully',
+    type: EnrollmentResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   enroll(
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
@@ -38,6 +50,12 @@ export class EnrollmentController {
 
   @Delete(':courseId')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Unenroll from a course' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Unenrolled successfully',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   unenroll(
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
@@ -49,6 +67,13 @@ export class EnrollmentController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get current user enrollments' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Enrollments retrieved',
+    type: [EnrollmentResponseDTO],
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   myEnrollments(@CurrentUser('id') userId: string) {
     return rpcCall(
       this.courseClient,
@@ -58,6 +83,12 @@ export class EnrollmentController {
   }
 
   @Get('check/:courseId')
+  @ApiOperation({ summary: 'Check if current user is enrolled in a course' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Enrollment status checked',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   check(
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,

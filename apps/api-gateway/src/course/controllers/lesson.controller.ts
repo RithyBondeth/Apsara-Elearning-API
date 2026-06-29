@@ -1,7 +1,14 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE } from '@app/contracts';
-import { ApiTags } from '@nestjs/swagger';
+import { COURSE_SERVICE, LessonResponseDTO } from '@app/contracts';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { rpcCall } from '../../utils/rpc-call';
 
 // Public read-only access to lessons. Mutations go through the admin gateway.
@@ -14,14 +21,26 @@ export class LessonController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get all lessons for a specific module' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lessons retrieved successfully',
+    type: [LessonResponseDTO],
+  })
   findAllByModule(@Query('moduleId') moduleId: string) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.LESSON_FIND_ALL, {
       moduleId,
     });
   }
 
-  // Must precede `:id` so the literal segment is not captured as an id.
   @Get('slug/:slug')
+  @ApiOperation({ summary: 'Get a lesson by slug' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lesson retrieved successfully',
+    type: LessonResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Lesson not found' })
   findBySlug(@Param('slug') slug: string) {
     return rpcCall(
       this.courseClient,
@@ -31,6 +50,13 @@ export class LessonController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a specific lesson by ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lesson retrieved successfully',
+    type: LessonResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Lesson not found' })
   findOne(@Param('id') id: string) {
     return rpcCall(
       this.courseClient,

@@ -6,3 +6,4 @@ export * from './email';
 export * from './guards';
 export * from './decorators';
 export * from './exceptions';
+export * from './swagger/swagger.config';

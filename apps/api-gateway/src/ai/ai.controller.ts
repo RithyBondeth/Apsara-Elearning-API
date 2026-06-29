@@ -15,9 +15,17 @@ import {
   AI_SERVICE,
   CreateConversationRequestDTO,
   SendMessageRequestDTO,
+  ConversationResponseDTO,
+  MessageResponseDTO,
+  AiUsageResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { rpcCall } from '../utils/rpc-call';
 
 @ApiTags('Apsara AI')
@@ -30,6 +38,13 @@ export class AiController {
   ) {}
 
   @Post('conversations')
+  @ApiOperation({ summary: 'Create a new AI conversation' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Conversation created successfully',
+    type: ConversationResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   createConversation(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateConversationRequestDTO,
@@ -41,6 +56,13 @@ export class AiController {
   }
 
   @Get('conversations')
+  @ApiOperation({ summary: 'List all user conversations' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Conversations retrieved successfully',
+    type: [ConversationResponseDTO],
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   listConversations(@CurrentUser('id') userId: string) {
     return rpcCall(this.aiClient, AI_SERVICE.ACTIONS.CONVERSATION_FIND_ALL, {
       userId,
@@ -48,10 +70,18 @@ export class AiController {
   }
 
   @Get('conversations/:id')
-  getConversation(
-    @CurrentUser('id') userId: string,
-    @Param('id') id: string,
-  ) {
+  @ApiOperation({ summary: 'Get a specific conversation by ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Conversation retrieved successfully',
+    type: ConversationResponseDTO,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Conversation not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  getConversation(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return rpcCall(this.aiClient, AI_SERVICE.ACTIONS.CONVERSATION_FIND_ONE, {
       userId,
       id,
@@ -60,6 +90,16 @@ export class AiController {
 
   @Delete('conversations/:id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a specific conversation' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Conversation deleted successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Conversation not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   deleteConversation(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
@@ -72,6 +112,13 @@ export class AiController {
 
   @Post('conversations/:id/messages')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send a message to a conversation' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Message sent and response received',
+    type: MessageResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   sendMessage(
     @CurrentUser('id') userId: string,
     @Param('id') conversationId: string,
@@ -85,6 +132,13 @@ export class AiController {
   }
 
   @Get('conversations/:id/messages')
+  @ApiOperation({ summary: 'List all messages in a conversation' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Messages retrieved successfully',
+    type: [MessageResponseDTO],
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   listMessages(
     @CurrentUser('id') userId: string,
     @Param('id') conversationId: string,
@@ -96,6 +150,13 @@ export class AiController {
   }
 
   @Get('usage')
+  @ApiOperation({ summary: 'Get user AI usage statistics' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Usage stats retrieved successfully',
+    type: AiUsageResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   usage(@CurrentUser('id') userId: string) {
     return rpcCall(this.aiClient, AI_SERVICE.ACTIONS.USAGE_FIND_BY_USER, {
       userId,
@@ -103,6 +164,12 @@ export class AiController {
   }
 
   @Get('credits')
+  @ApiOperation({ summary: 'Check remaining AI credits' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Credits retrieved successfully',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   credits(@CurrentUser('id') userId: string) {
     return rpcCall(this.aiClient, AI_SERVICE.ACTIONS.USAGE_CHECK_CREDITS, {
       userId,

@@ -13,9 +13,17 @@ import { ClientProxy } from '@nestjs/microservices';
 import {
   ASSESSMENT_SERVICE,
   CreateSubmissionRequestDTO,
+  ChallengeResponseDTO,
+  SubmissionResponseDTO,
+  TestCaseResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { rpcCall } from '../utils/rpc-call';
 
 @ApiTags('Coding Challenges')
@@ -28,14 +36,27 @@ export class ChallengeController {
   ) {}
 
   @Get('lesson/:lessonId')
+  @ApiOperation({ summary: 'Get all challenges for a specific lesson' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Challenges retrieved successfully',
+    type: [ChallengeResponseDTO],
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   findByLesson(@Param('lessonId') lessonId: string) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL, {
       lessonId,
     });
   }
 
-  // Literal segments declared before `:id` so they aren't captured as an id.
   @Get('submissions')
+  @ApiOperation({ summary: 'Get current user submissions' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Submissions retrieved successfully',
+    type: [SubmissionResponseDTO],
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   mySubmissions(@CurrentUser('id') userId: string) {
     return rpcCall(
       this.client,
@@ -45,6 +66,17 @@ export class ChallengeController {
   }
 
   @Get('submission/:id')
+  @ApiOperation({ summary: 'Get a specific submission by ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Submission retrieved successfully',
+    type: SubmissionResponseDTO,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Submission not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   submission(@Param('id') id: string) {
     return rpcCall(
       this.client,
@@ -54,6 +86,17 @@ export class ChallengeController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a specific challenge by ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Challenge retrieved successfully',
+    type: ChallengeResponseDTO,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Challenge not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   async findOne(@Param('id') id: string) {
     const challenge = await rpcCall<Record<string, unknown>>(
       this.client,
@@ -61,13 +104,21 @@ export class ChallengeController {
       { id },
     );
     // Never expose the reference solution to students.
-    delete challenge.solutionCode;
+    if (challenge) {
+      delete challenge.solutionCode;
+    }
     return challenge;
   }
 
   @Get(':id/test-cases')
+  @ApiOperation({ summary: 'Get visible test cases for a challenge' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Test cases retrieved successfully',
+    type: [TestCaseResponseDTO],
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   testCases(@Param('id') id: string) {
-    // Service returns visible (non-hidden) cases only for this payload shape.
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL, {
       challengeId: id,
     });
@@ -75,6 +126,13 @@ export class ChallengeController {
 
   @Post(':id/submit')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Submit a solution for a challenge' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Solution submitted and evaluated',
+    type: SubmissionResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   submit(
     @CurrentUser('id') userId: string,
     @Param('id') challengeId: string,

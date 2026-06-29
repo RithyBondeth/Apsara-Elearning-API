@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AdminGatewayModule } from './admin-gateway.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { RpcToHttpExceptionFilter } from '@app/common';
+import { RpcToHttpExceptionFilter, setupSwagger } from '@app/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -17,18 +17,10 @@ async function bootstrap() {
   const logger = app.get(Logger);
 
   // Swagger configuration
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('ADMIN GATEWAY')
-    .setDescription('KHODE KH PLATFORM ADMIN GATEWAY')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('admin/docs', app, swaggerDocument, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
+  setupSwagger(app, {
+    title: 'ADMIN GATEWAY',
+    description: 'KHODE KH PLATFORM ADMIN GATEWAY',
+    path: 'admin/docs',
   });
 
   app.useLogger(logger);

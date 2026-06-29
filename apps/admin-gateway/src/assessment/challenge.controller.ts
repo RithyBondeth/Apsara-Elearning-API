@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Inject,
   Param,
   Patch,
@@ -17,7 +18,12 @@ import {
   UpdateTestCaseRequestDTO,
 } from '@app/contracts';
 import { rpcCall } from '../utils/rpc-call';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Coding Challenges (Admin)')
 @ApiBearerAuth()
@@ -29,6 +35,8 @@ export class ChallengeController {
 
   // ---- Challenge ----
   @Post('lessons/:lessonId/challenges')
+  @ApiOperation({ summary: 'Create a new coding challenge for a lesson' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Challenge created' })
   create(
     @Param('lessonId') lessonId: string,
     @Body() body: CreateChallengeRequestDTO,
@@ -40,6 +48,8 @@ export class ChallengeController {
   }
 
   @Get('lessons/:lessonId/challenges')
+  @ApiOperation({ summary: 'Get all challenges for a lesson' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Challenges retrieved' })
   findAll(@Param('lessonId') lessonId: string) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL, {
       lessonId,
@@ -47,6 +57,8 @@ export class ChallengeController {
   }
 
   @Get('challenges/:id')
+  @ApiOperation({ summary: 'Get a challenge by ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Challenge retrieved' })
   findOne(@Param('id') id: string) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ONE, {
       id,
@@ -54,6 +66,8 @@ export class ChallengeController {
   }
 
   @Patch('challenges/:id')
+  @ApiOperation({ summary: 'Update a challenge' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Challenge updated' })
   update(@Param('id') id: string, @Body() body: UpdateChallengeRequestDTO) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_UPDATE, {
       id,
@@ -62,6 +76,8 @@ export class ChallengeController {
   }
 
   @Delete('challenges/:id')
+  @ApiOperation({ summary: 'Delete a challenge' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Challenge deleted' })
   remove(@Param('id') id: string) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_DELETE, {
       id,
@@ -70,6 +86,8 @@ export class ChallengeController {
 
   // ---- Test cases ----
   @Post('challenges/:challengeId/test-cases')
+  @ApiOperation({ summary: 'Create a new test case for a challenge' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Test case created' })
   createTestCase(
     @Param('challengeId') challengeId: string,
     @Body() body: CreateTestCaseRequestDTO,
@@ -80,8 +98,9 @@ export class ChallengeController {
     });
   }
 
-  // Admins see hidden test cases too.
   @Get('challenges/:challengeId/test-cases')
+  @ApiOperation({ summary: 'Get all test cases (including hidden) for a challenge' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Test cases retrieved' })
   findTestCases(@Param('challengeId') challengeId: string) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL, {
       challengeId,
@@ -90,6 +109,8 @@ export class ChallengeController {
   }
 
   @Patch('test-cases/:id')
+  @ApiOperation({ summary: 'Update a test case' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Test case updated' })
   updateTestCase(
     @Param('id') id: string,
     @Body() body: UpdateTestCaseRequestDTO,
@@ -101,6 +122,8 @@ export class ChallengeController {
   }
 
   @Delete('test-cases/:id')
+  @ApiOperation({ summary: 'Delete a test case' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Test case deleted' })
   removeTestCase(@Param('id') id: string) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_DELETE, {
       id,

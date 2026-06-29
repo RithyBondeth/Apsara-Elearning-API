@@ -7,15 +7,17 @@ import {
   Param,
   Patch,
   Post,
+  HttpStatus,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
   CreateCourseRequestDTO,
   UpdateCourseRequestDTO,
+  CourseResponseDTO,
 } from '@app/contracts';
 import { rpcCall } from '../utils/rpc-call';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Courses')
 @ApiBearerAuth()
@@ -26,6 +28,12 @@ export class CourseController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new course' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Course created successfully',
+    type: CourseResponseDTO,
+  })
   create(@Body() body: CreateCourseRequestDTO) {
     return rpcCall(
       this.courseClient,
@@ -35,6 +43,12 @@ export class CourseController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all courses' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Return all courses',
+    type: [CourseResponseDTO],
+  })
   findAll() {
     return rpcCall(
       this.courseClient,
@@ -44,6 +58,13 @@ export class CourseController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a course by id' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Return the course',
+    type: CourseResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Course not found' })
   findOne(@Param('id') id: string) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE, {
       id,
@@ -51,6 +72,13 @@ export class CourseController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a course' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Course updated successfully',
+    type: CourseResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Course not found' })
   update(@Param('id') id: string, @Body() body: UpdateCourseRequestDTO) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_UPDATE, {
       id,
@@ -59,6 +87,9 @@ export class CourseController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a course' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Course deleted successfully' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Course not found' })
   remove(@Param('id') id: string) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_DELETE, {
       id,

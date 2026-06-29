@@ -10,7 +10,12 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { rpcCall } from '../utils/rpc-call';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   RegisterRequestDTO,
   RegisterResponseDTO,
@@ -40,6 +45,13 @@ export class AuthController {
 
   @Post('register')
   @Throttle(LOGIN)
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'User registered successfully',
+    type: RegisterResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.CONFLICT, description: 'User already exists' })
   register(
     @Body() registerRequestDTO: RegisterRequestDTO,
   ): Promise<RegisterResponseDTO> {
@@ -53,6 +65,13 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle(LOGIN)
+  @ApiOperation({ summary: 'Login user and return tokens' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Login successful',
+    type: LoginResponseDTO,
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Invalid credentials' })
   login(@Body() loginRequestDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
     return rpcCall<LoginResponseDTO>(
       this.authClient,
@@ -63,6 +82,12 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Tokens refreshed successfully',
+    type: RegisterResponseDTO,
+  })
   refresh(
     @Body() refreshTokenRequestDTO: RefreshTokenRequestDTO,
   ): Promise<RegisterResponseDTO> {
@@ -77,6 +102,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user and invalidate refresh token' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Logged out successfully',
+    type: MessageResponseDTO,
+  })
   logout(@CurrentUser('id') userId: string): Promise<MessageResponseDTO> {
     return rpcCall<MessageResponseDTO>(
       this.authClient,
@@ -87,6 +118,12 @@ export class AuthController {
 
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify user email with token' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Email verified successfully',
+    type: MessageResponseDTO,
+  })
   verifyEmail(
     @Body() verifyEmailRequestDTO: VerifyEmailRequestDTO,
   ): Promise<MessageResponseDTO> {
@@ -100,6 +137,12 @@ export class AuthController {
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   @Throttle(STRICT)
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Verification email sent',
+    type: MessageResponseDTO,
+  })
   resendVerification(
     @Body() resendVerificationRequestDTO: ResendVerificationRequestDTO,
   ): Promise<MessageResponseDTO> {
@@ -113,6 +156,12 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle(STRICT)
+  @ApiOperation({ summary: 'Send password reset link' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Password reset link sent',
+    type: MessageResponseDTO,
+  })
   forgotPassword(
     @Body() forgotPasswordRequestDTO: ForgotPasswordRequestDTO,
   ): Promise<MessageResponseDTO> {
@@ -126,6 +175,12 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @Throttle(STRICT)
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Password reset successfully',
+    type: MessageResponseDTO,
+  })
   resetPassword(
     @Body() resetPasswordRequestDTO: ResetPasswordRequestDTO,
   ): Promise<MessageResponseDTO> {
@@ -140,6 +195,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change password' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Password changed successfully',
+    type: MessageResponseDTO,
+  })
   changePassword(
     @CurrentUser('id') userId: string,
     @Body() changePasswordRequestDTO: ChangePasswordRequestDTO,
