@@ -16,7 +16,7 @@ import {
   CreateConversationRequestDTO,
   SendMessageRequestDTO,
   ConversationResponseDTO,
-  MessageResponseDTO,
+  AiMessageResponseDTO,
   AiUsageResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
@@ -116,7 +116,7 @@ export class AiController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Message sent and response received',
-    type: MessageResponseDTO,
+    type: AiMessageResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   sendMessage(
@@ -136,7 +136,7 @@ export class AiController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Messages retrieved successfully',
-    type: [MessageResponseDTO],
+    type: [AiMessageResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   listMessages(

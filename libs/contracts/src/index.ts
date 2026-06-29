@@ -28,6 +28,7 @@ export * from './dtos/assessment/test-case.dto';
 export * from './dtos/assessment/submission.dto';
 export * from './dtos/ai/conversation.dto';
 export * from './dtos/ai/message.dto';
+export * from './dtos/ai/usage.dto';
 export * from './dtos/subscription/plan.dto';
 export * from './dtos/subscription/subscribe.dto';
 export * from './dtos/subscription/payment.dto';
