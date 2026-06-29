@@ -46,3 +46,32 @@ export class CreatePlanRequestDTO {
 }
 
 export class UpdatePlanRequestDTO extends PartialType(CreatePlanRequestDTO) {}
+
+export class PlanResponseDTO {
+  @ApiProperty({ example: '3c4e5f6d-1a2b-3c4d-5e6f-7a8b9c0d1e2f' })
+  id: string;
+
+  @ApiProperty({ example: 'Pro' })
+  name: string;
+
+  @ApiProperty({ example: 'pro' })
+  slug: string;
+
+  @ApiPropertyOptional({ example: 'Unlimited courses + AI tutor' })
+  description?: string;
+
+  @ApiProperty({ example: 9.99 })
+  price: number;
+
+  @ApiPropertyOptional({ enum: BILLING_PERIODS, example: 'monthly' })
+  billingPeriod?: BillingPeriod;
+
+  @ApiPropertyOptional({ example: 1000 })
+  aiCredits?: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+}

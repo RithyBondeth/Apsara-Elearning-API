@@ -40,7 +40,10 @@ export class ModuleController {
     description: 'Module retrieved successfully',
     type: ModuleResponseDTO,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Module not found' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Module not found',
+  })
   findOne(@Param('id') id: string) {
     return rpcCall(
       this.courseClient,

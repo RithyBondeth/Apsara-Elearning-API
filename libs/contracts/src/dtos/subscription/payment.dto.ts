@@ -44,3 +44,35 @@ export class CreatePaymentRequestDTO {
   @IsNotEmpty()
   status: string;
 }
+
+export class PaymentResponseDTO {
+  @ApiProperty({ example: '9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d' })
+  id: string;
+
+  @ApiProperty({ example: '6f1e7e2a-0c2a-4c1e-9f0a-1b2c3d4e5f6a' })
+  userId: string;
+
+  @ApiPropertyOptional({ example: '7a2f8f3b-1d3b-5d2f-0g1b-2c3d4e5f6a7b' })
+  subscriptionId?: string;
+
+  @ApiProperty({ example: 9.99 })
+  amount: number;
+
+  @ApiPropertyOptional({ example: 'USD' })
+  currency?: string;
+
+  @ApiProperty({ example: 'stripe' })
+  provider: string;
+
+  @ApiProperty({ example: 'pi_3Xyz...' })
+  transactionId: string;
+
+  @ApiProperty({ example: 'succeeded' })
+  status: string;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+}

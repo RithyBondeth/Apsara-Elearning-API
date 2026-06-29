@@ -40,7 +40,10 @@ export class LessonController {
     description: 'Lesson retrieved successfully',
     type: LessonResponseDTO,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Lesson not found' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Lesson not found',
+  })
   findBySlug(@Param('slug') slug: string) {
     return rpcCall(
       this.courseClient,
@@ -56,7 +59,10 @@ export class LessonController {
     description: 'Lesson retrieved successfully',
     type: LessonResponseDTO,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Lesson not found' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Lesson not found',
+  })
   findOne(@Param('id') id: string) {
     return rpcCall(
       this.courseClient,
