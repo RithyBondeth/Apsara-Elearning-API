@@ -17,6 +17,7 @@ export * from './dtos/course/category.dto';
 export * from './dtos/course/course.dto';
 export * from './dtos/course/module.dto';
 export * from './dtos/course/lesson.dto';
+export * from './dtos/course/enrollment.dto';
 export * from './dtos/user/update-user.dto';
 export * from './dtos/user/badge.dto';
 export * from './dtos/assessment/quiz.dto';
