@@ -1,11 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import {
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateChallengeRequestDTO {
   @ApiProperty({ example: 'Sum two numbers' })
@@ -38,3 +32,14 @@ export class CreateChallengeRequestDTO {
 export class UpdateChallengeRequestDTO extends PartialType(
   CreateChallengeRequestDTO,
 ) {}
+
+export class ChallengeResponseDTO extends CreateChallengeRequestDTO {
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  id: string;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  createdAt: Date;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  updatedAt: Date;
+}
