@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class SendMessageRequestDTO {
   @ApiProperty({ example: 'How do I write a for loop in JavaScript?' })
@@ -7,6 +13,22 @@ export class SendMessageRequestDTO {
   @IsNotEmpty()
   @MaxLength(8000)
   content: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'anthropic',
+    enum: ['anthropic', 'openai', 'deepseek', 'gemini'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['anthropic', 'openai', 'deepseek', 'gemini'])
+  provider?: 'anthropic' | 'openai' | 'deepseek' | 'gemini';
+
+  @ApiProperty({ required: false, example: 'claude-opus-4-8' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  model?: string;
 }
 
 export class AiMessageResponseDTO {
@@ -24,4 +46,10 @@ export class AiMessageResponseDTO {
 
   @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty({ required: false, example: 'anthropic' })
+  provider?: string;
+
+  @ApiProperty({ required: false, example: 'claude-opus-4-8' })
+  model?: string;
 }

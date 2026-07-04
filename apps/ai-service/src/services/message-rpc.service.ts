@@ -5,7 +5,11 @@ import { aiMessages } from '@app/database/schemas/ai/ai-message.schema';
 import { aiConversations } from '@app/database/schemas/ai/ai-conversation.schema';
 import { aiUsageTracking } from '@app/database/schemas/ai/ai-usage-tracking.schema';
 import { DRIZZLE } from '@app/contracts';
-import { AnthropicService, ChatTurn } from '../anthropic/anthropic.service';
+import { IChatTurn } from '@app/contracts/interfaces/ai/ai-service.interface';
+import {
+  AiGatewayChatOptions,
+  AiGatewayService,
+} from '../providers/ai-gateway.service';
 import { APSARA_SYSTEM_PROMPT } from '../anthropic/system-prompt';
 import { ConversationRpcService } from './conversation-rpc.service';
 
@@ -15,7 +19,7 @@ export class MessageRpcService {
 
   constructor(
     @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
-    private readonly anthropic: AnthropicService,
+    private readonly ai: AiGatewayService,
     private readonly conversations: ConversationRpcService,
   ) {}
 
@@ -27,13 +31,18 @@ export class MessageRpcService {
       .orderBy(aiMessages.createdAt);
   }
 
-  async send(userId: string, conversationId: string, content: string) {
+  async send(
+    userId: string,
+    conversationId: string,
+    content: string,
+    options?: AiGatewayChatOptions,
+  ) {
     // Ownership check (throws 404 if not the user's conversation).
     await this.conversations.findOneOwned(userId, conversationId);
 
     // Build history from prior turns + the new user message.
     const prior = await this.findByConversation(conversationId);
-    const history: ChatTurn[] = [
+    const history: IChatTurn[] = [
       ...prior
         .filter((m) => m.role === 'user' || m.role === 'assistant')
         .map((m) => ({
@@ -48,8 +57,7 @@ export class MessageRpcService {
       .insert(aiMessages)
       .values({ conversationId, role: 'user', content });
 
-    // Call Claude (or mock).
-    const result = await this.anthropic.chat(APSARA_SYSTEM_PROMPT, history);
+    const result = await this.ai.chat(APSARA_SYSTEM_PROMPT, history, options);
 
     // Persist the assistant reply.
     const [assistant] = await this.db
@@ -60,6 +68,8 @@ export class MessageRpcService {
         content: result.text,
         promptTokens: result.promptTokens,
         completionTokens: result.completionTokens,
+        provider: result.provider,
+        model: result.model,
       })
       .returning();
 
@@ -76,10 +86,14 @@ export class MessageRpcService {
       promptTokens: result.promptTokens,
       completionTokens: result.completionTokens,
       totalTokens: result.promptTokens + result.completionTokens,
+      provider: result.provider,
+      model: result.model,
     });
 
     this.logger.log(
-      `Reply in ${conversationId} (${result.mock ? 'mock' : 'live'}, ${result.completionTokens} out tokens)`,
+      `Reply in ${conversationId} (${result.provider}/${result.model}, ${
+        result.mock ? 'mock' : 'live'
+      }, ${result.completionTokens} out tokens)`,
     );
     return { message: assistant, mock: result.mock };
   }

@@ -144,14 +144,18 @@ completion only. Crossing a badge's `xpRequired` auto-awards it.
 | `RABBITMQ_URL` + `*_QUEUE` | ✅ | broker URL + one queue name per service |
 | `API_GATEWAY_PORT` / `ADMIN_GATEWAY_PORT` | — | default `1111` / `2222` |
 | `RESEND_API_KEY` / `EMAIL_FROM` | ✅ | transactional email (verification, reset) |
-| `ANTHROPIC_API_KEY` | — | enables the real Claude tutor; **mock replies without it** |
-| `ANTHROPIC_MODEL` | — | default `claude-opus-4-8` |
+| `AI_PROVIDER` | — | default provider: `anthropic`, `openai`, `deepseek`, or `gemini`; default `anthropic` |
+| `AI_MODEL` / `AI_MAX_TOKENS` | — | optional global model override / max output tokens |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | — | enables Claude; **mock replies without key** |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` | — | enables OpenAI-compatible GPT chat |
+| `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | — | enables DeepSeek chat |
+| `GEMINI_API_KEY` / `GEMINI_MODEL` | — | enables Gemini chat |
 | `JUDGE0_URL` / `JUDGE0_TOKEN` | — | enables real code execution; **mock grading without it** |
 | `CORS_ORIGINS` | — | comma-separated allowed origins; **`*` (open) if unset** |
 | `WEBHOOK_SECRET` | — | shared secret for the payment webhook (`x-webhook-secret`); check skipped if unset |
 | `REDIS_URL` | — | distributed rate limiting across replicas; in-memory if unset |
 
-> **Mock modes:** without `ANTHROPIC_API_KEY` the AI tutor returns canned replies,
+> **Mock modes:** without the selected provider API key the AI tutor returns canned replies,
 > and without `JUDGE0_URL` code grading uses a placeholder (a test passes when its
 > expected output appears in the source). Both become real once the key/URL is set.
 

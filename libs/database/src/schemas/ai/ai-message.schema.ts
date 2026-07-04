@@ -12,5 +12,7 @@ export const aiMessages = pgTable('ai_messages', {
   content: text('content'),
   promptTokens: integer('prompt_tokens'),
   completionTokens: integer('completion_tokens'),
+  provider: varchar('provider', { length: 50 }),
+  model: varchar('model', { length: 100 }),
   ...timestamps,
 });

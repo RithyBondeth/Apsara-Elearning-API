@@ -128,6 +128,8 @@ export class AiController {
       userId,
       conversationId,
       content: dto.content,
+      provider: dto.provider,
+      model: dto.model,
     });
   }
 

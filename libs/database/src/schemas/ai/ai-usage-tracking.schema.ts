@@ -12,5 +12,7 @@ export const aiUsageTracking = pgTable('ai_usage_tracking', {
   promptTokens: integer('prompt_tokens'),
   completionTokens: integer('completion_tokens'),
   totalTokens: integer('total_tokens'),
+  provider: varchar('provider', { length: 50 }),
+  model: varchar('model', { length: 100 }),
   ...timestamps,
 });

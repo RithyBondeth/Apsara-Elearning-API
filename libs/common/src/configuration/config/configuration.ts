@@ -43,10 +43,22 @@ export default () => ({
     from: process.env.EMAIL_FROM,
   },
 
-  // AI (Anthropic / Claude)
+  // AI
   ai: {
+    provider: process.env.AI_PROVIDER ?? 'anthropic',
+    model: process.env.AI_MODEL ?? process.env.ANTHROPIC_MODEL,
+    maxTokens: parseInt(process.env.AI_MAX_TOKENS ?? '4096', 10),
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    model: process.env.ANTHROPIC_MODEL ?? 'claude-opus-4-8',
+    anthropicModel: process.env.ANTHROPIC_MODEL,
+    openaiApiKey: process.env.OPENAI_API_KEY,
+    openaiModel: process.env.OPENAI_MODEL,
+    openaiBaseUrl: process.env.OPENAI_BASE_URL,
+    deepseekApiKey: process.env.DEEPSEEK_API_KEY,
+    deepseekModel: process.env.DEEPSEEK_MODEL,
+    deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL,
+    geminiApiKey: process.env.GEMINI_API_KEY,
+    geminiModel: process.env.GEMINI_MODEL,
+    geminiBaseUrl: process.env.GEMINI_BASE_URL,
   },
 
   // Code execution (Judge0) — optional; grading runs in mock mode without it

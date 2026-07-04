@@ -37,9 +37,23 @@ export const validationSchema = Joi.object({
   RESEND_API_KEY: Joi.string().required(),
   EMAIL_FROM: Joi.string().required(),
 
-  // AI (Anthropic) — optional; service runs in mock mode without a key
+  // AI — optional; providers run in mock mode without their keys
+  AI_PROVIDER: Joi.string()
+    .valid('anthropic', 'openai', 'deepseek', 'gemini')
+    .default('anthropic'),
+  AI_MODEL: Joi.string().optional(),
+  AI_MAX_TOKENS: Joi.number().default(4096),
   ANTHROPIC_API_KEY: Joi.string().allow('').optional(),
   ANTHROPIC_MODEL: Joi.string().optional(),
+  OPENAI_API_KEY: Joi.string().allow('').optional(),
+  OPENAI_MODEL: Joi.string().optional(),
+  OPENAI_BASE_URL: Joi.string().uri().optional(),
+  DEEPSEEK_API_KEY: Joi.string().allow('').optional(),
+  DEEPSEEK_MODEL: Joi.string().optional(),
+  DEEPSEEK_BASE_URL: Joi.string().uri().optional(),
+  GEMINI_API_KEY: Joi.string().allow('').optional(),
+  GEMINI_MODEL: Joi.string().optional(),
+  GEMINI_BASE_URL: Joi.string().uri().optional(),
 
   // Judge0 code execution — optional; grading runs in mock mode without it
   JUDGE0_URL: Joi.string().allow('').optional(),
