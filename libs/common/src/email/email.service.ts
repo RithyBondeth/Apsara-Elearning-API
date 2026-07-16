@@ -62,10 +62,10 @@ export class EmailService {
   ): Promise<CreateEmailResponse> {
     return this.sendEmail(
       email,
-      'Welcome to KodeKH',
+      'Welcome to Apsara Elearning',
       `
       <h1>Welcome ${name}</h1>
-      <p>Thank you for joining KodeKH.</p>
+      <p>Thank you for joining Apsara Elearning.</p>
       `,
     );
   }

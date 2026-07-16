@@ -1,6 +1,6 @@
-# KodeKH API — Apsara AI
+# Apsara Elearning API — Apsara AI
 
-Backend for **KodeKH / Apsara AI**, a bilingual (English + Khmer) coding-education
+Backend for **Apsara Elearning / Apsara AI**, a bilingual (English + Khmer) coding-education
 platform. It's a **NestJS microservices monorepo**: HTTP gateways talk to backend
 services over **RabbitMQ**, with **Drizzle ORM** on **Neon** (serverless Postgres).
 
@@ -83,8 +83,8 @@ The full, interactive endpoint list lives in Swagger — the tables below are a 
 
 | Account | Email | Password |
 |---------|-------|----------|
-| Admin | `admin@kodekh.com` | `Admin@123` |
-| Student | `student@kodekh.com` | `Student@123` |
+| Admin | `admin@apsara-elearning.com` | `Admin@123` |
+| Student | `student@apsara-elearning.com` | `Student@123` |
 
 …plus a published "Intro to JavaScript" course with a module, two lessons, a
 quiz, a coding challenge, and a "First Steps" badge.

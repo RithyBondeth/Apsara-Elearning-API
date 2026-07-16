@@ -34,7 +34,7 @@ export class UpdateUserRequestDTO {
 }
 
 export class UpdateAvatarRequestDTO {
-  @ApiProperty({ example: 'https://cdn.kodekh.com/avatars/abc.png' })
+  @ApiProperty({ example: 'https://cdn.apsaraelearning.com/avatars/abc.png' })
   @IsString()
   @IsNotEmpty()
   avatar: string;

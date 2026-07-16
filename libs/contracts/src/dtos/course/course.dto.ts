@@ -38,7 +38,7 @@ export class CreateCourseRequestDTO {
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.kodekh.com/js.png' })
+  @ApiPropertyOptional({ example: 'https://cdn.apsaraelearning.com/js.png' })
   @IsString()
   @IsOptional()
   thumbnail?: string;

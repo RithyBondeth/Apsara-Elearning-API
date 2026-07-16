@@ -7,8 +7,8 @@ import bcrypt from 'bcrypt';
 const sql = neon(process.env.DATABASE_URL);
 const saltRounds = parseInt(process.env.BCRYPT_SALT ?? '10', 10);
 
-const ADMIN = { email: 'admin@kodekh.com', password: 'Admin@123' };
-const STUDENT = { email: 'student@kodekh.com', password: 'Student@123' };
+const ADMIN = { email: 'admin@apsara-elearning.com', password: 'Admin@123' };
+const STUDENT = { email: 'student@apsara-elearning.com', password: 'Student@123' };
 const COURSE_SLUG = 'intro-to-javascript';
 const CATEGORY_SLUG = 'web-development';
 const BADGE_NAME = 'First Steps';
