@@ -1,89 +1,91 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { eq } from 'drizzle-orm';
-import { categories } from '@app/database/schemas/course/category.schema';
+import { subjects } from '@app/database/schemas/course/subject.schema';
 import {
-  CreateCategoryRequestDTO,
+  CreateSubjectRequestDTO,
   DRIZZLE,
-  UpdateCategoryRequestDTO,
+  UpdateSubjectRequestDTO,
 } from '@app/contracts';
 import { RpcConflictException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class CategoryRpcService {
-  private readonly logger = new Logger(CategoryRpcService.name);
+export class SubjectRpcService {
+  private readonly logger = new Logger(SubjectRpcService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
 
-  async create(dto: CreateCategoryRequestDTO) {
+  async create(dto: CreateSubjectRequestDTO) {
     await this.ensureSlugAvailable(dto.slug);
     const [created] = await this.db
-      .insert(categories)
+      .insert(subjects)
       .values({
         name: dto.name,
+        nameKm: dto.nameKm,
         slug: dto.slug,
         description: dto.description,
+        descriptionKm: dto.descriptionKm,
         icon: dto.icon,
       })
       .returning();
-    this.logger.log(`Category created: ${created.slug}`);
+    this.logger.log(`Subject created: ${created.slug}`);
     return created;
   }
 
   findAll() {
-    return this.db.select().from(categories).orderBy(categories.name);
+    return this.db.select().from(subjects).orderBy(subjects.name);
   }
 
   async findOne(id: string) {
     const [found] = await this.db
       .select()
-      .from(categories)
-      .where(eq(categories.id, id))
+      .from(subjects)
+      .where(eq(subjects.id, id))
       .limit(1);
-    if (!found) throw new RpcNotFoundException('Category not found');
+    if (!found) throw new RpcNotFoundException('Subject not found');
     return found;
   }
 
   async findBySlug(slug: string) {
     const [found] = await this.db
       .select()
-      .from(categories)
-      .where(eq(categories.slug, slug))
+      .from(subjects)
+      .where(eq(subjects.slug, slug))
       .limit(1);
-    if (!found) throw new RpcNotFoundException('Category not found');
+    if (!found) throw new RpcNotFoundException('Subject not found');
     return found;
   }
 
-  async update(id: string, dto: UpdateCategoryRequestDTO) {
+  async update(id: string, dto: UpdateSubjectRequestDTO) {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
     const [updated] = await this.db
-      .update(categories)
+      .update(subjects)
       .set({ ...dto, updatedAt: new Date() })
-      .where(eq(categories.id, id))
+      .where(eq(subjects.id, id))
       .returning();
-    this.logger.log(`Category updated: ${id}`);
+    this.logger.log(`Subject updated: ${id}`);
     return updated;
   }
 
   async remove(id: string) {
     const [deleted] = await this.db
-      .delete(categories)
-      .where(eq(categories.id, id))
+      .delete(subjects)
+      .where(eq(subjects.id, id))
       .returning();
-    if (!deleted) throw new RpcNotFoundException('Category not found');
-    this.logger.log(`Category deleted: ${id}`);
-    return { message: 'Category deleted successfully', id };
+    if (!deleted) throw new RpcNotFoundException('Subject not found');
+    this.logger.log(`Subject deleted: ${id}`);
+    return { message: 'Subject deleted successfully', id };
   }
 
   private async ensureSlugAvailable(slug: string, exceptId?: string) {
     const [existing] = await this.db
       .select()
-      .from(categories)
-      .where(eq(categories.slug, slug))
+      .from(subjects)
+      .where(eq(subjects.slug, slug))
       .limit(1);
     if (existing && existing.id !== exceptId) {
-      throw new RpcConflictException('Category with this slug already exists');
+      throw new RpcConflictException('Subject with this slug already exists');
     }
   }
 }

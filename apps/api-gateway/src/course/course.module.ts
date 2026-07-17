@@ -2,7 +2,9 @@ import { JwtModule, RabbitmqModule } from '@app/common';
 import { Module } from '@nestjs/common';
 import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
 import { CourseController } from './controllers/course.controller';
-import { CategoryController } from './controllers/category.controller';
+import { SubjectController } from './controllers/subject.controller';
+import { ProgrammingCategoryController } from './controllers/programming-category.controller';
+import { StructureController } from './controllers/structure.controller';
 import { LessonController } from './controllers/lesson.controller';
 import { EnrollmentController } from './controllers/enrollment.controller';
 import { LessonProgressController } from './controllers/lesson-progress.controller';
@@ -20,7 +22,9 @@ import { ModuleController } from './controllers/module.controller';
   ],
   controllers: [
     CourseController,
-    CategoryController,
+    SubjectController,
+    ProgrammingCategoryController,
+    StructureController,
     LessonController,
     ModuleController,
     EnrollmentController,

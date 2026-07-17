@@ -47,9 +47,7 @@ export class AuthServiceController {
   }
 
   @MessagePattern(AUTH_SERVICE.ACTIONS.LOGOUT)
-  logout(
-    @Payload() payload: { userId: string },
-  ): Promise<MessageResponseDTO> {
+  logout(@Payload() payload: { userId: string }): Promise<MessageResponseDTO> {
     return this.tokenService.logout(payload.userId);
   }
 

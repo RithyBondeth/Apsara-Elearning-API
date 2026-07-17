@@ -1,13 +1,45 @@
 export const COURSE_SERVICE = {
   NAME: 'COURSE_SERVICE',
   ACTIONS: {
-    // Categories
-    CATEGORY_CREATE: 'course.category.create',
-    CATEGORY_FIND_ALL: 'course.category.find_all',
-    CATEGORY_FIND_ONE: 'course.category.find_one',
-    CATEGORY_FIND_BY_SLUG: 'course.category.find_by_slug',
-    CATEGORY_UPDATE: 'course.category.update',
-    CATEGORY_DELETE: 'course.category.delete',
+    // Subjects (K–12 taxonomy)
+    SUBJECT_CREATE: 'course.subject.create',
+    SUBJECT_FIND_ALL: 'course.subject.find_all',
+    SUBJECT_FIND_ONE: 'course.subject.find_one',
+    SUBJECT_FIND_BY_SLUG: 'course.subject.find_by_slug',
+    SUBJECT_UPDATE: 'course.subject.update',
+    SUBJECT_DELETE: 'course.subject.delete',
+
+    // Grade levels (K–12, Grade 1–12)
+    GRADE_LEVEL_CREATE: 'course.grade_level.create',
+    GRADE_LEVEL_FIND_ALL: 'course.grade_level.find_all',
+    GRADE_LEVEL_FIND_ONE: 'course.grade_level.find_one',
+    GRADE_LEVEL_UPDATE: 'course.grade_level.update',
+    GRADE_LEVEL_DELETE: 'course.grade_level.delete',
+
+    // Faculties (university)
+    FACULTY_CREATE: 'course.faculty.create',
+    FACULTY_FIND_ALL: 'course.faculty.find_all',
+    FACULTY_FIND_ONE: 'course.faculty.find_one',
+    FACULTY_FIND_BY_SLUG: 'course.faculty.find_by_slug',
+    FACULTY_UPDATE: 'course.faculty.update',
+    FACULTY_DELETE: 'course.faculty.delete',
+
+    // Majors (university)
+    MAJOR_CREATE: 'course.major.create',
+    MAJOR_FIND_ALL: 'course.major.find_all', // optional ?facultyId
+    MAJOR_FIND_ONE: 'course.major.find_one',
+    MAJOR_FIND_BY_SLUG: 'course.major.find_by_slug',
+    MAJOR_UPDATE: 'course.major.update',
+    MAJOR_DELETE: 'course.major.delete',
+
+    // Programming categories (programming track taxonomy)
+    PROGRAMMING_CATEGORY_CREATE: 'course.programming_category.create',
+    PROGRAMMING_CATEGORY_FIND_ALL: 'course.programming_category.find_all',
+    PROGRAMMING_CATEGORY_FIND_ONE: 'course.programming_category.find_one',
+    PROGRAMMING_CATEGORY_FIND_BY_SLUG:
+      'course.programming_category.find_by_slug',
+    PROGRAMMING_CATEGORY_UPDATE: 'course.programming_category.update',
+    PROGRAMMING_CATEGORY_DELETE: 'course.programming_category.delete',
 
     // Courses
     COURSE_CREATE: 'course.course.create',
@@ -15,6 +47,9 @@ export const COURSE_SERVICE = {
     COURSE_FIND_PUBLISHED: 'course.course.find_published', // published only (public)
     COURSE_FIND_ONE: 'course.course.find_one',
     COURSE_FIND_BY_SLUG: 'course.course.find_by_slug',
+    COURSE_FIND_BY_SUBJECT: 'course.course.find_by_subject',
+    COURSE_FIND_BY_GRADE: 'course.course.find_by_grade',
+    COURSE_FIND_BY_MAJOR: 'course.course.find_by_major',
     COURSE_FIND_BY_CATEGORY: 'course.course.find_by_category',
     COURSE_UPDATE: 'course.course.update',
     COURSE_DELETE: 'course.course.delete',

@@ -46,8 +46,7 @@ export class AttemptRpcController {
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_ANSWER_FIND_ALL)
   findAnswers(@Payload() payload: string | { attemptId: string }) {
-    const attemptId =
-      typeof payload === 'string' ? payload : payload.attemptId;
+    const attemptId = typeof payload === 'string' ? payload : payload.attemptId;
     return this.attempts.findAnswers(attemptId);
   }
 }

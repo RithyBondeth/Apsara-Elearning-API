@@ -9,8 +9,9 @@ export const payments = pgTable('payments', {
   userId: uuid('user_id')
     .references(() => user.id, { onDelete: 'cascade' })
     .notNull(),
-  subscriptionId: uuid('subscription_id')
-    .references(() => subscriptions.id, { onDelete: 'set null' }),
+  subscriptionId: uuid('subscription_id').references(() => subscriptions.id, {
+    onDelete: 'set null',
+  }),
   amount: numeric('amount', { precision: 10, scale: 2 }),
   currency: varchar('currency'),
   provider: varchar('provider'),

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateQuizRequestDTO {
   @ApiProperty({ example: 'Variables Quiz' })
@@ -11,6 +11,12 @@ export class CreateQuizRequestDTO {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiPropertyOptional({ example: 25, description: 'XP granted on first pass' })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  xpReward?: number;
 }
 
 export class UpdateQuizRequestDTO extends PartialType(CreateQuizRequestDTO) {}

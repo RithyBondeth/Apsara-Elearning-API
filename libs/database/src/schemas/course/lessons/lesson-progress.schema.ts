@@ -15,7 +15,10 @@ export const lessonProgress = pgTable(
       .references(() => user.id, { onDelete: 'cascade' })
       .notNull(),
     completed: boolean('completed').default(false),
-    completedAt: timestamp('completed_at', { withTimezone: true, mode: 'date' }),
+    completedAt: timestamp('completed_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
     ...timestamps,
   },
   (t) => [unique().on(t.userId, t.lessonId)],

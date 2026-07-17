@@ -32,7 +32,9 @@ export class CreateLessonRequestDTO {
   @IsOptional()
   content?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.apsaraelearning.com/lesson.mp4' })
+  @ApiPropertyOptional({
+    example: 'https://cdn.apsaraelearning.com/lesson.mp4',
+  })
   @IsString()
   @IsOptional()
   videoUrl?: string;

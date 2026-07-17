@@ -4,11 +4,7 @@ import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE, MessageResponseDTO } from '@app/contracts';
-import {
-  EmailService,
-  JwtService,
-  RpcBadRequestException,
-} from '@app/common';
+import { EmailService, JwtService, RpcBadRequestException } from '@app/common';
 import ms from 'ms';
 
 @Injectable()

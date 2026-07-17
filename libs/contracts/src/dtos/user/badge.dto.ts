@@ -1,11 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import {
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateBadgeRequestDTO {
   @ApiProperty({ example: 'First Steps' })

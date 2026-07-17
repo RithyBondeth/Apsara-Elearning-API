@@ -1,8 +1,20 @@
-import { Controller, Delete, Get, Inject, Param, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  HttpStatus,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { USER_SERVICE } from '@app/contracts/constants/services/user-service.constant';
 import { rpcCall } from '../utils/rpc-call';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -29,7 +41,10 @@ export class UserController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a user by id' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'User deleted successfully' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User deleted successfully',
+  })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
   remove(@Param('id') id: string) {
     return rpcCall(this.userClient, USER_SERVICE.ACTIONS.DELETE, { id });

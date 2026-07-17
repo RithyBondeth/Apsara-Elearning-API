@@ -2,7 +2,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { eq } from 'drizzle-orm';
 import { courses } from '@app/database/schemas/course/course.schema';
-import { categories } from '@app/database/schemas/course/category.schema';
+import { subjects } from '@app/database/schemas/course/subject.schema';
+import { gradeLevels } from '@app/database/schemas/course/grade-level.schema';
+import { majors } from '@app/database/schemas/course/major.schema';
+import { programmingCategories } from '@app/database/schemas/course/programming-category.schema';
 import {
   CreateCourseRequestDTO,
   DRIZZLE,
@@ -22,14 +25,20 @@ export class CourseRpcService {
 
   async create(dto: CreateCourseRequestDTO) {
     await this.ensureSlugAvailable(dto.slug);
-    if (dto.categoryId) await this.ensureCategoryExists(dto.categoryId);
+    await this.ensurePlacementExists(dto);
     const [created] = await this.db
       .insert(courses)
       .values({
+        programType: dto.programType,
         title: dto.title,
+        titleKm: dto.titleKm,
         slug: dto.slug,
+        subjectId: dto.subjectId,
+        gradeLevelId: dto.gradeLevelId,
+        majorId: dto.majorId,
         categoryId: dto.categoryId,
         description: dto.description,
+        descriptionKm: dto.descriptionKm,
         thumbnail: dto.thumbnail,
         difficulty: dto.difficulty,
         estimatedHours: dto.estimatedHours,
@@ -72,6 +81,30 @@ export class CourseRpcService {
     return found;
   }
 
+  findBySubject(subjectId: string) {
+    return this.db
+      .select()
+      .from(courses)
+      .where(eq(courses.subjectId, subjectId))
+      .orderBy(courses.createdAt);
+  }
+
+  findByGrade(gradeLevelId: string) {
+    return this.db
+      .select()
+      .from(courses)
+      .where(eq(courses.gradeLevelId, gradeLevelId))
+      .orderBy(courses.createdAt);
+  }
+
+  findByMajor(majorId: string) {
+    return this.db
+      .select()
+      .from(courses)
+      .where(eq(courses.majorId, majorId))
+      .orderBy(courses.createdAt);
+  }
+
   findByCategory(categoryId: string) {
     return this.db
       .select()
@@ -83,7 +116,7 @@ export class CourseRpcService {
   async update(id: string, dto: UpdateCourseRequestDTO) {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
-    if (dto.categoryId) await this.ensureCategoryExists(dto.categoryId);
+    await this.ensurePlacementExists(dto);
     const [updated] = await this.db
       .update(courses)
       .set({ ...dto, updatedAt: new Date() })
@@ -129,14 +162,45 @@ export class CourseRpcService {
     }
   }
 
-  private async ensureCategoryExists(categoryId: string) {
-    const [category] = await this.db
-      .select()
-      .from(categories)
-      .where(eq(categories.id, categoryId))
-      .limit(1);
-    if (!category) {
-      throw new RpcBadRequestException('Category does not exist');
+  /** Validates whichever placement FKs the payload carries. */
+  private async ensurePlacementExists(
+    dto: CreateCourseRequestDTO | UpdateCourseRequestDTO,
+  ) {
+    if (dto.subjectId) {
+      const [subject] = await this.db
+        .select({ id: subjects.id })
+        .from(subjects)
+        .where(eq(subjects.id, dto.subjectId))
+        .limit(1);
+      if (!subject) throw new RpcBadRequestException('Subject does not exist');
+    }
+    if (dto.gradeLevelId) {
+      const [gradeLevel] = await this.db
+        .select({ id: gradeLevels.id })
+        .from(gradeLevels)
+        .where(eq(gradeLevels.id, dto.gradeLevelId))
+        .limit(1);
+      if (!gradeLevel) {
+        throw new RpcBadRequestException('Grade level does not exist');
+      }
+    }
+    if (dto.majorId) {
+      const [major] = await this.db
+        .select({ id: majors.id })
+        .from(majors)
+        .where(eq(majors.id, dto.majorId))
+        .limit(1);
+      if (!major) throw new RpcBadRequestException('Major does not exist');
+    }
+    if (dto.categoryId) {
+      const [category] = await this.db
+        .select({ id: programmingCategories.id })
+        .from(programmingCategories)
+        .where(eq(programmingCategories.id, dto.categoryId))
+        .limit(1);
+      if (!category) {
+        throw new RpcBadRequestException('Programming category does not exist');
+      }
     }
   }
 }

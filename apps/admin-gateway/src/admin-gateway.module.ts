@@ -1,7 +1,12 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { AdminGuard, ConfigurationModule, JwtModule, LoggerModule } from '@app/common';
-import { CategoryModule } from './category/category.module';
+import {
+  AdminGuard,
+  ConfigurationModule,
+  JwtModule,
+  LoggerModule,
+} from '@app/common';
+import { TaxonomyModule } from './taxonomy/taxonomy.module';
 import { CourseModule } from './course/course.module';
 import { UserModule } from './user/user.module';
 import { AssessmentModule } from './assessment/assessment.module';
@@ -12,7 +17,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
     ConfigurationModule,
     LoggerModule,
     JwtModule,
-    CategoryModule,
+    TaxonomyModule,
     CourseModule,
     UserModule,
     AssessmentModule,

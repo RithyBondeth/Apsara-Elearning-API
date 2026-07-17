@@ -99,7 +99,9 @@ export class ChallengeController {
   }
 
   @Get('challenges/:challengeId/test-cases')
-  @ApiOperation({ summary: 'Get all test cases (including hidden) for a challenge' })
+  @ApiOperation({
+    summary: 'Get all test cases (including hidden) for a challenge',
+  })
   @ApiResponse({ status: HttpStatus.OK, description: 'Test cases retrieved' })
   findTestCases(@Param('challengeId') challengeId: string) {
     return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL, {

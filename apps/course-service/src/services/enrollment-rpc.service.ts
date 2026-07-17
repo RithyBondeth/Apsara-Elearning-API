@@ -20,7 +20,9 @@ export class EnrollmentRpcService {
       .limit(1);
     if (!course) throw new RpcBadRequestException('Course does not exist');
     if (!course.published) {
-      throw new RpcBadRequestException('Course is not available for enrollment');
+      throw new RpcBadRequestException(
+        'Course is not available for enrollment',
+      );
     }
 
     const existing = await this.findEnrollment(userId, courseId);

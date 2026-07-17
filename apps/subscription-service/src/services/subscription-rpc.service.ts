@@ -34,10 +34,7 @@ export class SubscriptionRpcService {
       .update(subscriptions)
       .set({ active: false, updatedAt: new Date() })
       .where(
-        and(
-          eq(subscriptions.userId, userId),
-          eq(subscriptions.active, true),
-        ),
+        and(eq(subscriptions.userId, userId), eq(subscriptions.active, true)),
       );
 
     const startsAt = new Date();
@@ -105,7 +102,10 @@ export class SubscriptionRpcService {
     return and(
       eq(subscriptions.userId, userId),
       eq(subscriptions.active, true),
-      or(isNull(subscriptions.expiresAt), gt(subscriptions.expiresAt, new Date())),
+      or(
+        isNull(subscriptions.expiresAt),
+        gt(subscriptions.expiresAt, new Date()),
+      ),
     );
   }
 

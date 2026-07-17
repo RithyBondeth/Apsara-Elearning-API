@@ -21,7 +21,7 @@ export function setupSwagger(
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  
+
   SwaggerModule.setup(options.path, app, document, {
     swaggerOptions: {
       persistAuthorization: true,

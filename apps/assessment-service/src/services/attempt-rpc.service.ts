@@ -8,15 +8,11 @@ import { quizQuestions } from '@app/database/schemas/course/quizzes/quiz-questio
 import { quizOptions } from '@app/database/schemas/course/quizzes/quiz-option.schema';
 import { quizAttempts } from '@app/database/schemas/course/quizzes/quiz-attempt.schema';
 import { quizAttemptAnswers } from '@app/database/schemas/course/quizzes/quiz-attempt-answer.schema';
-import {
-  AttemptAnswerDTO,
-  DRIZZLE,
-  USER_SERVICE,
-} from '@app/contracts';
+import { AttemptAnswerDTO, DRIZZLE, USER_SERVICE } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import { gradeAnswer, GradableQuestion } from './graders';
 
 const PASS_THRESHOLD = 70;
-const QUIZ_XP_REWARD = 25;
 
 @Injectable()
 export class AttemptRpcService {
@@ -27,7 +23,7 @@ export class AttemptRpcService {
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
   ) {}
 
-  /** Creates an attempt and returns the quiz with answer-stripped options. */
+  /** Creates an attempt and returns the quiz with all answer keys stripped. */
   async start(userId: string, quizId: string) {
     const [quiz] = await this.db
       .select()
@@ -66,12 +62,16 @@ export class AttemptRpcService {
       quiz,
       questions: questions.map((q) => ({
         id: q.id,
+        type: q.type,
         question: q.question,
+        points: q.points,
         order: q.order,
-        // NOTE: options intentionally exclude `isCorrect`.
+        // NOTE: options intentionally exclude `isCorrect`, and `correctAnswer`
+        // is never returned — only the renderable prompt derived from it.
         options: options
           .filter((o) => o.questionId === q.id)
           .map((o) => ({ id: o.id, answer: o.answer })),
+        prompt: this.buildPrompt(q),
       })),
     };
   }
@@ -90,19 +90,31 @@ export class AttemptRpcService {
       throw new RpcBadRequestException('Attempt has already been submitted');
     }
 
-    // Build the set of correct option ids per question for this quiz.
+    const [quiz] = await this.db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.id, attempt.quizId))
+      .limit(1);
+    if (!quiz) throw new RpcNotFoundException('Quiz not found');
+
     const questions = await this.db
-      .select({ id: quizQuestions.id })
+      .select({
+        id: quizQuestions.id,
+        type: quizQuestions.type,
+        correctAnswer: quizQuestions.correctAnswer,
+        points: quizQuestions.points,
+      })
       .from(quizQuestions)
       .where(eq(quizQuestions.quizId, attempt.quizId));
+    const questionById = new Map<string, GradableQuestion>(
+      questions.map((q) => [q.id, q]),
+    );
     const questionIds = questions.map((q) => q.id);
 
+    // Correct option ids per question, for choice-based types.
     const correctOptions = questionIds.length
       ? await this.db
-          .select({
-            id: quizOptions.id,
-            questionId: quizOptions.questionId,
-          })
+          .select({ id: quizOptions.id, questionId: quizOptions.questionId })
           .from(quizOptions)
           .where(
             and(
@@ -118,27 +130,44 @@ export class AttemptRpcService {
       correctByQuestion.get(o.questionId)!.add(o.id);
     }
 
-    // Grade each submitted answer (one per question, last write wins).
+    // Grade each submitted answer (one per question, first write wins).
     const seen = new Set<string>();
     let correct = 0;
+    let earnedPoints = 0;
+    let needsReview = 0;
     for (const ans of answers) {
       if (seen.has(ans.questionId)) continue;
+      const question = questionById.get(ans.questionId);
+      if (!question) {
+        throw new RpcBadRequestException(
+          `Question ${ans.questionId} does not belong to this quiz`,
+        );
+      }
       seen.add(ans.questionId);
-      const isCorrect =
-        !!ans.selectedOptionId &&
-        (correctByQuestion.get(ans.questionId)?.has(ans.selectedOptionId) ??
-          false);
-      if (isCorrect) correct++;
+
+      const result = gradeAnswer(question, ans, {
+        correctOptionIds: correctByQuestion.get(ans.questionId) ?? new Set(),
+      });
+      if (result.isCorrect) correct++;
+      if (result.requiresReview) needsReview++;
+      earnedPoints += result.pointsAwarded;
+
       await this.db.insert(quizAttemptAnswers).values({
         attemptId,
         questionId: ans.questionId,
         selectedOptionId: ans.selectedOptionId ?? null,
-        isCorrect,
+        answerData: ans.answerData ?? null,
+        isCorrect: result.isCorrect,
+        pointsAwarded: result.pointsAwarded,
+        requiresReview: result.requiresReview,
       });
     }
 
+    // Score is weighted by question points; unanswered questions still count.
+    const totalPoints = questions.reduce((sum, q) => sum + (q.points ?? 1), 0);
     const total = attempt.totalQuestions ?? questionIds.length;
-    const score = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const score =
+      totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
     const passed = score >= PASS_THRESHOLD;
 
     const [updated] = await this.db
@@ -155,14 +184,27 @@ export class AttemptRpcService {
 
     // Award XP only the first time the user passes this quiz.
     let xpAwarded = 0;
-    if (passed && !(await this.hasPassedBefore(userId, attempt.quizId, attemptId))) {
-      xpAwarded = await this.grantXp(userId, QUIZ_XP_REWARD);
+    if (
+      passed &&
+      !(await this.hasPassedBefore(userId, attempt.quizId, attemptId))
+    ) {
+      xpAwarded = await this.grantXp(userId, quiz.xpReward ?? 0);
     }
 
     this.logger.log(
       `User ${userId} submitted attempt ${attemptId}: ${score}% (${passed ? 'pass' : 'fail'})`,
     );
-    return { attempt: updated, score, passed, correctAnswers: correct, total, xpAwarded };
+    return {
+      attempt: updated,
+      score,
+      passed,
+      correctAnswers: correct,
+      total,
+      earnedPoints,
+      totalPoints,
+      needsReview,
+      xpAwarded,
+    };
   }
 
   findAllByUser(userId: string) {
@@ -200,6 +242,32 @@ export class AttemptRpcService {
       .where(eq(quizAttemptAnswers.attemptId, attemptId));
   }
 
+  /**
+   * Builds the renderable half of a question whose prompt lives in
+   * `correctAnswer`. Matching needs its left items plus a shuffled pool of
+   * right items; returning the pairs as authored would hand over the answer.
+   */
+  private buildPrompt(question: {
+    type: string;
+    correctAnswer: unknown;
+  }): Record<string, unknown> | null {
+    if (question.type !== 'matching') return null;
+    const pairs = (question.correctAnswer as { pairs?: unknown })?.pairs;
+    if (!Array.isArray(pairs)) return null;
+    const lefts = pairs.map((p: { left: string }) => p.left);
+    const rights = pairs.map((p: { right: string }) => p.right);
+    return { lefts, rights: this.shuffle(rights) };
+  }
+
+  private shuffle<T>(items: T[]): T[] {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
   private async hasPassedBefore(
     userId: string,
     quizId: string,
@@ -221,6 +289,7 @@ export class AttemptRpcService {
   }
 
   private async grantXp(userId: string, amount: number): Promise<number> {
+    if (amount <= 0) return 0;
     try {
       await firstValueFrom(
         this.userClient

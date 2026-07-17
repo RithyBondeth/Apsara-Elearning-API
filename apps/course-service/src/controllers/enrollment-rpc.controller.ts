@@ -29,8 +29,7 @@ export class EnrollmentRpcController {
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.ENROLLMENT_FIND_BY_COURSE)
   findByCourse(@Payload() payload: string | { courseId: string }) {
-    const courseId =
-      typeof payload === 'string' ? payload : payload.courseId;
+    const courseId = typeof payload === 'string' ? payload : payload.courseId;
     return this.enrollmentRpcService.findByCourse(courseId);
   }
 

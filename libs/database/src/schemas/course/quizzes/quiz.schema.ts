@@ -1,4 +1,4 @@
-import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { id } from '../../common/id.schema';
 import { timestamps } from '../../common/timestap.schema';
 import { lessons } from '../lessons/lesson.schema';
@@ -10,5 +10,6 @@ export const quizzes = pgTable('quizzes', {
     .notNull(),
   title: text('title').notNull(),
   description: text('description'),
+  xpReward: integer('xp_reward').notNull().default(25),
   ...timestamps,
 });

@@ -112,18 +112,48 @@ export class CourseController {
     );
   }
 
-  @Get('category/:categoryId')
-  @ApiOperation({ summary: 'Get courses by category ID' })
+  @Get('subject/:subjectId')
+  @ApiOperation({ summary: 'Get courses by subject ID' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Courses retrieved',
     type: [CourseResponseDTO],
   })
-  findByCategory(@Param('categoryId') categoryId: string) {
+  findBySubject(@Param('subjectId') subjectId: string) {
     return rpcCall(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_CATEGORY,
-      categoryId,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_SUBJECT,
+      subjectId,
+    );
+  }
+
+  @Get('grade/:gradeLevelId')
+  @ApiOperation({ summary: 'Get courses by grade level ID (K–12)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Courses retrieved',
+    type: [CourseResponseDTO],
+  })
+  findByGrade(@Param('gradeLevelId') gradeLevelId: string) {
+    return rpcCall(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_GRADE,
+      gradeLevelId,
+    );
+  }
+
+  @Get('major/:majorId')
+  @ApiOperation({ summary: 'Get courses by major ID (university)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Courses retrieved',
+    type: [CourseResponseDTO],
+  })
+  findByMajor(@Param('majorId') majorId: string) {
+    return rpcCall(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_MAJOR,
+      majorId,
     );
   }
 

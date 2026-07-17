@@ -1,7 +1,17 @@
-import { boolean, integer, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { id } from '../common/id.schema';
 import { timestamps } from '../common/timestap.schema';
-import { categories } from './category.schema';
+import { subjects } from './subject.schema';
+import { gradeLevels } from './grade-level.schema';
+import { majors } from './major.schema';
+import { programmingCategories } from './programming-category.schema';
 
 export const difficultyEnum = pgEnum('difficulty_level', [
   'beginner',
@@ -9,13 +19,34 @@ export const difficultyEnum = pgEnum('difficulty_level', [
   'advanced',
 ]);
 
+export const programTypeEnum = pgEnum('program_type', [
+  'k12',
+  'university',
+  'programming',
+]);
+
 export const courses = pgTable('courses', {
   ...id,
-  categoryId: uuid('category_id').references(() => categories.id, {
+  programType: programTypeEnum('program_type').notNull().default('k12'),
+  // K–12 placement
+  subjectId: uuid('subject_id').references(() => subjects.id, {
+    onDelete: 'set null',
+  }),
+  gradeLevelId: uuid('grade_level_id').references(() => gradeLevels.id, {
+    onDelete: 'set null',
+  }),
+  // University placement
+  majorId: uuid('major_id').references(() => majors.id, {
+    onDelete: 'set null',
+  }),
+  // Programming placement
+  categoryId: uuid('category_id').references(() => programmingCategories.id, {
     onDelete: 'set null',
   }),
   title: text('title').notNull(),
+  titleKm: text('title_km'),
   description: text('description'),
+  descriptionKm: text('description_km'),
   slug: text('slug').notNull().unique(),
   thumbnail: text('thumbnail'),
   difficulty: difficultyEnum('difficulty').notNull().default('beginner'),

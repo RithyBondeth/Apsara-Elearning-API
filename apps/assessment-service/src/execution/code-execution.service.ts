@@ -124,7 +124,8 @@ export class CodeExecutionService {
     return {
       passed,
       total: testCases.length,
-      allPassed: !errorMessage && testCases.length > 0 && passed === testCases.length,
+      allPassed:
+        !errorMessage && testCases.length > 0 && passed === testCases.length,
       executionTimeMs: Date.now() - start,
       errorMessage,
       mock: false,

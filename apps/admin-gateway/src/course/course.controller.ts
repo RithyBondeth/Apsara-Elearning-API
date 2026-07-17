@@ -17,7 +17,12 @@ import {
   CourseResponseDTO,
 } from '@app/contracts';
 import { rpcCall } from '../utils/rpc-call';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Courses')
 @ApiBearerAuth()
@@ -64,7 +69,10 @@ export class CourseController {
     description: 'Return the course',
     type: CourseResponseDTO,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Course not found' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Course not found',
+  })
   findOne(@Param('id') id: string) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE, {
       id,
@@ -78,7 +86,10 @@ export class CourseController {
     description: 'Course updated successfully',
     type: CourseResponseDTO,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Course not found' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Course not found',
+  })
   update(@Param('id') id: string, @Body() body: UpdateCourseRequestDTO) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_UPDATE, {
       id,
@@ -88,8 +99,14 @@ export class CourseController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a course' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Course deleted successfully' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Course not found' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Course deleted successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Course not found',
+  })
   remove(@Param('id') id: string) {
     return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_DELETE, {
       id,

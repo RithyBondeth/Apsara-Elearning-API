@@ -96,9 +96,13 @@ export class LessonProgressController {
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
   ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.PROGRESS_CALCULATE, {
-      userId,
-      courseId,
-    });
+    return rpcCall(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.PROGRESS_CALCULATE,
+      {
+        userId,
+        courseId,
+      },
+    );
   }
 }

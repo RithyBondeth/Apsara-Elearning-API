@@ -4,7 +4,11 @@ import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as userSchema from '../schemas/user/user.schema';
 import * as userBadgeSchema from '../schemas/user/user-badge.schema';
 import * as badgeSchema from '../schemas/user/badge.schema';
-import * as categorySchema from '../schemas/course/category.schema';
+import * as subjectSchema from '../schemas/course/subject.schema';
+import * as gradeLevelSchema from '../schemas/course/grade-level.schema';
+import * as facultySchema from '../schemas/course/faculty.schema';
+import * as majorSchema from '../schemas/course/major.schema';
+import * as programmingCategorySchema from '../schemas/course/programming-category.schema';
 import * as courseSchema from '../schemas/course/course.schema';
 import * as enrollmentSchema from '../schemas/course/enrollment.schema';
 import * as moduleSchema from '../schemas/course/module.schema';
@@ -29,7 +33,11 @@ const schema = {
   ...userSchema,
   ...userBadgeSchema,
   ...badgeSchema,
-  ...categorySchema,
+  ...subjectSchema,
+  ...gradeLevelSchema,
+  ...facultySchema,
+  ...majorSchema,
+  ...programmingCategorySchema,
   ...courseSchema,
   ...enrollmentSchema,
   ...moduleSchema,

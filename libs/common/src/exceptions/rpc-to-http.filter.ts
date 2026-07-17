@@ -51,7 +51,9 @@ export class RpcToHttpExceptionFilter implements ExceptionFilter {
       error = 'Internal Server Error';
       this.logger.error(
         `Unhandled exception on ${request.method} ${request.url}`,
-        exception instanceof Error ? exception.stack : JSON.stringify(exception),
+        exception instanceof Error
+          ? exception.stack
+          : JSON.stringify(exception),
       );
     }
 

@@ -1,8 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
   IsArray,
+  IsObject,
   IsOptional,
   IsUUID,
   ValidateNested,
@@ -13,10 +14,25 @@ export class AttemptAnswerDTO {
   @IsUUID()
   questionId: string;
 
-  @ApiProperty({ example: '7a2f8f3b-1d3b-5d2f-0g1b-2c3d4e5f6a7b' })
+  @ApiPropertyOptional({
+    description: 'Selected option (choice-based questions)',
+    example: '7a2f8f3b-1d3b-5d2f-0f1b-2c3d4e5f6a7b',
+  })
   @IsUUID()
   @IsOptional()
   selectedOptionId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Raw answer for non-choice questions. Examples — numeric: { "value": 42 }; ' +
+      'fill_blank/short_answer: { "text": "const" }; ' +
+      'true_false: { "value": true }; ' +
+      'matching: { "pairs": [{ "left": "2+2", "right": "4" }] }.',
+    example: { value: 42 },
+  })
+  @IsObject()
+  @IsOptional()
+  answerData?: Record<string, unknown>;
 }
 
 export class AttemptAnswerResponseDTO extends AttemptAnswerDTO {

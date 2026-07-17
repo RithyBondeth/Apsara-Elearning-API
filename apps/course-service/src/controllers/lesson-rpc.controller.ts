@@ -20,8 +20,7 @@ export class LessonRpcController {
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_ALL)
   findAll(@Payload() payload: string | { moduleId: string }) {
-    const moduleId =
-      typeof payload === 'string' ? payload : payload.moduleId;
+    const moduleId = typeof payload === 'string' ? payload : payload.moduleId;
     return this.lessonRpcService.findAllByModule(moduleId);
   }
 

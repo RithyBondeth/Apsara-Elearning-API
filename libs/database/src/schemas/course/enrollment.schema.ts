@@ -1,4 +1,11 @@
-import { boolean, integer, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  pgTable,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { id } from '../common/id.schema';
 import { timestamps } from '../common/timestap.schema';
 import { user } from '../user/user.schema';
@@ -17,7 +24,10 @@ export const enrollments = pgTable(
     enrolledAt: timestamp('enrolled_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
-    completedAt: timestamp('completed_at', { withTimezone: true, mode: 'date' }),
+    completedAt: timestamp('completed_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
     progressPercent: integer('progress_percent').notNull().default(0),
     completed: boolean('completed').default(false),
     ...timestamps,

@@ -17,28 +17,73 @@ export const COURSE_DIFFICULTIES = [
 ] as const;
 export type CourseDifficulty = (typeof COURSE_DIFFICULTIES)[number];
 
+export const PROGRAM_TYPES = ['k12', 'university', 'programming'] as const;
+export type ProgramType = (typeof PROGRAM_TYPES)[number];
+
 export class CreateCourseRequestDTO {
-  @ApiProperty({ example: 'Intro to JavaScript' })
+  @ApiPropertyOptional({ enum: PROGRAM_TYPES, example: 'k12' })
+  @IsIn(PROGRAM_TYPES)
+  @IsOptional()
+  programType?: ProgramType;
+
+  @ApiProperty({ example: 'Grade 7 Mathematics' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: 'intro-to-javascript' })
+  @ApiPropertyOptional({ example: 'គណិតវិទ្យា ថ្នាក់ទី៧' })
+  @IsString()
+  @IsOptional()
+  titleKm?: string;
+
+  @ApiProperty({ example: 'grade-7-mathematics' })
   @IsString()
   @IsNotEmpty()
   slug: string;
 
-  @ApiPropertyOptional({ example: '6f1e7e2a-0c2a-4c1e-9f0a-1b2c3d4e5f6a' })
+  @ApiPropertyOptional({
+    description: 'Subject (K–12 placement)',
+    example: '6f1e7e2a-0c2a-4c1e-9f0a-1b2c3d4e5f6a',
+  })
+  @IsUUID()
+  @IsOptional()
+  subjectId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Grade level (K–12 placement)',
+    example: '7a2f8f3b-1d3b-5d2f-0f1b-2c3d4e5f6a7b',
+  })
+  @IsUUID()
+  @IsOptional()
+  gradeLevelId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Major (university placement)',
+    example: '8b3f9f4c-2e4c-6e3f-1f2c-3d4e5f6a7b8c',
+  })
+  @IsUUID()
+  @IsOptional()
+  majorId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Programming category (programming placement)',
+    example: '9c4a0a5d-3f5d-7f4a-2a3d-4e5f6a7b8c9d',
+  })
   @IsUUID()
   @IsOptional()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'Learn the fundamentals of JavaScript' })
+  @ApiPropertyOptional({ example: 'Learn the fundamentals of algebra' })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.apsaraelearning.com/js.png' })
+  @ApiPropertyOptional({ example: 'រៀនមូលដ្ឋានគ្រឹះនៃពិជគណិត' })
+  @IsString()
+  @IsOptional()
+  descriptionKm?: string;
+
+  @ApiPropertyOptional({ example: 'https://cdn.apsaraelearning.com/math7.png' })
   @IsString()
   @IsOptional()
   thumbnail?: string;

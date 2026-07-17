@@ -51,7 +51,10 @@ export class AuthController {
     description: 'User registered successfully',
     type: RegisterResponseDTO,
   })
-  @ApiResponse({ status: HttpStatus.CONFLICT, description: 'User already exists' })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'User already exists',
+  })
   register(
     @Body() registerRequestDTO: RegisterRequestDTO,
   ): Promise<RegisterResponseDTO> {
@@ -71,7 +74,10 @@ export class AuthController {
     description: 'Login successful',
     type: LoginResponseDTO,
   })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Invalid credentials' })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Invalid credentials',
+  })
   login(@Body() loginRequestDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
     return rpcCall<LoginResponseDTO>(
       this.authClient,

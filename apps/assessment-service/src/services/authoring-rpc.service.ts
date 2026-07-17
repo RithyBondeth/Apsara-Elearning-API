@@ -33,17 +33,19 @@ export class AuthoringRpcService {
 
     const [created] = await this.db
       .insert(quizzes)
-      .values({ lessonId, title: dto.title, description: dto.description })
+      .values({
+        lessonId,
+        title: dto.title,
+        description: dto.description,
+        xpReward: dto.xpReward,
+      })
       .returning();
     this.logger.log(`Quiz created: ${created.id}`);
     return created;
   }
 
   findQuizzesByLesson(lessonId: string) {
-    return this.db
-      .select()
-      .from(quizzes)
-      .where(eq(quizzes.lessonId, lessonId));
+    return this.db.select().from(quizzes).where(eq(quizzes.lessonId, lessonId));
   }
 
   async findQuiz(id: string) {
@@ -82,8 +84,11 @@ export class AuthoringRpcService {
       .insert(quizQuestions)
       .values({
         quizId,
+        type: dto.type,
         question: dto.question,
+        correctAnswer: dto.correctAnswer,
         explanation: dto.explanation,
+        points: dto.points,
         order: dto.order,
       })
       .returning();

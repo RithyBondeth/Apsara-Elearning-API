@@ -37,6 +37,25 @@ export class CourseRpcController {
     return this.courseService.findBySlug(slugOf(payload));
   }
 
+  @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_SUBJECT)
+  findBySubject(@Payload() payload: string | { subjectId: string }) {
+    const subjectId = typeof payload === 'string' ? payload : payload.subjectId;
+    return this.courseService.findBySubject(subjectId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_GRADE)
+  findByGrade(@Payload() payload: string | { gradeLevelId: string }) {
+    const gradeLevelId =
+      typeof payload === 'string' ? payload : payload.gradeLevelId;
+    return this.courseService.findByGrade(gradeLevelId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_MAJOR)
+  findByMajor(@Payload() payload: string | { majorId: string }) {
+    const majorId = typeof payload === 'string' ? payload : payload.majorId;
+    return this.courseService.findByMajor(majorId);
+  }
+
   @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_CATEGORY)
   findByCategory(@Payload() payload: string | { categoryId: string }) {
     const categoryId =

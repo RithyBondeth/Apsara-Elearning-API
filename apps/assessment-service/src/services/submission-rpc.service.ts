@@ -4,7 +4,11 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { and, eq } from 'drizzle-orm';
 import { challengeSubmissions } from '@app/database/schemas/challenge/challenge-submission.schema';
-import { CreateSubmissionRequestDTO, DRIZZLE, USER_SERVICE } from '@app/contracts';
+import {
+  CreateSubmissionRequestDTO,
+  DRIZZLE,
+  USER_SERVICE,
+} from '@app/contracts';
 import { RpcNotFoundException } from '@app/common';
 import { ChallengeRpcService } from './challenge-rpc.service';
 import { CodeExecutionService } from '../execution/code-execution.service';
@@ -32,7 +36,10 @@ export class SubmissionRpcService {
     const result = await this.executor.grade(
       dto.language,
       dto.sourceCode,
-      testCases.map((t) => ({ input: t.input, expectedOutput: t.expectedOutput })),
+      testCases.map((t) => ({
+        input: t.input,
+        expectedOutput: t.expectedOutput,
+      })),
     );
 
     const score =

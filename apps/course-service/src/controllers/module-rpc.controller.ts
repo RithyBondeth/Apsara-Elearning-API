@@ -20,8 +20,7 @@ export class ModuleRpcController {
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.MODULE_FIND_ALL)
   findAll(@Payload() payload: string | { courseId: string }) {
-    const courseId =
-      typeof payload === 'string' ? payload : payload.courseId;
+    const courseId = typeof payload === 'string' ? payload : payload.courseId;
     return this.moduleRpcService.findAllByCourse(courseId);
   }
 

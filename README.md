@@ -1,8 +1,25 @@
 # Apsara Elearning API — Apsara AI
 
-Backend for **Apsara Elearning / Apsara AI**, a bilingual (English + Khmer) coding-education
-platform. It's a **NestJS microservices monorepo**: HTTP gateways talk to backend
-services over **RabbitMQ**, with **Drizzle ORM** on **Neon** (serverless Postgres).
+Backend for **Apsara Elearning / Apsara AI**, a bilingual (English + Khmer) e-learning
+platform for Cambodia covering **Grade 1–12 across every subject** and **university
+courses per major**. It's a **NestJS microservices monorepo**: HTTP gateways talk to
+backend services over **RabbitMQ**, with **Drizzle ORM** on **Neon** (serverless Postgres).
+
+## Content structure
+
+Every course is placed on one of two tracks via its `programType`:
+
+```
+k12         Grade level (1–12)  ×  Subject   ──►  course ──► module ──► lesson ──► quiz / challenge
+university  Faculty ──► Major               ──►  course ──► module ──► lesson ──► quiz / challenge
+```
+
+- **`subjects`** — Mathematics, Khmer, English, Physics… (bilingual `name` / `nameKm`).
+- **`gradeLevels`** — Grade 1–12, each tagged with a Cambodian education `stage`
+  (`primary` 1–6, `lower_secondary` 7–9, `upper_secondary` 10–12).
+- **`faculties` → `majors`** — the university track.
+
+Below courses, the module → lesson → assessment stack is shared by both tracks.
 
 ## Architecture
 
@@ -19,12 +36,12 @@ client ──► admin-gateway (:2222) ──┤──► auth-service
 
 | App | Type | Responsibility |
 |-----|------|----------------|
-| `api-gateway` | HTTP (public) | Auth, profile, course reads, enrollment, progress, quizzes, challenges, AI tutor |
-| `admin-gateway` | HTTP (admin-only) | Authoring: courses/modules/lessons, quizzes, challenges, users, badges |
+| `api-gateway` | HTTP (public) | Auth, profile, structure + course reads, enrollment, progress, quizzes, challenges, AI tutor |
+| `admin-gateway` | HTTP (admin-only) | Authoring: structure, courses/modules/lessons, quizzes, challenges, users, badges |
 | `auth-service` | RMQ consumer | Register, login, tokens, email verification, password reset |
 | `user-service` | RMQ consumer | Profile, XP, streaks, badges |
-| `course-service` | RMQ consumer | Categories, courses, modules, lessons, enrollment, progress |
-| `assessment-service` | RMQ consumer | Quizzes (auto-graded) + coding challenges (Judge0) |
+| `course-service` | RMQ consumer | Subjects, grade levels, faculties, majors, courses, modules, lessons, enrollment, progress |
+| `assessment-service` | RMQ consumer | Quizzes (auto-graded, multi-type) + coding challenges (Judge0) |
 | `ai-service` | RMQ consumer | "Apsara AI" tutor (Anthropic Claude) |
 | `subscription-service` | RMQ consumer | Plans, subscriptions, payments (mock gateway) |
 
@@ -86,8 +103,14 @@ The full, interactive endpoint list lives in Swagger — the tables below are a 
 | Admin | `admin@apsara-elearning.com` | `Admin@123` |
 | Student | `student@apsara-elearning.com` | `Student@123` |
 
-…plus a published "Intro to JavaScript" course with a module, two lessons, a
-quiz, a coding challenge, and a "First Steps" badge.
+**Reference data** (upserted, safe to re-run): Grades 1–12 with Khmer names, nine
+subjects (Mathematics, Khmer, English, Physics, Chemistry, Biology, History,
+Geography, IT), and a Faculty of Engineering → Computer Science major.
+
+**Demo content**: a published "Intro to JavaScript" course placed on the **k12**
+track at **Grade 10 / Information Technology**, with a module, two lessons, a quiz
+(one multiple-choice + one auto-graded `numeric` question), a coding challenge, and
+a "First Steps" badge.
 
 ## Auth & roles
 
@@ -105,8 +128,9 @@ quiz, a coding challenge, and a "First Steps" badge.
 |-------|--------|
 | **Auth** | `POST /auth/register` · `login` · `refresh` · `verify-email` · `resend-verification` · `forgot-password` · `reset-password` · 🔒`logout` · 🔒`change-password` |
 | **User** 🔒 | `GET/PATCH /user/me` · `PATCH /user/me/avatar` · `GET /user/me/badges` |
-| **Courses** | reads: `GET /course`, `/course/published`, `/course/:id`, `/course/slug/:slug`, `/course/category/:categoryId` · 🔒admin: `POST/PUT/DELETE /course`, `PATCH /course/:id/publish\|unpublish` |
-| **Categories** | `GET /category`, `/category/:id`, `/category/slug/:slug` · 🔒admin mutations |
+| **Courses** | reads: `GET /course`, `/course/published`, `/course/:id`, `/course/slug/:slug`, `/course/subject/:subjectId`, `/course/grade/:gradeLevelId`, `/course/major/:majorId` · 🔒admin: `POST/PUT/DELETE /course`, `PATCH /course/:id/publish\|unpublish` |
+| **Subjects** | `GET /subject`, `/subject/:id`, `/subject/slug/:slug` · 🔒admin mutations |
+| **Structure** (read-only) | `GET /grade-level[/:id]` · `GET /faculty[/:id]`, `/faculty/slug/:slug` · `GET /major[?facultyId=][/:id]`, `/major/slug/:slug` |
 | **Modules / Lessons** | `GET /module?courseId=`, `/module/:id` · `GET /lesson?moduleId=`, `/lesson/slug/:slug`, `/lesson/:id` |
 | **Enrollment** 🔒 | `POST/DELETE /enrollment/:courseId` · `GET /enrollment` · `GET /enrollment/check/:courseId` |
 | **Progress** 🔒 | `POST /lesson-progress/lesson/:lessonId` · `GET /lesson-progress` · `POST /lesson-progress/course/:courseId/recalculate` |
@@ -119,7 +143,8 @@ quiz, a coding challenge, and a "First Steps" badge.
 
 | Group | Routes |
 |-------|--------|
-| **Categories / Courses** | full CRUD under `/categories` and `/courses` |
+| **Structure** | full CRUD under `/subjects`, `/grade-levels`, `/faculties`, `/majors` (`/majors?facultyId=` to filter) |
+| **Courses** | full CRUD under `/courses` |
 | **Modules** | `/courses/:courseId/modules` (POST, GET) · `PATCH /…/modules/reorder` · `PATCH/DELETE /…/modules/:id` |
 | **Lessons** | `/modules/:moduleId/lessons` (POST, GET, GET `:id`) · `PATCH /…/lessons/reorder` · `PATCH/DELETE /…/lessons/:id` |
 | **Users / Badges** | `GET /users`, `GET/DELETE /users/:id` · `/badges` CRUD · `POST /badges/:id/award/:userId` |
@@ -127,11 +152,38 @@ quiz, a coding challenge, and a "First Steps" badge.
 | **Quiz authoring** | `/lessons/:lessonId/quizzes`, `/quizzes/:id`, `/quizzes/:quizId/questions`, `PATCH /questions/reorder`, `/questions/:id`, `/questions/:questionId/options`, `/options/:id` |
 | **Challenge authoring** | `/lessons/:lessonId/challenges`, `/challenges/:id`, `/challenges/:challengeId/test-cases`, `/test-cases/:id` |
 
+## Exercises
+
+A quiz holds typed questions, each auto-graded by its own strategy. `points`
+weights a question (default `1`); the attempt score is
+`round(earnedPoints / totalPoints * 100)` and passes at **70%**.
+
+| `type` | Student sends | `correctAnswer` spec | Graded by |
+|--------|---------------|----------------------|-----------|
+| `multiple_choice` | `selectedOptionId` | — (uses `quiz_options.isCorrect`) | option match |
+| `true_false` | `{ value: true }` | `{ value: true }` *(or two options)* | boolean match |
+| `fill_blank` | `{ text: "const" }` | `{ accepted: ["const"], caseSensitive?: false }` | normalized text match |
+| `short_answer` | `{ text: "…" }` | `{ accepted: [...] }` — omit to require manual review | normalized text match |
+| `numeric` | `{ value: 1.5 }` | `{ value: 1.5, tolerance?: 0.01 }` | absolute tolerance |
+| `matching` | `{ pairs: [{left,right}] }` | `{ pairs: [{left,right}] }` | all pairs, order-independent |
+
+Text matching trims, collapses internal whitespace, and is case-insensitive
+unless `caseSensitive` is set. A question that cannot be auto-graded (e.g. a
+`short_answer` with no `accepted` list) is stored with `requiresReview = true`
+and scores 0 pending a human — it is never silently marked wrong.
+
+Answer keys never leave the server: `POST /quiz/:quizId/start` strips
+`isCorrect` and `correctAnswer`, and returns matching questions as a `prompt`
+of left items plus a **shuffled** pool of right items.
+
+Coding challenges (Judge0) remain a separate, CS-only exercise type.
+
 ## Gamification
 
-Completing a lesson grants **10 XP**; passing a quiz grants **25 XP**; solving a
-coding challenge grants its `xpReward` (default **50**) — each on first
-completion only. Crossing a badge's `xpRequired` auto-awards it.
+Completing a lesson grants **10 XP**; passing a quiz grants its `xpReward`
+(default **25**); solving a coding challenge grants its `xpReward` (default
+**50**) — each on first completion only. Crossing a badge's `xpRequired`
+auto-awards it.
 
 ## Environment
 
