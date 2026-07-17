@@ -61,6 +61,12 @@ END $$;
 -- 4. Starter categories for the programming track.
 INSERT INTO "programming_categories" ("name", "name_km", "slug", "description", "description_km", "icon")
 VALUES
+  ('Programming Fundamentals', 'មូលដ្ឋានគ្រឹះនៃការសរសេរកម្មវិធី', 'programming-fundamentals',
+   'Start from zero — variables, loops, functions and your first real programs.',
+   'ចាប់ផ្តើមពីសូន្យ — អថេរ loop អនុគមន៍ និងកម្មវិធីពិតដំបូងរបស់អ្នក។', 'Terminal'),
+  ('Computer Science', 'វិទ្យាសាស្ត្រកុំព្យូទ័រ', 'computer-science',
+   'Algorithms, data structures and the theory behind good engineering.',
+   'ក្បួនដោះស្រាយ រចនាសម្ព័ន្ធទិន្នន័យ និងទ្រឹស្តីនៃវិស្វកម្មល្អ។', 'Binary'),
   ('Web Development', 'ការអភិវឌ្ឍន៍គេហទំព័រ', 'web-development',
    'Build websites and web apps with HTML, CSS, JavaScript and React.',
    'បង្កើតគេហទំព័រ និងកម្មវិធីវេប ជាមួយ HTML, CSS, JavaScript និង React។', 'Globe'),

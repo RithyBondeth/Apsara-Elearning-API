@@ -1,7 +1,11 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UserRpcService } from '../services/user-rpc.service';
-import { USER_SERVICE, UpdateUserRequestDTO } from '@app/contracts';
+import {
+  USER_SERVICE,
+  UpdateUserRequestDTO,
+  TAvatarPreset,
+} from '@app/contracts';
 import { idOf, splitUpdate } from '../utils/payload';
 
 @Controller()
@@ -31,7 +35,7 @@ export class UserRpcController {
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.UPDATE_AVATAR)
-  updateAvatar(@Payload() payload: { id: string; avatar: string }) {
+  updateAvatar(@Payload() payload: { id: string; avatar: TAvatarPreset }) {
     return this.userRpcService.updateAvatar(payload.id, payload.avatar);
   }
 

@@ -1,10 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { AVATAR_PRESETS } from '../../constants/domain/avatar.constant';
+import type { TAvatarPreset } from '../../constants/domain/avatar.constant';
 
 export class UpdateUserRequestDTO {
   @ApiPropertyOptional({ example: 'John' })
@@ -34,8 +37,12 @@ export class UpdateUserRequestDTO {
 }
 
 export class UpdateAvatarRequestDTO {
-  @ApiProperty({ example: 'https://cdn.apsaraelearning.com/avatars/abc.png' })
-  @IsString()
+  @ApiProperty({
+    description: 'Key of a built-in avatar the student picked',
+    enum: AVATAR_PRESETS,
+    example: 'rocket',
+  })
+  @IsIn(AVATAR_PRESETS)
   @IsNotEmpty()
-  avatar: string;
+  avatar: TAvatarPreset;
 }

@@ -4,8 +4,13 @@ import { eq, lte, sql } from 'drizzle-orm';
 import { user } from '@app/database/schemas/user/user.schema';
 import { badges } from '@app/database/schemas/user/badge.schema';
 import { userBadges } from '@app/database/schemas/user/user-badge.schema';
-import { DRIZZLE, UpdateUserRequestDTO } from '@app/contracts';
-import { RpcNotFoundException } from '@app/common';
+import {
+  AVATAR_PRESETS,
+  DRIZZLE,
+  TAvatarPreset,
+  UpdateUserRequestDTO,
+} from '@app/contracts';
+import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 /**
  * Columns safe to return to clients — never expose password, tokens, or OTPs.
@@ -69,13 +74,22 @@ export class UserRpcService {
     return updated;
   }
 
-  async updateAvatar(id: string, avatar: string) {
+  async updateAvatar(id: string, avatar: TAvatarPreset) {
+    // The gateway DTO already checks this, but the action is callable over RPC
+    // by any service — the column is free text, so guard the write itself.
+    if (!AVATAR_PRESETS.includes(avatar)) {
+      throw new RpcBadRequestException(
+        `Unknown avatar '${avatar}'. Expected one of: ${AVATAR_PRESETS.join(', ')}`,
+      );
+    }
+
     const [updated] = await this.db
       .update(user)
       .set({ avatar, updatedAt: new Date() })
       .where(eq(user.id, id))
       .returning(publicColumns);
     if (!updated) throw new RpcNotFoundException('User not found');
+    this.logger.log(`Avatar updated: ${id} -> ${avatar}`);
     return updated;
   }
 

@@ -41,3 +41,4 @@ export * from './dtos/subscription/payment.dto';
 export * from './dtos/subscription/subscription.dto';
 export * from './constants/domain/database.constant';
 export * from './constants/domain/email.constant';
+export * from './constants/domain/avatar.constant';
