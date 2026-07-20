@@ -1,5 +1,8 @@
 CREATE TYPE "public"."difficulty_level" AS ENUM('beginner', 'intermediate', 'advanced');--> statement-breakpoint
+CREATE TYPE "public"."program_type" AS ENUM('k12', 'university', 'programming');--> statement-breakpoint
+CREATE TYPE "public"."education_stage" AS ENUM('primary', 'lower_secondary', 'upper_secondary');--> statement-breakpoint
 CREATE TYPE "public"."lesson_type" AS ENUM('article', 'video', 'interactive');--> statement-breakpoint
+CREATE TYPE "public"."question_type" AS ENUM('multiple_choice', 'true_false', 'fill_blank', 'short_answer', 'matching', 'numeric');--> statement-breakpoint
 CREATE TYPE "public"."billing_period" AS ENUM('monthly', 'yearly', 'lifetime');--> statement-breakpoint
 CREATE TABLE "ai_conversations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -18,6 +21,8 @@ CREATE TABLE "ai_messages" (
 	"content" text,
 	"prompt_tokens" integer,
 	"completion_tokens" integer,
+	"provider" varchar(50),
+	"model" varchar(100),
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -29,6 +34,8 @@ CREATE TABLE "ai_usage_tracking" (
 	"prompt_tokens" integer,
 	"completion_tokens" integer,
 	"total_tokens" integer,
+	"provider" varchar(50),
+	"model" varchar(100),
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -73,22 +80,17 @@ CREATE TABLE "coding_challenges" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "categories" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" text NOT NULL,
-	"slug" text NOT NULL,
-	"description" text,
-	"icon" text,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "categories_slug_unique" UNIQUE("slug")
-);
---> statement-breakpoint
 CREATE TABLE "courses" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"program_type" "program_type" DEFAULT 'k12' NOT NULL,
+	"subject_id" uuid,
+	"grade_level_id" uuid,
+	"major_id" uuid,
 	"category_id" uuid,
 	"title" text NOT NULL,
+	"title_km" text,
 	"description" text,
+	"description_km" text,
 	"slug" text NOT NULL,
 	"thumbnail" text,
 	"difficulty" "difficulty_level" DEFAULT 'beginner' NOT NULL,
@@ -110,6 +112,30 @@ CREATE TABLE "enrollments" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "enrollments_user_id_course_id_unique" UNIQUE("user_id","course_id")
+);
+--> statement-breakpoint
+CREATE TABLE "faculties" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" text NOT NULL,
+	"name_km" text,
+	"slug" text NOT NULL,
+	"description" text,
+	"icon" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "faculties_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
+CREATE TABLE "grade_levels" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"stage" "education_stage" NOT NULL,
+	"grade" integer NOT NULL,
+	"name" text NOT NULL,
+	"name_km" text,
+	"order" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "grade_levels_grade_unique" UNIQUE("grade")
 );
 --> statement-breakpoint
 CREATE TABLE "lesson_progress" (
@@ -138,6 +164,18 @@ CREATE TABLE "lessons" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "majors" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"faculty_id" uuid,
+	"name" text NOT NULL,
+	"name_km" text,
+	"slug" text NOT NULL,
+	"description" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "majors_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
 CREATE TABLE "modules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"course_id" uuid NOT NULL,
@@ -148,12 +186,28 @@ CREATE TABLE "modules" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "programming_categories" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" text NOT NULL,
+	"name_km" text,
+	"slug" text NOT NULL,
+	"description" text,
+	"description_km" text,
+	"icon" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "programming_categories_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
 CREATE TABLE "quiz_attempt_answers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"attempt_id" uuid NOT NULL,
 	"question_id" uuid NOT NULL,
 	"selected_option_id" uuid,
+	"answer_data" jsonb,
 	"is_correct" boolean DEFAULT false NOT NULL,
+	"points_awarded" integer DEFAULT 0 NOT NULL,
+	"requires_review" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -182,8 +236,11 @@ CREATE TABLE "quiz_options" (
 CREATE TABLE "quiz_questions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"quiz_id" uuid NOT NULL,
+	"type" "question_type" DEFAULT 'multiple_choice' NOT NULL,
 	"question" text NOT NULL,
+	"correct_answer" jsonb,
 	"explanation" text,
+	"points" integer DEFAULT 1 NOT NULL,
 	"order" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
@@ -194,8 +251,22 @@ CREATE TABLE "quizzes" (
 	"lesson_id" uuid NOT NULL,
 	"title" text NOT NULL,
 	"description" text,
+	"xp_reward" integer DEFAULT 25 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "subjects" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" text NOT NULL,
+	"name_km" text,
+	"slug" text NOT NULL,
+	"description" text,
+	"description_km" text,
+	"icon" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "subjects_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
 CREATE TABLE "payments" (
@@ -298,12 +369,16 @@ ALTER TABLE "challenge_submissions" ADD CONSTRAINT "challenge_submissions_challe
 ALTER TABLE "challenge_submissions" ADD CONSTRAINT "challenge_submissions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "challenge_test_cases" ADD CONSTRAINT "challenge_test_cases_challenge_id_coding_challenges_id_fk" FOREIGN KEY ("challenge_id") REFERENCES "public"."coding_challenges"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "coding_challenges" ADD CONSTRAINT "coding_challenges_lesson_id_lessons_id_fk" FOREIGN KEY ("lesson_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "courses" ADD CONSTRAINT "courses_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "courses" ADD CONSTRAINT "courses_subject_id_subjects_id_fk" FOREIGN KEY ("subject_id") REFERENCES "public"."subjects"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "courses" ADD CONSTRAINT "courses_grade_level_id_grade_levels_id_fk" FOREIGN KEY ("grade_level_id") REFERENCES "public"."grade_levels"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "courses" ADD CONSTRAINT "courses_major_id_majors_id_fk" FOREIGN KEY ("major_id") REFERENCES "public"."majors"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "courses" ADD CONSTRAINT "courses_category_id_programming_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."programming_categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_course_id_courses_id_fk" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "lesson_progress" ADD CONSTRAINT "lesson_progress_lesson_id_lessons_id_fk" FOREIGN KEY ("lesson_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "lesson_progress" ADD CONSTRAINT "lesson_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "lessons" ADD CONSTRAINT "lessons_module_id_modules_id_fk" FOREIGN KEY ("module_id") REFERENCES "public"."modules"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "majors" ADD CONSTRAINT "majors_faculty_id_faculties_id_fk" FOREIGN KEY ("faculty_id") REFERENCES "public"."faculties"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "modules" ADD CONSTRAINT "modules_course_id_courses_id_fk" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "quiz_attempt_answers" ADD CONSTRAINT "quiz_attempt_answers_attempt_id_quiz_attempts_id_fk" FOREIGN KEY ("attempt_id") REFERENCES "public"."quiz_attempts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "quiz_attempt_answers" ADD CONSTRAINT "quiz_attempt_answers_question_id_quiz_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."quiz_questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

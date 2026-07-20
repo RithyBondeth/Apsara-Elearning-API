@@ -3,7 +3,7 @@
 Backend for **Apsara Elearning / Apsara AI**, a bilingual (English + Khmer) e-learning
 platform for Cambodia covering **Grade 1–12 across every subject** and **university
 courses per major**. It's a **NestJS microservices monorepo**: HTTP gateways talk to
-backend services over **RabbitMQ**, with **Drizzle ORM** on **Neon** (serverless Postgres).
+backend services over **RabbitMQ**, with **Drizzle ORM** on **PostgreSQL** (Docker).
 
 ## Content structure
 
@@ -31,7 +31,7 @@ client ──► admin-gateway (:2222) ──┤──► auth-service
                                    │──► course-service
                                    │──► assessment-service
                                    └──► ai-service
-                          (all services share Neon Postgres via Drizzle)
+                           (all services share PostgreSQL via Drizzle)
 ```
 
 | App | Type | Responsibility |
@@ -47,20 +47,19 @@ client ──► admin-gateway (:2222) ──┤──► auth-service
 
 Shared libraries: `@app/common` (config, JWT, guards, email, logger, RabbitMQ,
 RPC exceptions), `@app/contracts` (message patterns + DTOs), `@app/database`
-(Drizzle schemas + Neon connection).
+(Drizzle schemas + PostgreSQL connection).
 
 ## Prerequisites
 
 - **Node.js** ≥ 20 and **npm**
-- **Docker** (for RabbitMQ via `docker-compose.yml`)
-- A **Neon** Postgres connection string
+- **Docker** (for PostgreSQL + RabbitMQ via `docker-compose.yml`)
 
 ## Setup
 
 ```bash
 npm install
 cp .env.example .env   # then fill in values (see "Environment" below)
-npm run db:push        # sync the Drizzle schema to your Neon database
+npm run db:push        # sync the Drizzle schema to your PostgreSQL database
 npm run seed           # optional: load demo data
 ```
 
@@ -189,7 +188,7 @@ auto-awards it.
 
 | Variable | Required | Notes |
 |----------|----------|-------|
-| `DATABASE_URL` | ✅ | Neon Postgres connection string |
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
 | `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | ✅ | token signing |
 | `JWT_ACCESS_EXPIRES` / `JWT_REFRESH_EXPIRES` | ✅ | e.g. `15m` / `7d` |
 | `BCRYPT_SALT` | — | default `10` |
