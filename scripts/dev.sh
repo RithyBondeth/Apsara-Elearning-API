@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-# Boot RabbitMQ + every microservice in watch mode with one command.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

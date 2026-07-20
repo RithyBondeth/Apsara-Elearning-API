@@ -8,11 +8,11 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { neon } from '@neondatabase/serverless';
+import postgres from 'postgres';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const drizzleDir = join(root, 'drizzle');
-const sql = neon(process.env.DATABASE_URL);
+const sql = postgres(process.env.DATABASE_URL);
 
 async function main() {
   const journal = JSON.parse(
@@ -28,10 +28,7 @@ async function main() {
 
   let added = 0;
   for (const entry of journal.entries) {
-    const content = readFileSync(
-      join(drizzleDir, `${entry.tag}.sql`),
-      'utf8',
-    );
+    const content = readFileSync(join(drizzleDir, `${entry.tag}.sql`), 'utf8');
     const hash = createHash('sha256').update(content).digest('hex');
 
     const [existing] = await sql`

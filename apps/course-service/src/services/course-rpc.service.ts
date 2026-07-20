@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { courses } from '@app/database/schemas/course/course.schema';
 import { subjects } from '@app/database/schemas/course/subject.schema';
@@ -21,7 +21,7 @@ import {
 export class CourseRpcService {
   private readonly logger = new Logger(CourseRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async create(dto: CreateCourseRequestDTO) {
     await this.ensureSlugAvailable(dto.slug);

@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, desc, eq, gt, isNull, or } from 'drizzle-orm';
 import { subscriptions } from '@app/database/schemas/subscription/subscription.schema';
 import { plans } from '@app/database/schemas/subscription/plan.schema';
@@ -14,7 +14,7 @@ export class SubscriptionRpcService {
   private readonly logger = new Logger(SubscriptionRpcService.name);
 
   constructor(
-    @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly planService: PlanRpcService,
     private readonly paymentService: PaymentRpcService,
     private readonly gateway: PaymentGatewayService,

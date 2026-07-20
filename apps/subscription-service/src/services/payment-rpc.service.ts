@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { payments } from '@app/database/schemas/payment/payment.schema';
 import { DRIZZLE } from '@app/contracts';
@@ -19,7 +19,7 @@ export interface RecordPaymentInput {
 export class PaymentRpcService {
   private readonly logger = new Logger(PaymentRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async record(input: RecordPaymentInput) {
     const [created] = await this.db

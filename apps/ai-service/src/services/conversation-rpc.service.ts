@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, eq } from 'drizzle-orm';
 import { aiConversations } from '@app/database/schemas/ai/ai-conversation.schema';
 import { CreateConversationRequestDTO, DRIZZLE } from '@app/contracts';
@@ -9,7 +9,7 @@ import { RpcNotFoundException } from '@app/common';
 export class ConversationRpcService {
   private readonly logger = new Logger(ConversationRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async create(userId: string, dto: CreateConversationRequestDTO) {
     const [created] = await this.db

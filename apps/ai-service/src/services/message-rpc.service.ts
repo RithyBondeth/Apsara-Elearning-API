@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { aiMessages } from '@app/database/schemas/ai/ai-message.schema';
 import { aiConversations } from '@app/database/schemas/ai/ai-conversation.schema';
@@ -18,7 +18,7 @@ export class MessageRpcService {
   private readonly logger = new Logger(MessageRpcService.name);
 
   constructor(
-    @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly ai: AiGatewayService,
     private readonly conversations: ConversationRpcService,
   ) {}

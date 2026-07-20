@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq, lte, sql } from 'drizzle-orm';
 import { user } from '@app/database/schemas/user/user.schema';
 import { badges } from '@app/database/schemas/user/badge.schema';
@@ -37,7 +37,7 @@ const publicColumns = {
 export class UserRpcService {
   private readonly logger = new Logger(UserRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   findAll() {
     return this.db.select(publicColumns).from(user).orderBy(user.createdAt);

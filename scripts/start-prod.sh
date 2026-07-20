@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-# Boot RabbitMQ + every built service (dist) and tear them down together on exit.
-# Run `npm run build:all` first.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

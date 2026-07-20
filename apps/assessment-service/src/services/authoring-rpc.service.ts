@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { quizzes } from '@app/database/schemas/course/quizzes/quiz.schema';
 import { quizQuestions } from '@app/database/schemas/course/quizzes/quiz-question.schema';
@@ -20,7 +20,7 @@ import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 export class AuthoringRpcService {
   private readonly logger = new Logger(AuthoringRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   // ---- Quiz ----
   async createQuiz(lessonId: string, dto: CreateQuizRequestDTO) {
@@ -123,7 +123,7 @@ export class AuthoringRpcService {
   }
 
   async reorderQuestions(orderedIds: string[]) {
-    // Sequential updates (neon-http has no interactive transactions).
+    // Sequential updates.
     for (let i = 0; i < orderedIds.length; i++) {
       await this.db
         .update(quizQuestions)

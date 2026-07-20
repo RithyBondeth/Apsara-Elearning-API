@@ -2,11 +2,11 @@
 // Idempotent: reference data is upserted, demo rows are cleared and re-inserted.
 // Run with: npm run seed
 import 'dotenv/config';
-import { neon } from '@neondatabase/serverless';
+import postgres from 'postgres';
 import bcrypt from 'bcrypt';
 import { MATH_GRADE_12 } from './content/math-grade-12.mjs';
 
-const sql = neon(process.env.DATABASE_URL);
+const sql = postgres(process.env.DATABASE_URL);
 const saltRounds = parseInt(process.env.BCRYPT_SALT ?? '10', 10);
 
 const ADMIN = { email: 'admin@apsara-elearning.com', password: 'Admin@123' };
@@ -207,7 +207,7 @@ async function createCourseWithLessons({
  *  optionally carrying a quiz. Takes the curriculum objects in scripts/content/.
  *  Returns counts so the summary can report what actually landed.
  *
- *  Writes are row-by-row on purpose — the Neon HTTP driver has no interactive
+ *  Writes are row-by-row on purpose — the driver has no interactive
  *  transactions, so there is nothing to batch them into. */
 async function createFullCourse(curriculum, { subjectId, gradeLevelId }) {
   const [course] = await sql`

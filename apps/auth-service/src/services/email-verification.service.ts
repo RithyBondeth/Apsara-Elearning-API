@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
 import { ConfigService } from '@nestjs/config';
@@ -12,7 +12,7 @@ export class EmailVerificationService {
   private readonly logger = new Logger(EmailVerificationService.name);
 
   constructor(
-    @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,

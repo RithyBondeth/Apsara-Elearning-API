@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, eq } from 'drizzle-orm';
 import { enrollments } from '@app/database/schemas/course/enrollment.schema';
 import { courses } from '@app/database/schemas/course/course.schema';
@@ -10,7 +10,7 @@ import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 export class EnrollmentRpcService {
   private readonly logger = new Logger(EnrollmentRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async enroll(userId: string, courseId: string) {
     const [course] = await this.db

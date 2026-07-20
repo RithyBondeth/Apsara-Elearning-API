@@ -1,7 +1,7 @@
 import { RegisterRequestDTO, RegisterResponseDTO } from '@app/contracts';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
@@ -21,7 +21,7 @@ export class RegisterService {
   private readonly logger = new Logger(RegisterService.name);
 
   constructor(
-    @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
@@ -67,7 +67,7 @@ export class RegisterService {
     let accessToken: string;
     let refreshToken: string;
     try {
-      // 3. Create the user + issue tokens. The neon-http driver has no
+      // 3. Create the user + issue tokens.
       // interactive transactions, so these run as sequential auto-committed
       // statements (the unique email constraint still guards duplicates).
       const [newUser] = await this.db

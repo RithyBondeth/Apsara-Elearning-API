@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
-import { neon } from '@neondatabase/serverless';
-import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import postgres from 'postgres';
+import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as userSchema from '../schemas/user/user.schema';
 import * as userBadgeSchema from '../schemas/user/user-badge.schema';
 import * as badgeSchema from '../schemas/user/badge.schema';
@@ -61,7 +61,7 @@ const schema = {
 
 export const databaseConfig = (
   configService: ConfigService,
-): NeonHttpDatabase<typeof schema> => {
-  const sql = neon(configService.get<string>('database.url')!);
+): PostgresJsDatabase<typeof schema> => {
+  const sql = postgres(configService.get<string>('database.url')!);
   return drizzle(sql, { logger: true, schema });
 };

@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, eq } from 'drizzle-orm';
 import { codingChallenges } from '@app/database/schemas/challenge/coding-challenge.schema';
 import { challengeTestCases } from '@app/database/schemas/challenge/challenge-test-case.schema';
@@ -17,7 +17,7 @@ import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 export class ChallengeRpcService {
   private readonly logger = new Logger(ChallengeRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   // ---- Challenge ----
   async createChallenge(lessonId: string, dto: CreateChallengeRequestDTO) {

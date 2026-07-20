@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, eq } from 'drizzle-orm';
 import { challengeSubmissions } from '@app/database/schemas/challenge/challenge-submission.schema';
 import {
@@ -18,7 +18,7 @@ export class SubmissionRpcService {
   private readonly logger = new Logger(SubmissionRpcService.name);
 
   constructor(
-    @Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>,
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
     private readonly challenges: ChallengeRpcService,
     private readonly executor: CodeExecutionService,

@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, eq } from 'drizzle-orm';
 import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
 import { modules } from '@app/database/schemas/course/module.schema';
@@ -18,7 +18,7 @@ import {
 export class LessonRpcService {
   private readonly logger = new Logger(LessonRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async create(moduleId: string, dto: CreateLessonRequestDTO) {
     await this.ensureModuleExists(moduleId);
@@ -95,7 +95,7 @@ export class LessonRpcService {
   /** Sets each lesson's `order` to its index in `orderedIds` (scoped to module). */
   async reorder(moduleId: string, orderedIds: string[]) {
     await this.ensureModuleExists(moduleId);
-    // Sequential updates — neon-http has no interactive transactions.
+    // Sequential updates.
     for (let i = 0; i < orderedIds.length; i++) {
       await this.db
         .update(lessons)

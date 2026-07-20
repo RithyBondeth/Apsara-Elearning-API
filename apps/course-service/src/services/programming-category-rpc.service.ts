@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { programmingCategories } from '@app/database/schemas/course/programming-category.schema';
 import {
@@ -13,7 +13,7 @@ import { RpcConflictException, RpcNotFoundException } from '@app/common';
 export class ProgrammingCategoryRpcService {
   private readonly logger = new Logger(ProgrammingCategoryRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async create(dto: CreateProgrammingCategoryRequestDTO) {
     await this.ensureSlugAvailable(dto.slug);

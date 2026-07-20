@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { asc, eq } from 'drizzle-orm';
 import { gradeLevels } from '@app/database/schemas/course/grade-level.schema';
 import {
@@ -13,7 +13,7 @@ import { RpcConflictException, RpcNotFoundException } from '@app/common';
 export class GradeLevelRpcService {
   private readonly logger = new Logger(GradeLevelRpcService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async create(dto: CreateGradeLevelRequestDTO) {
     await this.ensureGradeAvailable(dto.grade);

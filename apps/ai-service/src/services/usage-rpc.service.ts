@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq, sql } from 'drizzle-orm';
 import { aiUsageTracking } from '@app/database/schemas/ai/ai-usage-tracking.schema';
 import { DRIZZLE } from '@app/contracts';
@@ -9,7 +9,7 @@ const TOKEN_LIMIT = 1_000_000;
 
 @Injectable()
 export class UsageRpcService {
-  constructor(@Inject(DRIZZLE) private readonly db: NeonHttpDatabase<any>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   findByUser(userId: string) {
     return this.db
