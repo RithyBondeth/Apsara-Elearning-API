@@ -1,16 +1,19 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CourseRpcService } from '../services/course-rpc.service';
 import {
   COURSE_SERVICE,
   CreateCourseRequestDTO,
   UpdateCourseRequestDTO,
+  I_COURSE_SERVICE,
 } from '@app/contracts';
+import type { ICourseService, ICourseRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class CourseRpcController {
-  constructor(private readonly courseService: CourseRpcService) {}
+export class CourseRpcController implements ICourseRpcController {
+  constructor(
+    @Inject(I_COURSE_SERVICE) private readonly courseService: ICourseService,
+  ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_CREATE)
   create(@Payload() dto: CreateCourseRequestDTO) {

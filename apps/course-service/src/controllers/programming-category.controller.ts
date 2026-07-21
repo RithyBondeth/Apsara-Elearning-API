@@ -1,17 +1,18 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ProgrammingCategoryRpcService } from '../services/programming-category-rpc.service';
 import {
   COURSE_SERVICE,
   CreateProgrammingCategoryRequestDTO,
   UpdateProgrammingCategoryRequestDTO,
+  I_PROGRAMMING_CATEGORY_SERVICE,
 } from '@app/contracts';
+import type { IProgrammingCategoryService, IProgrammingCategoryRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class ProgrammingCategoryRpcController {
+export class ProgrammingCategoryRpcController implements IProgrammingCategoryRpcController {
   constructor(
-    private readonly programmingCategoryRpcService: ProgrammingCategoryRpcService,
+    @Inject(I_PROGRAMMING_CATEGORY_SERVICE) private readonly programmingCategoryRpcService: IProgrammingCategoryService,
   ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_CREATE)

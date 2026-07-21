@@ -1,16 +1,19 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { GradeLevelRpcService } from '../services/grade-level-rpc.service';
 import {
   COURSE_SERVICE,
   CreateGradeLevelRequestDTO,
   UpdateGradeLevelRequestDTO,
+  I_GRADE_LEVEL_SERVICE,
 } from '@app/contracts';
+import type { IGradeLevelService, IGradeLevelRpcController } from '@app/contracts';
 import { idOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class GradeLevelRpcController {
-  constructor(private readonly gradeLevelRpcService: GradeLevelRpcService) {}
+export class GradeLevelRpcController implements IGradeLevelRpcController {
+  constructor(
+    @Inject(I_GRADE_LEVEL_SERVICE) private readonly gradeLevelRpcService: IGradeLevelService,
+  ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.GRADE_LEVEL_CREATE)
   create(@Payload() dto: CreateGradeLevelRequestDTO) {

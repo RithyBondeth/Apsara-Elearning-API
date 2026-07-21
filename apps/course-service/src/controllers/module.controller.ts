@@ -1,16 +1,19 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ModuleRpcService } from '../services/module-rpc.service';
 import {
   COURSE_SERVICE,
   CreateModuleRequestDTO,
   UpdateModuleRequestDTO,
+  I_MODULE_SERVICE,
 } from '@app/contracts';
+import type { IModuleService, IModuleRpcController } from '@app/contracts';
 import { idOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class ModuleRpcController {
-  constructor(private readonly moduleRpcService: ModuleRpcService) {}
+export class ModuleRpcController implements IModuleRpcController {
+  constructor(
+    @Inject(I_MODULE_SERVICE) private readonly moduleRpcService: IModuleService,
+  ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.MODULE_CREATE)
   create(@Payload() payload: CreateModuleRequestDTO & { courseId: string }) {

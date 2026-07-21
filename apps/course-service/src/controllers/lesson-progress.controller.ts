@@ -1,12 +1,12 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { LessonProgressRpcService } from '../services/lesson-progress-rpc.service';
-import { COURSE_SERVICE } from '@app/contracts';
+import { COURSE_SERVICE, I_LESSON_PROGRESS_SERVICE } from '@app/contracts';
+import type { ILessonProgressService, ILessonProgressRpcController } from '@app/contracts';
 
 @Controller()
-export class LessonProgressRpcController {
+export class LessonProgressRpcController implements ILessonProgressRpcController {
   constructor(
-    private readonly lessonProgressRpcService: LessonProgressRpcService,
+    @Inject(I_LESSON_PROGRESS_SERVICE) private readonly lessonProgressRpcService: ILessonProgressService,
   ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.PROGRESS_MARK_COMPLETE)

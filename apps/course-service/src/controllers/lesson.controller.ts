@@ -1,16 +1,19 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { LessonRpcService } from '../services/lesson-rpc.service';
 import {
   COURSE_SERVICE,
   CreateLessonRequestDTO,
   UpdateLessonRequestDTO,
+  I_LESSON_SERVICE,
 } from '@app/contracts';
+import type { ILessonService, ILessonRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class LessonRpcController {
-  constructor(private readonly lessonRpcService: LessonRpcService) {}
+export class LessonRpcController implements ILessonRpcController {
+  constructor(
+    @Inject(I_LESSON_SERVICE) private readonly lessonRpcService: ILessonService,
+  ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_CREATE)
   create(@Payload() payload: CreateLessonRequestDTO & { moduleId: string }) {

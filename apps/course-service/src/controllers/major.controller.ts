@@ -1,16 +1,19 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { MajorRpcService } from '../services/major-rpc.service';
 import {
   COURSE_SERVICE,
   CreateMajorRequestDTO,
   UpdateMajorRequestDTO,
+  I_MAJOR_SERVICE,
 } from '@app/contracts';
+import type { IMajorService, IMajorRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class MajorRpcController {
-  constructor(private readonly majorRpcService: MajorRpcService) {}
+export class MajorRpcController implements IMajorRpcController {
+  constructor(
+    @Inject(I_MAJOR_SERVICE) private readonly majorRpcService: IMajorService,
+  ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.MAJOR_CREATE)
   create(@Payload() dto: CreateMajorRequestDTO) {
