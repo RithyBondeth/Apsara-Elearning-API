@@ -14,7 +14,7 @@ import {
 import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class AuthoringRpcController implements IAuthoringRpcController {
+export class AuthoringController implements IAuthoringRpcController {
   constructor(@Inject(I_AUTHORING_SERVICE) private readonly authoring: IAuthoringService) {}
 
   // ---- Quiz ----

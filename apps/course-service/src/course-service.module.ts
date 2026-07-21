@@ -19,26 +19,26 @@ import {
   I_PROGRAMMING_CATEGORY_SERVICE,
   I_SUBJECT_SERVICE,
 } from '@app/contracts';
-import { CourseRpcController } from './controllers/course.controller';
-import { CourseRpcService } from './services/course.service';
-import { EnrollmentRpcController } from './controllers/enrollment.controller';
-import { EnrollmentRpcService } from './services/enrollment.service';
-import { FacultyRpcController } from './controllers/faculty.controller';
-import { FacultyRpcService } from './services/faculty.service';
-import { GradeLevelRpcController } from './controllers/grade-level.controller';
-import { GradeLevelRpcService } from './services/grade-level.service';
-import { LessonRpcController } from './controllers/lesson.controller';
-import { LessonRpcService } from './services/lesson.service';
-import { LessonProgressRpcController } from './controllers/lesson-progress.controller';
-import { LessonProgressRpcService } from './services/lesson-progress.service';
-import { MajorRpcController } from './controllers/major.controller';
-import { MajorRpcService } from './services/major.service';
-import { ModuleRpcController } from './controllers/module.controller';
-import { ModuleRpcService } from './services/module.service';
-import { ProgrammingCategoryRpcController } from './controllers/programming-category.controller';
-import { ProgrammingCategoryRpcService } from './services/programming-category.service';
-import { SubjectRpcController } from './controllers/subject.controller';
-import { SubjectRpcService } from './services/subject.service';
+import { CourseController } from './controllers/course.controller';
+import { CourseService } from './services/course.service';
+import { EnrollmentController } from './controllers/enrollment.controller';
+import { EnrollmentService } from './services/enrollment.service';
+import { FacultyController } from './controllers/faculty.controller';
+import { FacultyService } from './services/faculty.service';
+import { GradeLevelController } from './controllers/grade-level.controller';
+import { GradeLevelService } from './services/grade-level.service';
+import { LessonController } from './controllers/lesson.controller';
+import { LessonService } from './services/lesson.service';
+import { LessonProgressController } from './controllers/lesson-progress.controller';
+import { LessonProgressService } from './services/lesson-progress.service';
+import { MajorController } from './controllers/major.controller';
+import { MajorService } from './services/major.service';
+import { ModuleController } from './controllers/module.controller';
+import { ModuleService } from './services/module.service';
+import { ProgrammingCategoryController } from './controllers/programming-category.controller';
+import { ProgrammingCategoryService } from './services/programming-category.service';
+import { SubjectController } from './controllers/subject.controller';
+import { SubjectService } from './services/subject.service';
 import { CourseHealthController } from './health/health.controller';
 
 @Module({
@@ -53,29 +53,29 @@ import { CourseHealthController } from './health/health.controller';
     ]),
   ],
   controllers: [
-    CourseRpcController,
-    EnrollmentRpcController,
-    FacultyRpcController,
-    GradeLevelRpcController,
-    LessonRpcController,
-    LessonProgressRpcController,
-    MajorRpcController,
-    ModuleRpcController,
-    ProgrammingCategoryRpcController,
-    SubjectRpcController,
+    CourseController,
+    EnrollmentController,
+    FacultyController,
+    GradeLevelController,
+    LessonController,
+    LessonProgressController,
+    MajorController,
+    ModuleController,
+    ProgrammingCategoryController,
+    SubjectController,
     CourseHealthController,
   ],
   providers: [
-    { provide: I_COURSE_SERVICE, useClass: CourseRpcService },
-    { provide: I_ENROLLMENT_SERVICE, useClass: EnrollmentRpcService },
-    { provide: I_FACULTY_SERVICE, useClass: FacultyRpcService },
-    { provide: I_GRADE_LEVEL_SERVICE, useClass: GradeLevelRpcService },
-    { provide: I_LESSON_SERVICE, useClass: LessonRpcService },
-    { provide: I_LESSON_PROGRESS_SERVICE, useClass: LessonProgressRpcService },
-    { provide: I_MAJOR_SERVICE, useClass: MajorRpcService },
-    { provide: I_MODULE_SERVICE, useClass: ModuleRpcService },
-    { provide: I_PROGRAMMING_CATEGORY_SERVICE, useClass: ProgrammingCategoryRpcService },
-    { provide: I_SUBJECT_SERVICE, useClass: SubjectRpcService },
+    { provide: I_COURSE_SERVICE, useClass: CourseService },
+    { provide: I_ENROLLMENT_SERVICE, useClass: EnrollmentService },
+    { provide: I_FACULTY_SERVICE, useClass: FacultyService },
+    { provide: I_GRADE_LEVEL_SERVICE, useClass: GradeLevelService },
+    { provide: I_LESSON_SERVICE, useClass: LessonService },
+    { provide: I_LESSON_PROGRESS_SERVICE, useClass: LessonProgressService },
+    { provide: I_MAJOR_SERVICE, useClass: MajorService },
+    { provide: I_MODULE_SERVICE, useClass: ModuleService },
+    { provide: I_PROGRAMMING_CATEGORY_SERVICE, useClass: ProgrammingCategoryService },
+    { provide: I_SUBJECT_SERVICE, useClass: SubjectService },
   ],
 })
 export class CourseServiceModule {}

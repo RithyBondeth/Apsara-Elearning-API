@@ -5,7 +5,7 @@ import { AI_SERVICE } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('usage')
-export class UsageRpcController implements IUsageRpcController {
+export class UsageController implements IUsageRpcController {
   constructor(@Inject(I_USAGE_SERVICE) private readonly usageService: IUsageService) {}
 
   @MessagePattern(AI_SERVICE.ACTIONS.USAGE_FIND_BY_USER)

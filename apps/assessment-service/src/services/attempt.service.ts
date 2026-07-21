@@ -15,8 +15,8 @@ import { gradeAnswer, GradableQuestion } from './graders';
 const PASS_THRESHOLD = 70;
 
 @Injectable()
-export class AttemptRpcService {
-  private readonly logger = new Logger(AttemptRpcService.name);
+export class AttemptService {
+  private readonly logger = new Logger(AttemptService.name);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,

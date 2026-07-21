@@ -34,8 +34,8 @@ const publicColumns = {
 };
 
 @Injectable()
-export class UserRpcService {
-  private readonly logger = new Logger(UserRpcService.name);
+export class UserService {
+  private readonly logger = new Logger(UserService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

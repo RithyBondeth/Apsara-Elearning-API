@@ -6,17 +6,17 @@ import { plans } from '@app/database/schemas/subscription/plan.schema';
 import { DRIZZLE } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 import { PaymentGatewayService } from '../payment/payment-gateway.service';
-import { PlanRpcService } from './plan.service';
-import { PaymentRpcService } from './payment.service';
+import { PlanService } from './plan.service';
+import { PaymentService } from './payment.service';
 
 @Injectable()
-export class SubscriptionRpcService {
-  private readonly logger = new Logger(SubscriptionRpcService.name);
+export class SubscriptionService {
+  private readonly logger = new Logger(SubscriptionService.name);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
-    private readonly planService: PlanRpcService,
-    private readonly paymentService: PaymentRpcService,
+    private readonly planService: PlanService,
+    private readonly paymentService: PaymentService,
     private readonly gateway: PaymentGatewayService,
   ) {}
 

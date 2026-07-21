@@ -10,7 +10,7 @@ import type { IFacultyService, IFacultyRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class FacultyRpcController implements IFacultyRpcController {
+export class FacultyController implements IFacultyRpcController {
   constructor(
     @Inject(I_FACULTY_SERVICE) private readonly facultyRpcService: IFacultyService,
   ) {}

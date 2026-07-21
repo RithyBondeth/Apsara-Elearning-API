@@ -10,7 +10,7 @@ import type { IGradeLevelService, IGradeLevelRpcController } from '@app/contract
 import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class GradeLevelRpcController implements IGradeLevelRpcController {
+export class GradeLevelController implements IGradeLevelRpcController {
   constructor(
     @Inject(I_GRADE_LEVEL_SERVICE) private readonly gradeLevelRpcService: IGradeLevelService,
   ) {}

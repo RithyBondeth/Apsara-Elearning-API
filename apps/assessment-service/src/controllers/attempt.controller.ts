@@ -6,7 +6,7 @@ import { ASSESSMENT_SERVICE, AttemptAnswerDTO } from '@app/contracts';
 import { idOf } from '@app/utils';
 
 @Controller()
-export class AttemptRpcController implements IAttemptRpcController {
+export class AttemptController implements IAttemptRpcController {
   constructor(@Inject(I_ATTEMPT_SERVICE) private readonly attempts: IAttemptService) {}
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_START)

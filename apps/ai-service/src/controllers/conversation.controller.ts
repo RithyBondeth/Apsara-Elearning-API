@@ -5,7 +5,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AI_SERVICE, CreateConversationRequestDTO } from '@app/contracts';
 
 @Controller('conversation')
-export class ConversationRpcController implements IConversationRpcController {
+export class ConversationController implements IConversationRpcController {
   constructor(@Inject(I_CONVERSATION_SERVICE) private readonly conversations: IConversationService) {}
 
   @MessagePattern(AI_SERVICE.ACTIONS.CONVERSATION_CREATE)

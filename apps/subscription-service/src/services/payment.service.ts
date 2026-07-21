@@ -16,8 +16,8 @@ export interface RecordPaymentInput {
 }
 
 @Injectable()
-export class PaymentRpcService {
-  private readonly logger = new Logger(PaymentRpcService.name);
+export class PaymentService {
+  private readonly logger = new Logger(PaymentService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

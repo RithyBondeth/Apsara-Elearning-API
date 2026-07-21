@@ -10,7 +10,7 @@ import type { ILessonService, ILessonRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class LessonRpcController implements ILessonRpcController {
+export class LessonController implements ILessonRpcController {
   constructor(
     @Inject(I_LESSON_SERVICE) private readonly lessonRpcService: ILessonService,
   ) {}

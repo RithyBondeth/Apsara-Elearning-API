@@ -10,7 +10,7 @@ import type { IModuleService, IModuleRpcController } from '@app/contracts';
 import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class ModuleRpcController implements IModuleRpcController {
+export class ModuleController implements IModuleRpcController {
   constructor(
     @Inject(I_MODULE_SERVICE) private readonly moduleRpcService: IModuleService,
   ) {}

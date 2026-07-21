@@ -14,8 +14,8 @@ import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 const XP_PER_LESSON = 10;
 
 @Injectable()
-export class LessonProgressRpcService {
-  private readonly logger = new Logger(LessonProgressRpcService.name);
+export class LessonProgressService {
+  private readonly logger = new Logger(LessonProgressService.name);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,

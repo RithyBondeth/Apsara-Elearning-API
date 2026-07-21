@@ -7,8 +7,8 @@ import { DRIZZLE } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class EnrollmentRpcService {
-  private readonly logger = new Logger(EnrollmentRpcService.name);
+export class EnrollmentService {
+  private readonly logger = new Logger(EnrollmentService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

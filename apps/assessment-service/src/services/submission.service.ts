@@ -10,17 +10,17 @@ import {
   USER_SERVICE,
 } from '@app/contracts';
 import { RpcNotFoundException } from '@app/common';
-import { ChallengeRpcService } from './challenge.service';
+import { ChallengeService } from './challenge.service';
 import { CodeExecutionService } from '../execution/code-execution.service';
 
 @Injectable()
-export class SubmissionRpcService {
-  private readonly logger = new Logger(SubmissionRpcService.name);
+export class SubmissionService {
+  private readonly logger = new Logger(SubmissionService.name);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
-    private readonly challenges: ChallengeRpcService,
+    private readonly challenges: ChallengeService,
     private readonly executor: CodeExecutionService,
   ) {}
 

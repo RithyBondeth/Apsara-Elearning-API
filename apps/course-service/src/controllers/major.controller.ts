@@ -10,7 +10,7 @@ import type { IMajorService, IMajorRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class MajorRpcController implements IMajorRpcController {
+export class MajorController implements IMajorRpcController {
   constructor(
     @Inject(I_MAJOR_SERVICE) private readonly majorRpcService: IMajorService,
   ) {}

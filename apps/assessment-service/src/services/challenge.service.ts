@@ -14,8 +14,8 @@ import {
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class ChallengeRpcService {
-  private readonly logger = new Logger(ChallengeRpcService.name);
+export class ChallengeService {
+  private readonly logger = new Logger(ChallengeService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

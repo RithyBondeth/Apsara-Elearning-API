@@ -6,8 +6,8 @@ import { CreateConversationRequestDTO, DRIZZLE } from '@app/contracts';
 import { RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class ConversationRpcService {
-  private readonly logger = new Logger(ConversationRpcService.name);
+export class ConversationService {
+  private readonly logger = new Logger(ConversationService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

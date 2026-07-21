@@ -4,7 +4,7 @@ import { COURSE_SERVICE, I_LESSON_PROGRESS_SERVICE } from '@app/contracts';
 import type { ILessonProgressService, ILessonProgressRpcController } from '@app/contracts';
 
 @Controller()
-export class LessonProgressRpcController implements ILessonProgressRpcController {
+export class LessonProgressController implements ILessonProgressRpcController {
   constructor(
     @Inject(I_LESSON_PROGRESS_SERVICE) private readonly lessonProgressRpcService: ILessonProgressService,
   ) {}

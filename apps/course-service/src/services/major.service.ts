@@ -15,8 +15,8 @@ import {
 } from '@app/common';
 
 @Injectable()
-export class MajorRpcService {
-  private readonly logger = new Logger(MajorRpcService.name);
+export class MajorService {
+  private readonly logger = new Logger(MajorService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

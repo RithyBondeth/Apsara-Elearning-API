@@ -10,8 +10,8 @@ import {
 import { RpcConflictException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class GradeLevelRpcService {
-  private readonly logger = new Logger(GradeLevelRpcService.name);
+export class GradeLevelService {
+  private readonly logger = new Logger(GradeLevelService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

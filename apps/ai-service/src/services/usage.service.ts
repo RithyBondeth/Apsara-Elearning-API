@@ -8,7 +8,7 @@ import { DRIZZLE } from '@app/contracts';
 const TOKEN_LIMIT = 1_000_000;
 
 @Injectable()
-export class UsageRpcService {
+export class UsageService {
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   findByUser(userId: string) {

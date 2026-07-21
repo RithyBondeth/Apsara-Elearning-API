@@ -10,7 +10,7 @@ import type { IProgrammingCategoryService, IProgrammingCategoryRpcController } f
 import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class ProgrammingCategoryRpcController implements IProgrammingCategoryRpcController {
+export class ProgrammingCategoryController implements IProgrammingCategoryRpcController {
   constructor(
     @Inject(I_PROGRAMMING_CATEGORY_SERVICE) private readonly programmingCategoryRpcService: IProgrammingCategoryService,
   ) {}

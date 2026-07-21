@@ -11,7 +11,7 @@ import {
 import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class SubscriptionRpcController implements ISubscriptionRpcController {
+export class SubscriptionController implements ISubscriptionRpcController {
   constructor(
     @Inject(I_PLAN_SERVICE) private readonly plans: IPlanService,
     @Inject(I_SUBSCRIPTION_SERVICE) private readonly subscriptions: ISubscriptionService,

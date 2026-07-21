@@ -8,19 +8,19 @@ import { AnthropicProvider } from './providers/anthropic.provider';
 import { DeepSeekProvider } from './providers/deepseek.provider';
 import { GeminiProvider } from './providers/gemini.provider';
 import { OpenAiProvider } from './providers/openai.provider';
-import { ConversationRpcService } from './services/conversation.service';
-import { MessageRpcService } from './services/message.service';
-import { UsageRpcService } from './services/usage.service';
-import { ConversationRpcController } from './controllers/conversation.controller';
-import { MessageRpcController } from './controllers/message.controller';
-import { UsageRpcController } from './controllers/usage.controller';
+import { ConversationService } from './services/conversation.service';
+import { MessageService } from './services/message.service';
+import { UsageService } from './services/usage.service';
+import { ConversationController } from './controllers/conversation.controller';
+import { MessageController } from './controllers/message.controller';
+import { UsageController } from './controllers/usage.controller';
 
 @Module({
   imports: [ConfigurationModule, LoggerModule, DatabaseModule, HealthModule],
   controllers: [
-    ConversationRpcController,
-    MessageRpcController,
-    UsageRpcController,
+    ConversationController,
+    MessageController,
+    UsageController,
     AiHealthController,
   ],
   providers: [
@@ -29,9 +29,9 @@ import { UsageRpcController } from './controllers/usage.controller';
     OpenAiProvider,
     DeepSeekProvider,
     GeminiProvider,
-    { provide: I_CONVERSATION_SERVICE, useClass: ConversationRpcService },
-    { provide: I_MESSAGE_SERVICE, useClass: MessageRpcService },
-    { provide: I_USAGE_SERVICE, useClass: UsageRpcService },
+    { provide: I_CONVERSATION_SERVICE, useClass: ConversationService },
+    { provide: I_MESSAGE_SERVICE, useClass: MessageService },
+    { provide: I_USAGE_SERVICE, useClass: UsageService },
   ],
 })
 export class AiServiceModule {}

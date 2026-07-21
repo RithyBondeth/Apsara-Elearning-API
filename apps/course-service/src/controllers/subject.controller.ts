@@ -10,7 +10,7 @@ import type { ISubjectService, ISubjectRpcController } from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class SubjectRpcController implements ISubjectRpcController {
+export class SubjectController implements ISubjectRpcController {
   constructor(
     @Inject(I_SUBJECT_SERVICE) private readonly subjectRpcService: ISubjectService,
   ) {}

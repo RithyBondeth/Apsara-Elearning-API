@@ -13,7 +13,7 @@ import {
 import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
-export class ChallengeRpcController implements IChallengeRpcController {
+export class ChallengeController implements IChallengeRpcController {
   constructor(
     @Inject(I_CHALLENGE_SERVICE) private readonly challenges: IChallengeService,
     @Inject(I_SUBMISSION_SERVICE) private readonly submissions: ISubmissionService,

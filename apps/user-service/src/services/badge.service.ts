@@ -12,8 +12,8 @@ import {
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class BadgeRpcService {
-  private readonly logger = new Logger(BadgeRpcService.name);
+export class BadgeService {
+  private readonly logger = new Logger(BadgeService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 

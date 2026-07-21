@@ -15,8 +15,8 @@ import {
 import { APSARA_SYSTEM_PROMPT } from '../anthropic/system-prompt';
 
 @Injectable()
-export class MessageRpcService {
-  private readonly logger = new Logger(MessageRpcService.name);
+export class MessageService {
+  private readonly logger = new Logger(MessageService.name);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,

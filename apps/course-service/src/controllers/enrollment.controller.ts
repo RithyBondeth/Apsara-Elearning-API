@@ -9,7 +9,7 @@ interface UserCoursePayload {
 }
 
 @Controller()
-export class EnrollmentRpcController implements IEnrollmentRpcController {
+export class EnrollmentController implements IEnrollmentRpcController {
   constructor(
     @Inject(I_ENROLLMENT_SERVICE) private readonly enrollmentRpcService: IEnrollmentService,
   ) {}
