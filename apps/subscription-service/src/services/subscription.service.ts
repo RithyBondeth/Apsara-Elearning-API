@@ -5,9 +5,9 @@ import { subscriptions } from '@app/database/schemas/subscription/subscription.s
 import { plans } from '@app/database/schemas/subscription/plan.schema';
 import { DRIZZLE } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
-import { PlanRpcService } from './plan-rpc.service';
-import { PaymentRpcService } from './payment-rpc.service';
 import { PaymentGatewayService } from '../payment/payment-gateway.service';
+import { PlanRpcService } from './plan.service';
+import { PaymentRpcService } from './payment.service';
 
 @Injectable()
 export class SubscriptionRpcService {

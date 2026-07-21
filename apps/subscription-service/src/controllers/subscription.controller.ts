@@ -1,4 +1,6 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
+import { I_PAYMENT_SERVICE, I_PLAN_SERVICE, I_SUBSCRIPTION_SERVICE } from '@app/contracts';
+import type { IPaymentService, IPlanService, ISubscriptionRpcController, ISubscriptionService } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   CreatePaymentRequestDTO,
@@ -6,17 +8,14 @@ import {
   SUBSCRIPTION_SERVICE,
   UpdatePlanRequestDTO,
 } from '@app/contracts';
-import { PlanRpcService } from '../services/plan-rpc.service';
-import { SubscriptionRpcService } from '../services/subscription-rpc.service';
-import { PaymentRpcService } from '../services/payment-rpc.service';
 import { idOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class SubscriptionRpcController {
+export class SubscriptionRpcController implements ISubscriptionRpcController {
   constructor(
-    private readonly plans: PlanRpcService,
-    private readonly subscriptions: SubscriptionRpcService,
-    private readonly payments: PaymentRpcService,
+    @Inject(I_PLAN_SERVICE) private readonly plans: IPlanService,
+    @Inject(I_SUBSCRIPTION_SERVICE) private readonly subscriptions: ISubscriptionService,
+    @Inject(I_PAYMENT_SERVICE) private readonly payments: IPaymentService,
   ) {}
 
   // ---- Plans ----
