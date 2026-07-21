@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { HealthCheckError, HealthIndicatorResult } from '@nestjs/terminus';
 import { firstValueFrom, timeout } from 'rxjs';
-import { HEALTH_RPC_TIMEOUT_MS } from '@app/common';
 import { HEALTH_PATTERN } from '@app/contracts';
+import { HEALTH_RPC_TIMEOUT_MS } from '../constants';
 
 /**
  * RMQ counterpart of Terminus' MicroserviceHealthIndicator: sends the

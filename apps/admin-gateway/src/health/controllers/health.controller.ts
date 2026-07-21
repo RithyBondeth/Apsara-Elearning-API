@@ -6,20 +6,18 @@ import {
   HealthCheckService,
 } from '@nestjs/terminus';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { InternalServiceHealthIndicator } from '@app/common';
 import {
-  AI_SERVICE,
   ASSESSMENT_SERVICE,
-  AUTH_SERVICE,
   COURSE_SERVICE,
   SUBSCRIPTION_SERVICE,
   USER_SERVICE,
 } from '@app/contracts';
-import { InternalServiceHealthIndicator } from '@app/common';
 
 /**
- * Public readiness endpoint. Fans the HEALTH_PATTERN out to every microservice
- * over RabbitMQ and reports the aggregate — the gateway itself holds no DB, so
- * its health is the health of the services behind it.
+ * Admin readiness endpoint. The admin-gateway only proxies to course, user,
+ * assessment and subscription, so it reports the aggregate health of those four
+ * over RabbitMQ (taxonomy lives inside course-service).
  */
 @ApiTags('Health')
 @Controller('health')
@@ -27,22 +25,19 @@ export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
     private readonly internal: InternalServiceHealthIndicator,
-    @Inject(AUTH_SERVICE.NAME) private readonly authClient: ClientProxy,
-    @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
     @Inject(COURSE_SERVICE.NAME) private readonly courseClient: ClientProxy,
+    @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
     @Inject(ASSESSMENT_SERVICE.NAME) private readonly assessmentClient: ClientProxy,
     @Inject(SUBSCRIPTION_SERVICE.NAME) private readonly subscriptionClient: ClientProxy,
-    @Inject(AI_SERVICE.NAME) private readonly aiClient: ClientProxy,
   ) {}
 
   @Get()
   @HealthCheck()
-  @ApiOperation({ summary: 'Aggregate health of all microservices' })
+  @ApiOperation({ summary: 'Aggregate health of admin-facing microservices' })
   checkHealth(): Promise<HealthCheckResult> {
     return this.health.check([
-      () => this.internal.pingService(AUTH_SERVICE.NAME, this.authClient),
-      () => this.internal.pingService(USER_SERVICE.NAME, this.userClient),
       () => this.internal.pingService(COURSE_SERVICE.NAME, this.courseClient),
+      () => this.internal.pingService(USER_SERVICE.NAME, this.userClient),
       () =>
         this.internal.pingService(
           ASSESSMENT_SERVICE.NAME,
@@ -53,7 +48,6 @@ export class HealthController {
           SUBSCRIPTION_SERVICE.NAME,
           this.subscriptionClient,
         ),
-      () => this.internal.pingService(AI_SERVICE.NAME, this.aiClient),
     ]);
   }
 }
