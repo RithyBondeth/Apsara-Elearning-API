@@ -26,7 +26,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 
 @ApiTags('Apsara AI')
 @ApiBearerAuth()

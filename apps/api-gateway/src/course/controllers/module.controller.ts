@@ -9,7 +9,7 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { COURSE_SERVICE, ModuleResponseDTO } from '@app/contracts';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 
 // Public read-only access to modules. Mutations go through the admin gateway.
 @ApiTags('Modules')

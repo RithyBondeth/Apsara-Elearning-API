@@ -7,7 +7,7 @@ import {
   I_USER_SERVICE,
 } from '@app/contracts';
 import type { IUserService, IUserRpcController } from '@app/contracts';
-import { idOf, splitUpdate } from '../utils/payload';
+import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class UserController implements IUserRpcController {

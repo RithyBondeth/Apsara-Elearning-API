@@ -14,7 +14,7 @@ import {
   CreateGradeLevelRequestDTO,
   UpdateGradeLevelRequestDTO,
 } from '@app/contracts';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Grade levels')

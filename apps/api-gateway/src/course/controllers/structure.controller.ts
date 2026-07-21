@@ -14,7 +14,7 @@ import {
   MajorResponseDTO,
 } from '@app/contracts';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 
 /**
  * Public, read-only browsing of the content structure. Authoring these lives

@@ -17,7 +17,7 @@ import {
   UpdateChallengeRequestDTO,
   UpdateTestCaseRequestDTO,
 } from '@app/contracts';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 import {
   ApiBearerAuth,
   ApiOperation,

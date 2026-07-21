@@ -3,7 +3,7 @@ import { I_ATTEMPT_SERVICE } from '@app/contracts';
 import type { IAttemptRpcController, IAttemptService } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ASSESSMENT_SERVICE, AttemptAnswerDTO } from '@app/contracts';
-import { idOf } from '../utils/payload';
+import { idOf } from '@app/utils';
 
 @Controller()
 export class AttemptRpcController implements IAttemptRpcController {

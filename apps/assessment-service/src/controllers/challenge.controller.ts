@@ -10,7 +10,7 @@ import {
   UpdateChallengeRequestDTO,
   UpdateTestCaseRequestDTO,
 } from '@app/contracts';
-import { idOf, splitUpdate } from '../utils/payload';
+import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class ChallengeRpcController implements IChallengeRpcController {

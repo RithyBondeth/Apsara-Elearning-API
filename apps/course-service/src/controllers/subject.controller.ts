@@ -7,7 +7,7 @@ import {
   I_SUBJECT_SERVICE,
 } from '@app/contracts';
 import type { ISubjectService, ISubjectRpcController } from '@app/contracts';
-import { idOf, slugOf, splitUpdate } from '../utils/payload';
+import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class SubjectRpcController implements ISubjectRpcController {

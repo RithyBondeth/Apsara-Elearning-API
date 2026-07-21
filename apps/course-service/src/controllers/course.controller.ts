@@ -7,7 +7,7 @@ import {
   I_COURSE_SERVICE,
 } from '@app/contracts';
 import type { ICourseService, ICourseRpcController } from '@app/contracts';
-import { idOf, slugOf, splitUpdate } from '../utils/payload';
+import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class CourseRpcController implements ICourseRpcController {

@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 import {
   ApiBearerAuth,
   ApiOperation,

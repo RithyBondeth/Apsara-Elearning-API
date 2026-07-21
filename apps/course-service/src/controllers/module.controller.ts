@@ -7,7 +7,7 @@ import {
   I_MODULE_SERVICE,
 } from '@app/contracts';
 import type { IModuleService, IModuleRpcController } from '@app/contracts';
-import { idOf, splitUpdate } from '../utils/payload';
+import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class ModuleRpcController implements IModuleRpcController {

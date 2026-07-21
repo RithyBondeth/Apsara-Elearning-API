@@ -7,7 +7,7 @@ import {
   I_LESSON_SERVICE,
 } from '@app/contracts';
 import type { ILessonService, ILessonRpcController } from '@app/contracts';
-import { idOf, slugOf, splitUpdate } from '../utils/payload';
+import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class LessonRpcController implements ILessonRpcController {

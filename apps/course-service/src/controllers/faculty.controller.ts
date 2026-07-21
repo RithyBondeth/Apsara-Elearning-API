@@ -7,7 +7,7 @@ import {
   I_FACULTY_SERVICE,
 } from '@app/contracts';
 import type { IFacultyService, IFacultyRpcController } from '@app/contracts';
-import { idOf, slugOf, splitUpdate } from '../utils/payload';
+import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class FacultyRpcController implements IFacultyRpcController {

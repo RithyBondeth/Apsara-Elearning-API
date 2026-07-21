@@ -26,7 +26,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 
 @ApiTags('Subscription')
 @Controller('subscription')

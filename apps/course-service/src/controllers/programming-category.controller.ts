@@ -7,7 +7,7 @@ import {
   I_PROGRAMMING_CATEGORY_SERVICE,
 } from '@app/contracts';
 import type { IProgrammingCategoryService, IProgrammingCategoryRpcController } from '@app/contracts';
-import { idOf, slugOf, splitUpdate } from '../utils/payload';
+import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class ProgrammingCategoryRpcController implements IProgrammingCategoryRpcController {

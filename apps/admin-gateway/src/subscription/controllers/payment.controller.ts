@@ -1,7 +1,7 @@
 import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { CreatePaymentRequestDTO, SUBSCRIPTION_SERVICE } from '@app/contracts';
-import { rpcCall } from '../../utils/rpc-call';
+import { rpcCall } from '@app/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Payments (Admin)')
