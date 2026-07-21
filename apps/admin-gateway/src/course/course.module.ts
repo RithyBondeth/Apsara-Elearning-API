@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
-import { CourseController } from './course.controller';
-import { ModuleController } from './module.controller';
-import { LessonController } from './lesson.controller';
+import { CourseController } from './controllers/course.controller';
+import { ModuleController } from './controllers/module.controller';
+import { LessonController } from './controllers/lesson.controller';
 
 @Module({
   imports: [

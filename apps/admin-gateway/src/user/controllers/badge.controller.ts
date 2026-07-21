@@ -14,7 +14,7 @@ import {
   CreateBadgeRequestDTO,
   UpdateBadgeRequestDTO,
 } from '@app/contracts';
-import { rpcCall } from '../utils/rpc-call';
+import { rpcCall } from '../../utils/rpc-call';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Badges')

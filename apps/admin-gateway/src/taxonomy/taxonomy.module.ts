@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service.constant';
-import { SubjectController } from './subject.controller';
-import { GradeLevelController } from './grade-level.controller';
-import { FacultyController } from './faculty.controller';
-import { MajorController } from './major.controller';
-import { ProgrammingCategoryController } from './programming-category.controller';
+import { SubjectController } from './controllers/subject.controller';
+import { GradeLevelController } from './controllers/grade-level.controller';
+import { FacultyController } from './controllers/faculty.controller';
+import { MajorController } from './controllers/major.controller';
+import { ProgrammingCategoryController } from './controllers/programming-category.controller';
 
 /**
  * Content structure: subjects + grade levels (K–12), faculties + majors

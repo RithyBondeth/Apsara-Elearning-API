@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { USER_SERVICE } from '@app/contracts/constants/services/user-service.constant';
-import { UserController } from './user.controller';
-import { BadgeController } from './badge.controller';
+import { UserController } from './controllers/user.controller';
+import { BadgeController } from './controllers/badge.controller';
 
 @Module({
   imports: [

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule, RabbitmqModule } from '@app/common';
 import { SUBSCRIPTION_SERVICE } from '@app/contracts';
-import { SubscriptionController } from './subscription.controller';
+import { SubscriptionController } from './controllers/subscription.controller';
 
 @Module({
   imports: [

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { RabbitmqModule } from '@app/common';
 import { ASSESSMENT_SERVICE } from '@app/contracts';
-import { AssessmentController } from './assessment.controller';
-import { ChallengeController } from './challenge.controller';
+import { AssessmentController } from './controllers/assessment.controller';
+import { ChallengeController } from './controllers/challenge.controller';
 
 @Module({
   imports: [

@@ -15,7 +15,7 @@ import {
   CreateMajorRequestDTO,
   UpdateMajorRequestDTO,
 } from '@app/contracts';
-import { rpcCall } from '../utils/rpc-call';
+import { rpcCall } from '../../utils/rpc-call';
 import {
   ApiBearerAuth,
   ApiOperation,
