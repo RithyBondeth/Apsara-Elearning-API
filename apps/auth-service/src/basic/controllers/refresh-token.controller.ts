@@ -5,10 +5,7 @@ import {
   I_TOKEN_SERVICE,
   RegisterResponseDTO,
 } from '@app/contracts';
-import type {
-  ITokenService,
-  IRefreshTokenRpcController,
-} from '@app/contracts';
+import type { ITokenService, IRefreshTokenRpcController } from '@app/contracts';
 
 @Controller()
 export class RefreshTokenController implements IRefreshTokenRpcController {
