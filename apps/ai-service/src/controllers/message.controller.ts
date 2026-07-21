@@ -1,14 +1,14 @@
-import { Controller } from '@nestjs/common';
-import { MessageRpcService } from '../services/message-rpc.service';
+import { Controller, Inject } from '@nestjs/common';
+import { I_CONVERSATION_SERVICE, I_MESSAGE_SERVICE } from '@app/contracts';
+import type { IConversationService, IMessageRpcController, IMessageService } from '@app/contracts';
 import { AI_SERVICE } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ConversationRpcService } from '../services/conversation-rpc.service';
 
 @Controller('message')
-export class MessageRpcController {
+export class MessageRpcController implements IMessageRpcController {
   constructor(
-    private readonly messagesService: MessageRpcService,
-    private readonly conversationsService: ConversationRpcService,
+    @Inject(I_MESSAGE_SERVICE) private readonly messagesService: IMessageService,
+    @Inject(I_CONVERSATION_SERVICE) private readonly conversationsService: IConversationService,
   ) {}
 
   @MessagePattern(AI_SERVICE.ACTIONS.MESSAGE_SEND)

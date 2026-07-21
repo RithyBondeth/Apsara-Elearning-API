@@ -1,4 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { I_CONVERSATION_SERVICE } from '@app/contracts';
+import type { IConversationService } from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { aiMessages } from '@app/database/schemas/ai/ai-message.schema';
@@ -11,7 +13,6 @@ import {
   AiGatewayService,
 } from '../providers/ai-gateway.service';
 import { APSARA_SYSTEM_PROMPT } from '../anthropic/system-prompt';
-import { ConversationRpcService } from './conversation-rpc.service';
 
 @Injectable()
 export class MessageRpcService {
@@ -20,7 +21,7 @@ export class MessageRpcService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly ai: AiGatewayService,
-    private readonly conversations: ConversationRpcService,
+    @Inject(I_CONVERSATION_SERVICE) private readonly conversations: IConversationService,
   ) {}
 
   findByConversation(conversationId: string) {
