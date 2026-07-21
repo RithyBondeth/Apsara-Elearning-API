@@ -1,12 +1,13 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
+import { I_ATTEMPT_SERVICE } from '@app/contracts';
+import type { IAttemptRpcController, IAttemptService } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { AttemptRpcService } from '../services/attempt-rpc.service';
 import { ASSESSMENT_SERVICE, AttemptAnswerDTO } from '@app/contracts';
 import { idOf } from '../utils/payload';
 
 @Controller()
-export class AttemptRpcController {
-  constructor(private readonly attempts: AttemptRpcService) {}
+export class AttemptRpcController implements IAttemptRpcController {
+  constructor(@Inject(I_ATTEMPT_SERVICE) private readonly attempts: IAttemptService) {}
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_START)
   start(@Payload() payload: { userId: string; quizId: string }) {

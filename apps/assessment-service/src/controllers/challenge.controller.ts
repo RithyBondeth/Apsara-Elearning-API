@@ -1,7 +1,7 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
+import { I_CHALLENGE_SERVICE, I_SUBMISSION_SERVICE } from '@app/contracts';
+import type { IChallengeRpcController, IChallengeService, ISubmissionService } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ChallengeRpcService } from '../services/challenge-rpc.service';
-import { SubmissionRpcService } from '../services/submission-rpc.service';
 import {
   ASSESSMENT_SERVICE,
   CreateChallengeRequestDTO,
@@ -13,10 +13,10 @@ import {
 import { idOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class ChallengeRpcController {
+export class ChallengeRpcController implements IChallengeRpcController {
   constructor(
-    private readonly challenges: ChallengeRpcService,
-    private readonly submissions: SubmissionRpcService,
+    @Inject(I_CHALLENGE_SERVICE) private readonly challenges: IChallengeService,
+    @Inject(I_SUBMISSION_SERVICE) private readonly submissions: ISubmissionService,
   ) {}
 
   // ---- Challenge ----

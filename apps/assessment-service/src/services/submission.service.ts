@@ -10,7 +10,7 @@ import {
   USER_SERVICE,
 } from '@app/contracts';
 import { RpcNotFoundException } from '@app/common';
-import { ChallengeRpcService } from './challenge-rpc.service';
+import { ChallengeRpcService } from './challenge.service';
 import { CodeExecutionService } from '../execution/code-execution.service';
 
 @Injectable()
