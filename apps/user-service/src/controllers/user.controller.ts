@@ -1,16 +1,19 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { UserRpcService } from '../services/user-rpc.service';
 import {
   USER_SERVICE,
   UpdateUserRequestDTO,
   TAvatarPreset,
+  I_USER_SERVICE,
 } from '@app/contracts';
+import type { IUserService, IUserRpcController } from '@app/contracts';
 import { idOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class UserRpcController {
-  constructor(private readonly userRpcService: UserRpcService) {}
+export class UserController implements IUserRpcController {
+  constructor(
+    @Inject(I_USER_SERVICE) private readonly userRpcService: IUserService,
+  ) {}
 
   @MessagePattern(USER_SERVICE.ACTIONS.FIND_ALL)
   findAll() {

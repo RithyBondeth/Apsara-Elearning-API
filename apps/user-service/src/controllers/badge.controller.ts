@@ -1,16 +1,19 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { BadgeRpcService } from '../services/badge-rpc.service';
 import {
   USER_SERVICE,
   CreateBadgeRequestDTO,
   UpdateBadgeRequestDTO,
+  I_BADGE_SERVICE,
 } from '@app/contracts';
+import type { IBadgeService, IBadgeRpcController } from '@app/contracts';
 import { idOf, splitUpdate } from '../utils/payload';
 
 @Controller()
-export class BadgeRpcController {
-  constructor(private readonly badgeRpcService: BadgeRpcService) {}
+export class BadgeController implements IBadgeRpcController {
+  constructor(
+    @Inject(I_BADGE_SERVICE) private readonly badgeRpcService: IBadgeService,
+  ) {}
 
   @MessagePattern(USER_SERVICE.ACTIONS.BADGE_CREATE)
   create(@Payload() dto: CreateBadgeRequestDTO) {

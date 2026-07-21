@@ -1,14 +1,19 @@
 import { Module } from '@nestjs/common';
-import { ConfigurationModule, LoggerModule } from '@app/common';
+import { ConfigurationModule, HealthModule, LoggerModule } from '@app/common';
 import { DatabaseModule } from '@app/database';
-import { UserRpcController } from './controllers/user-rpc.controller';
-import { BadgeRpcController } from './controllers/badge-rpc.controller';
-import { UserRpcService } from './services/user-rpc.service';
-import { BadgeRpcService } from './services/badge-rpc.service';
+import { I_BADGE_SERVICE, I_USER_SERVICE } from '@app/contracts';
+import { UserController } from './controllers/user.controller';
+import { BadgeController } from './controllers/badge.controller';
+import { UserRpcService } from './services/user.service';
+import { BadgeRpcService } from './services/badge.service';
+import { UserHealthController } from './health/health.controller';
 
 @Module({
-  imports: [ConfigurationModule, LoggerModule, DatabaseModule],
-  controllers: [UserRpcController, BadgeRpcController],
-  providers: [UserRpcService, BadgeRpcService],
+  imports: [ConfigurationModule, LoggerModule, DatabaseModule, HealthModule],
+  controllers: [UserController, BadgeController, UserHealthController],
+  providers: [
+    { provide: I_USER_SERVICE, useClass: UserRpcService },
+    { provide: I_BADGE_SERVICE, useClass: BadgeRpcService },
+  ],
 })
 export class UserServiceModule {}
