@@ -12,37 +12,37 @@ import { idOf, slugOf, splitUpdate } from '@app/utils';
 @Controller()
 export class SubjectController implements ISubjectRpcController {
   constructor(
-    @Inject(I_SUBJECT_SERVICE) private readonly subjectRpcService: ISubjectService,
+    @Inject(I_SUBJECT_SERVICE) private readonly subjectService: ISubjectService,
   ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.SUBJECT_CREATE)
   create(@Payload() dto: CreateSubjectRequestDTO) {
-    return this.subjectRpcService.create(dto);
+    return this.subjectService.create(dto);
   }
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.SUBJECT_FIND_ALL)
   findAll() {
-    return this.subjectRpcService.findAll();
+    return this.subjectService.findAll();
   }
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.SUBJECT_FIND_ONE)
   findOne(@Payload() payload: string | { id: string }) {
-    return this.subjectRpcService.findOne(idOf(payload));
+    return this.subjectService.findOne(idOf(payload));
   }
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.SUBJECT_FIND_BY_SLUG)
   findBySlug(@Payload() payload: string | { slug: string }) {
-    return this.subjectRpcService.findBySlug(slugOf(payload));
+    return this.subjectService.findBySlug(slugOf(payload));
   }
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.SUBJECT_UPDATE)
   update(@Payload() payload: UpdateSubjectRequestDTO & { id: string }) {
     const { id, data } = splitUpdate(payload);
-    return this.subjectRpcService.update(id, data);
+    return this.subjectService.update(id, data);
   }
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.SUBJECT_DELETE)
   remove(@Payload() payload: string | { id: string }) {
-    return this.subjectRpcService.remove(idOf(payload));
+    return this.subjectService.remove(idOf(payload));
   }
 }

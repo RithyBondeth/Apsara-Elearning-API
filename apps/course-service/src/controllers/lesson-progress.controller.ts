@@ -6,12 +6,12 @@ import type { ILessonProgressService, ILessonProgressRpcController } from '@app/
 @Controller()
 export class LessonProgressController implements ILessonProgressRpcController {
   constructor(
-    @Inject(I_LESSON_PROGRESS_SERVICE) private readonly lessonProgressRpcService: ILessonProgressService,
+    @Inject(I_LESSON_PROGRESS_SERVICE) private readonly lessonProgressService: ILessonProgressService,
   ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.PROGRESS_MARK_COMPLETE)
   markComplete(@Payload() payload: { userId: string; lessonId: string }) {
-    return this.lessonProgressRpcService.markComplete(
+    return this.lessonProgressService.markComplete(
       payload.userId,
       payload.lessonId,
     );
@@ -19,12 +19,12 @@ export class LessonProgressController implements ILessonProgressRpcController {
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.PROGRESS_FIND_BY_USER)
   findByUser(@Payload() payload: { userId: string }) {
-    return this.lessonProgressRpcService.findByUser(payload.userId);
+    return this.lessonProgressService.findByUser(payload.userId);
   }
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.PROGRESS_FIND_BY_LESSON)
   findByLesson(@Payload() payload: { userId: string; lessonId: string }) {
-    return this.lessonProgressRpcService.findByLesson(
+    return this.lessonProgressService.findByLesson(
       payload.userId,
       payload.lessonId,
     );
@@ -32,7 +32,7 @@ export class LessonProgressController implements ILessonProgressRpcController {
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.PROGRESS_CALCULATE)
   calculate(@Payload() payload: { userId: string; courseId: string }) {
-    return this.lessonProgressRpcService.recalculate(
+    return this.lessonProgressService.recalculate(
       payload.userId,
       payload.courseId,
     );

@@ -12,48 +12,48 @@ import { idOf, splitUpdate } from '@app/utils';
 @Controller()
 export class UserController implements IUserRpcController {
   constructor(
-    @Inject(I_USER_SERVICE) private readonly userRpcService: IUserService,
+    @Inject(I_USER_SERVICE) private readonly userService: IUserService,
   ) {}
 
   @MessagePattern(USER_SERVICE.ACTIONS.FIND_ALL)
   findAll() {
-    return this.userRpcService.findAll();
+    return this.userService.findAll();
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.FIND_ONE)
   findOne(@Payload() payload: string | { id: string }) {
-    return this.userRpcService.findOne(idOf(payload));
+    return this.userService.findOne(idOf(payload));
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.FIND_BY_EMAIL)
   findByEmail(@Payload() payload: string | { email: string }) {
     const email = typeof payload === 'string' ? payload : payload.email;
-    return this.userRpcService.findByEmail(email);
+    return this.userService.findByEmail(email);
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.UPDATE)
   update(@Payload() payload: UpdateUserRequestDTO & { id: string }) {
     const { id, data } = splitUpdate(payload);
-    return this.userRpcService.update(id, data);
+    return this.userService.update(id, data);
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.UPDATE_AVATAR)
   updateAvatar(@Payload() payload: { id: string; avatar: TAvatarPreset }) {
-    return this.userRpcService.updateAvatar(payload.id, payload.avatar);
+    return this.userService.updateAvatar(payload.id, payload.avatar);
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.DELETE)
   remove(@Payload() payload: string | { id: string }) {
-    return this.userRpcService.remove(idOf(payload));
+    return this.userService.remove(idOf(payload));
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.ADD_XP)
   addXp(@Payload() payload: { userId: string; amount: number }) {
-    return this.userRpcService.addXp(payload.userId, payload.amount);
+    return this.userService.addXp(payload.userId, payload.amount);
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.UPDATE_STREAK)
   updateStreak(@Payload() payload: { userId: string; reset?: boolean }) {
-    return this.userRpcService.updateStreak(payload.userId, payload.reset);
+    return this.userService.updateStreak(payload.userId, payload.reset);
   }
 }
