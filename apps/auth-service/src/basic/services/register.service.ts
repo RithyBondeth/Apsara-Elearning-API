@@ -1,4 +1,8 @@
-import { RegisterRequestDTO, RegisterResponseDTO } from '@app/contracts';
+import {
+  IRegisterService,
+  RegisterRequestDTO,
+  RegisterResponseDTO,
+} from '@app/contracts';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
@@ -17,7 +21,7 @@ import {
 import ms from 'ms';
 
 @Injectable()
-export class RegisterService {
+export class RegisterService implements IRegisterService {
   private readonly logger = new Logger(RegisterService.name);
 
   constructor(

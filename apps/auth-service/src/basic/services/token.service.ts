@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ITokenService } from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
@@ -12,7 +13,7 @@ import { IJWTPayload, JwtService, RpcUnauthorizedException } from '@app/common';
 import ms from 'ms';
 
 @Injectable()
-export class TokenService {
+export class TokenService implements ITokenService {
   private readonly logger = new Logger(TokenService.name);
 
   constructor(

@@ -1,4 +1,8 @@
-import { LoginRequestDTO, LoginResponseDTO } from '@app/contracts';
+import {
+  ILoginService,
+  LoginRequestDTO,
+  LoginResponseDTO,
+} from '@app/contracts';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
@@ -15,7 +19,7 @@ import { ConfigService } from '@nestjs/config';
 import ms from 'ms';
 
 @Injectable()
-export class LoginService {
+export class LoginService implements ILoginService {
   private readonly logger = new Logger(LoginService.name);
 
   constructor(

@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { IPasswordService } from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
@@ -21,7 +22,7 @@ import {
 import ms from 'ms';
 
 @Injectable()
-export class PasswordService {
+export class PasswordService implements IPasswordService {
   private readonly logger = new Logger(PasswordService.name);
 
   constructor(

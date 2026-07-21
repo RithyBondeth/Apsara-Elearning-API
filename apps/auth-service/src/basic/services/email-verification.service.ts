@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { IEmailVerificationService } from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
 import { eq } from 'drizzle-orm';
@@ -8,7 +9,7 @@ import { EmailService, JwtService, RpcBadRequestException } from '@app/common';
 import ms from 'ms';
 
 @Injectable()
-export class EmailVerificationService {
+export class EmailVerificationService implements IEmailVerificationService {
   private readonly logger = new Logger(EmailVerificationService.name);
 
   constructor(
