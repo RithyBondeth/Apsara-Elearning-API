@@ -6,6 +6,21 @@ import postgres from 'postgres';
 import bcrypt from 'bcrypt';
 import { MATH_GRADE_12 } from './content/math-grade-12.mjs';
 import { MATH_GRADE_12_PRACTICE } from './content/math-grade-12-practice.mjs';
+import { MATH_GRADE_12_DETAIL } from './content/math-grade-12-detail.mjs';
+
+/** Key-points heading that closes each maths lesson — the detail supplement
+ *  is inserted just before it so the summary stays last. */
+const KEY_POINTS_HEADING = '### ចំណុចសំខាន់ត្រូវចងចាំ';
+
+/** Deepens a lesson with its detail supplement (extra worked example + common
+ *  mistakes), placed before the key-points summary. No-op without a supplement. */
+function withDetail(slug, content) {
+  const detail = MATH_GRADE_12_DETAIL[slug];
+  if (!detail) return content;
+  return content.includes(KEY_POINTS_HEADING)
+    ? content.replace(KEY_POINTS_HEADING, `${detail}\n\n${KEY_POINTS_HEADING}`)
+    : `${content}\n\n${detail}`;
+}
 
 const sql = postgres(process.env.DATABASE_URL);
 const saltRounds = parseInt(process.env.BCRYPT_SALT ?? '10', 10);
@@ -248,7 +263,7 @@ async function createFullCourse(curriculum, { subjectId, gradeLevelId }) {
       const [lessonRow] = await sql`
         INSERT INTO lessons (module_id, title, slug, type, content, "order", estimated_minutes)
         VALUES (${moduleRow.id}, ${lesson.title}, ${lesson.slug}, 'article',
-                ${lesson.content}, ${lessonOrder}, ${lesson.minutes})
+                ${withDetail(lesson.slug, lesson.content)}, ${lessonOrder}, ${lesson.minutes})
         RETURNING id`;
       counts.lessons++;
       lessonOrder++;
