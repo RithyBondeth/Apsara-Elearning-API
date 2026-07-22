@@ -15,7 +15,18 @@ const STUDENT = {
   password: 'Student@123',
 };
 const COURSE_SLUG = 'intro-to-javascript';
-const BADGE_NAME = 'First Steps';
+
+// XP-threshold badges — user-service auto-awards these when addXp crosses
+// xpRequired. Icons are lucide slugs the web frontend maps to components.
+const BADGES = [
+  ['First Steps', 'Earned your first 10 XP', 'trophy', 10],
+  ['Quick Learner', 'Reached 50 XP', 'zap', 50],
+  ['Rising Star', 'Reached 100 XP', 'star', 100],
+  ['Dedicated', 'Reached 250 XP', 'flame', 250],
+  ['Scholar', 'Reached 500 XP', 'medal', 500],
+  ['Master', 'Reached 1,000 XP', 'crown', 1000],
+];
+const BADGE_NAMES = BADGES.map(([name]) => name);
 
 // Slugs of every course this script owns — cleared and re-created each run.
 // 'math' / 'english' / 'python' / 'react' / 'algorithms' are chosen to match
@@ -92,7 +103,7 @@ async function clearDemo() {
   // Courses cascade to modules → lessons → quizzes/questions/options and
   // challenges/test-cases. Delete those roots, then standalone rows.
   await sql`DELETE FROM courses WHERE slug = ANY(${DEMO_COURSE_SLUGS})`;
-  await sql`DELETE FROM badges WHERE name = ${BADGE_NAME}`;
+  await sql`DELETE FROM badges WHERE name = ANY(${BADGE_NAMES})`;
   await sql`DELETE FROM users WHERE email IN (${ADMIN.email}, ${STUDENT.email})`;
 }
 
@@ -499,9 +510,11 @@ async function seed() {
     ],
   });
 
-  console.log('Creating badge…');
-  await sql`INSERT INTO badges (name, description, icon, xp_required)
-            VALUES (${BADGE_NAME}, 'Earned your first 10 XP', 'trophy', 10)`;
+  console.log('Creating badges…');
+  for (const [name, description, icon, xpRequired] of BADGES) {
+    await sql`INSERT INTO badges (name, description, icon, xp_required)
+              VALUES (${name}, ${description}, ${icon}, ${xpRequired})`;
+  }
 
   console.log('\n✓ Seed complete.');
   console.log(`  Admin:   ${ADMIN.email} / ${ADMIN.password}`);
