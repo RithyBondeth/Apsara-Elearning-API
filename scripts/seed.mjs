@@ -5,6 +5,7 @@ import 'dotenv/config';
 import postgres from 'postgres';
 import bcrypt from 'bcrypt';
 import { MATH_GRADE_12 } from './content/math-grade-12.mjs';
+import { MATH_GRADE_12_PRACTICE } from './content/math-grade-12-practice.mjs';
 
 const sql = postgres(process.env.DATABASE_URL);
 const saltRounds = parseInt(process.env.BCRYPT_SALT ?? '10', 10);
@@ -261,8 +262,15 @@ async function createFullCourse(curriculum, { subjectId, gradeLevelId }) {
         RETURNING id`;
       counts.quizzes++;
 
+      // Extra practice questions (math G12) are appended by lesson slug so every
+      // quiz reaches ~6 questions; undefined for lessons without extras.
+      const questions = [
+        ...lesson.quiz.questions,
+        ...(MATH_GRADE_12_PRACTICE[lesson.slug] ?? []),
+      ];
+
       let questionOrder = 0;
-      for (const q of lesson.quiz.questions) {
+      for (const q of questions) {
         const [questionRow] = await sql`
           INSERT INTO quiz_questions (quiz_id, type, question, correct_answer,
                                       explanation, points, "order")
