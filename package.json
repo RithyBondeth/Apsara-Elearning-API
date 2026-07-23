@@ -41,6 +41,7 @@
     "dev": "bash scripts/dev.sh",
     "start:prod:all": "bash scripts/prod.sh",
     "seed": "node scripts/seed.mjs",
+    "validate:katex": "node scripts/validate-katex.mjs",
     "db:baseline": "node scripts/baseline-migrations.mjs",
     "db:generate": "drizzle-kit generate --config=libs/database/src/config/drizzle.config.ts",
     "db:push": "drizzle-kit push --config=libs/database/src/config/drizzle.config.ts",
