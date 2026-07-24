@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule, RabbitmqModule } from '@app/common';
 import { ASSESSMENT_SERVICE } from '@app/contracts';
-import { ChallengeController } from './controllers/challenge.controller';
+import { ChallengeController } from './challenge.controller';
 
 @Module({
   imports: [

@@ -3,7 +3,6 @@ import { ApiGatewayModule } from './api-gateway.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { RpcToHttpExceptionFilter, setupSwagger } from '@app/common';
 
@@ -17,19 +16,19 @@ async function bootstrap() {
   );
   const configService = app.get(ConfigService);
 
-  // Swagger configuration
-  setupSwagger(app, {
-    title: 'API GATEWAY',
-    description: 'KHODE KH PLATFORM API GATEWAY',
-    path: 'api/v1/internal/docs',
-  });
-
   // Set up logging
   const logger = app.get(Logger);
   app.useLogger(logger);
 
   // Set global prefix
   app.setGlobalPrefix('api/v1/internal');
+
+  // Swagger configuration — must be after setGlobalPrefix so paths are correct
+  setupSwagger(app, {
+    title: 'API GATEWAY',
+    description: 'KHODE KH PLATFORM API GATEWAY',
+    path: 'api/v1/internal/docs',
+  });
 
   // Enable CORS — restrict via CORS_ORIGINS (comma-separated); '*' if unset.
   const corsOrigins = configService.get<string>('cors.origins');

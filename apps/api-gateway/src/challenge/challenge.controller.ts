@@ -32,7 +32,8 @@ import { rpcCall } from '@app/common';
 @Controller('challenge')
 export class ChallengeController {
   constructor(
-    @Inject(ASSESSMENT_SERVICE.NAME) private readonly client: ClientProxy,
+    @Inject(ASSESSMENT_SERVICE.NAME)
+    private readonly challengeClient: ClientProxy,
   ) {}
 
   @Get('lesson/:lessonId')
@@ -44,9 +45,13 @@ export class ChallengeController {
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   findByLesson(@Param('lessonId') lessonId: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL, {
-      lessonId,
-    });
+    return rpcCall<ChallengeResponseDTO[]>(
+      this.challengeClient,
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL,
+      {
+        lessonId,
+      },
+    );
   }
 
   @Get('submissions')
@@ -58,8 +63,8 @@ export class ChallengeController {
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   mySubmissions(@CurrentUser('id') userId: string) {
-    return rpcCall(
-      this.client,
+    return rpcCall<SubmissionResponseDTO>(
+      this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_FIND_ALL,
       { userId },
     );
@@ -78,8 +83,8 @@ export class ChallengeController {
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   submission(@Param('id') id: string) {
-    return rpcCall(
-      this.client,
+    return rpcCall<SubmissionResponseDTO>(
+      this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_FIND_ONE,
       { id },
     );
@@ -98,15 +103,12 @@ export class ChallengeController {
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   async findOne(@Param('id') id: string) {
-    const challenge = await rpcCall<Record<string, unknown>>(
-      this.client,
+    const challenge = await rpcCall<ChallengeResponseDTO>(
+      this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ONE,
       { id },
     );
-    // Never expose the reference solution to students.
-    if (challenge) {
-      delete challenge.solutionCode;
-    }
+    if (challenge) delete challenge.solutionCode;
     return challenge;
   }
 
@@ -119,9 +121,13 @@ export class ChallengeController {
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   testCases(@Param('id') id: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL, {
-      challengeId: id,
-    });
+    return rpcCall<TestCaseResponseDTO[]>(
+      this.challengeClient,
+      ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL,
+      {
+        challengeId: id,
+      },
+    );
   }
 
   @Post(':id/submit')
@@ -138,11 +144,15 @@ export class ChallengeController {
     @Param('id') challengeId: string,
     @Body() dto: CreateSubmissionRequestDTO,
   ) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_CREATE, {
-      userId,
-      challengeId,
-      sourceCode: dto.sourceCode,
-      language: dto.language,
-    });
+    return rpcCall<SubmissionResponseDTO>(
+      this.challengeClient,
+      ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_CREATE,
+      {
+        userId,
+        challengeId,
+        sourceCode: dto.sourceCode,
+        language: dto.language,
+      },
+    );
   }
 }

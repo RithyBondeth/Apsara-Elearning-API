@@ -16,15 +16,15 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const logger = app.get(Logger);
 
-  // Swagger configuration
+  app.useLogger(logger);
+  app.setGlobalPrefix('admin');
+
+  // Swagger configuration — must be after setGlobalPrefix so paths are correct
   setupSwagger(app, {
     title: 'ADMIN GATEWAY',
     description: 'KHODE KH PLATFORM ADMIN GATEWAY',
     path: 'admin/docs',
   });
-
-  app.useLogger(logger);
-  app.setGlobalPrefix('admin');
 
   // CORS — restrict via CORS_ORIGINS (comma-separated); '*' if unset.
   const corsOrigins = configService.get<string>('cors.origins');

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule, RabbitmqModule } from '@app/common';
 import { AI_SERVICE } from '@app/contracts';
-import { AiController } from './controllers/ai.controller';
+import { AiController } from './ai.controller';
 
 @Module({
   imports: [

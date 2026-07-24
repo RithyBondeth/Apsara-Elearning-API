@@ -45,7 +45,7 @@ export class CourseController {
     type: CourseResponseDTO,
   })
   createCourse(@Body() createCourseReqDTO: CreateCourseRequestDTO) {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_CREATE,
       createCourseReqDTO,
@@ -60,7 +60,7 @@ export class CourseController {
     type: [CourseResponseDTO],
   })
   findAllCourses() {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_ALL,
       {},
@@ -75,7 +75,7 @@ export class CourseController {
     type: [CourseResponseDTO],
   })
   findAllPublished() {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED,
       {},
@@ -90,7 +90,7 @@ export class CourseController {
     type: CourseResponseDTO,
   })
   findOneCourse(@Param('id') id: string) {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE,
       id,
@@ -105,7 +105,7 @@ export class CourseController {
     type: CourseResponseDTO,
   })
   findBySlug(@Param('slug') slug: string) {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_SLUG,
       slug,
@@ -120,7 +120,7 @@ export class CourseController {
     type: [CourseResponseDTO],
   })
   findBySubject(@Param('subjectId') subjectId: string) {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_SUBJECT,
       subjectId,
@@ -135,7 +135,7 @@ export class CourseController {
     type: [CourseResponseDTO],
   })
   findByGrade(@Param('gradeLevelId') gradeLevelId: string) {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_GRADE,
       gradeLevelId,
@@ -150,7 +150,7 @@ export class CourseController {
     type: [CourseResponseDTO],
   })
   findByMajor(@Param('majorId') majorId: string) {
-    return rpcCall(
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_MAJOR,
       majorId,
@@ -170,19 +170,31 @@ export class CourseController {
     @Param('id') id: string,
     @Body() updateCourseReqDTO: UpdateCourseRequestDTO,
   ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_UPDATE, {
-      id,
-      ...updateCourseReqDTO,
-    });
+    return rpcCall<CourseResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_UPDATE,
+      {
+        id,
+        ...updateCourseReqDTO,
+      },
+    );
   }
 
   @Delete(':id')
   @UseGuards(AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a course (Admin only)' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Course deleted' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Course deleted',
+    type: String,
+  })
   deleteCourse(@Param('id') id: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_DELETE, id);
+    return rpcCall<string>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_DELETE,
+      id,
+    );
   }
 
   @Patch(':id/publish')
