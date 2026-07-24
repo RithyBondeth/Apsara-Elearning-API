@@ -7,6 +7,9 @@ import bcrypt from 'bcrypt';
 import { MATH_GRADE_12 } from './content/math-grade-12.mjs';
 import { MATH_GRADE_12_PRACTICE } from './content/math-grade-12-practice.mjs';
 import { MATH_GRADE_12_DETAIL } from './content/math-grade-12-detail.mjs';
+import { MATH_GRADE_12_GRAPHS } from './content/math-grade-12-graphs.mjs';
+import { MATH_GRADE_12_PRACTICE_2 } from './content/math-grade-12-practice-2.mjs';
+import { MATH_GRADE_12_DETAIL_2 } from './content/math-grade-12-detail-2.mjs';
 
 /** Key-points heading that closes each maths lesson — the detail supplement
  *  is inserted just before it so the summary stays last. */
@@ -20,6 +23,26 @@ function withDetail(slug, content) {
   return content.includes(KEY_POINTS_HEADING)
     ? content.replace(KEY_POINTS_HEADING, `${detail}\n\n${KEY_POINTS_HEADING}`)
     : `${content}\n\n${detail}`;
+}
+
+/** Inserts a lesson's third worked example (detail-2) before the key-points
+ *  summary, after the first detail supplement. No-op without one. */
+function withDetail2(slug, content) {
+  const detail = MATH_GRADE_12_DETAIL_2[slug];
+  if (!detail) return content;
+  return content.includes(KEY_POINTS_HEADING)
+    ? content.replace(KEY_POINTS_HEADING, `${detail}\n\n${KEY_POINTS_HEADING}`)
+    : `${content}\n\n${detail}`;
+}
+
+/** Inserts a lesson's SVG graph supplement (```graph blocks) just before the
+ *  key-points summary, after any detail supplement. No-op without a graph. */
+function withGraph(slug, content) {
+  const graph = MATH_GRADE_12_GRAPHS[slug];
+  if (!graph) return content;
+  return content.includes(KEY_POINTS_HEADING)
+    ? content.replace(KEY_POINTS_HEADING, `${graph}\n\n${KEY_POINTS_HEADING}`)
+    : `${content}\n\n${graph}`;
 }
 
 const sql = postgres(process.env.DATABASE_URL);
@@ -263,7 +286,7 @@ async function createFullCourse(curriculum, { subjectId, gradeLevelId }) {
       const [lessonRow] = await sql`
         INSERT INTO lessons (module_id, title, slug, type, content, "order", estimated_minutes)
         VALUES (${moduleRow.id}, ${lesson.title}, ${lesson.slug}, 'article',
-                ${withDetail(lesson.slug, lesson.content)}, ${lessonOrder}, ${lesson.minutes})
+                ${withGraph(lesson.slug, withDetail2(lesson.slug, withDetail(lesson.slug, lesson.content)))}, ${lessonOrder}, ${lesson.minutes})
         RETURNING id`;
       counts.lessons++;
       lessonOrder++;
@@ -278,10 +301,11 @@ async function createFullCourse(curriculum, { subjectId, gradeLevelId }) {
       counts.quizzes++;
 
       // Extra practice questions (math G12) are appended by lesson slug so every
-      // quiz reaches ~6 questions; undefined for lessons without extras.
+      // quiz reaches ~9 questions; undefined for lessons without extras.
       const questions = [
         ...lesson.quiz.questions,
         ...(MATH_GRADE_12_PRACTICE[lesson.slug] ?? []),
+        ...(MATH_GRADE_12_PRACTICE_2[lesson.slug] ?? []),
       ];
 
       let questionOrder = 0;
