@@ -74,7 +74,10 @@ import { CourseHealthController } from './health/health.controller';
     { provide: I_LESSON_PROGRESS_SERVICE, useClass: LessonProgressService },
     { provide: I_MAJOR_SERVICE, useClass: MajorService },
     { provide: I_MODULE_SERVICE, useClass: ModuleService },
-    { provide: I_PROGRAMMING_CATEGORY_SERVICE, useClass: ProgrammingCategoryService },
+    {
+      provide: I_PROGRAMMING_CATEGORY_SERVICE,
+      useClass: ProgrammingCategoryService,
+    },
     { provide: I_SUBJECT_SERVICE, useClass: SubjectService },
   ],
 })

@@ -1,7 +1,17 @@
 import { Module } from '@nestjs/common';
-import { ConfigurationModule, LoggerModule, RabbitmqModule, HealthModule } from '@app/common';
+import {
+  ConfigurationModule,
+  LoggerModule,
+  RabbitmqModule,
+  HealthModule,
+} from '@app/common';
 import { DatabaseModule } from '@app/database';
-import { I_ATTEMPT_SERVICE, I_AUTHORING_SERVICE, I_CHALLENGE_SERVICE, I_SUBMISSION_SERVICE } from '@app/contracts';
+import {
+  I_ATTEMPT_SERVICE,
+  I_AUTHORING_SERVICE,
+  I_CHALLENGE_SERVICE,
+  I_SUBMISSION_SERVICE,
+} from '@app/contracts';
 import { AssessmentHealthController } from './health/health.controller';
 import { USER_SERVICE } from '@app/contracts';
 import { AuthoringController } from './controllers/authoring.controller';

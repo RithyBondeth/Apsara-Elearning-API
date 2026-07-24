@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigurationModule, LoggerModule, HealthModule } from '@app/common';
 import { DatabaseModule } from '@app/database';
-import { I_CONVERSATION_SERVICE, I_MESSAGE_SERVICE, I_USAGE_SERVICE } from '@app/contracts';
+import {
+  I_CONVERSATION_SERVICE,
+  I_MESSAGE_SERVICE,
+  I_USAGE_SERVICE,
+} from '@app/contracts';
 import { AiHealthController } from './health/health.controller';
 import { AiGatewayService } from './providers/ai-gateway.service';
 import { AnthropicProvider } from './providers/anthropic.provider';

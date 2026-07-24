@@ -11,9 +11,7 @@ import { DRIZZLE } from '@app/contracts';
  */
 @Injectable()
 export class DrizzleHealthIndicator {
-  constructor(
-    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
-  ) {}
+  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   async pingCheck(key: string): Promise<HealthIndicatorResult> {
     try {

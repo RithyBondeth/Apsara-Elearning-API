@@ -3,7 +3,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { ConfigurationModule, LoggerModule, ThrottlerModule } from '@app/common';
+import {
+  ConfigurationModule,
+  LoggerModule,
+  ThrottlerModule,
+} from '@app/common';
 import { CourseModule } from './course/course.module';
 import { QuizModule } from './quiz/quiz.module';
 import { AiModule } from './ai/ai.module';

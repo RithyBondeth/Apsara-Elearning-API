@@ -17,8 +17,6 @@ import {
   CreateCourseRequestDTO,
   UpdateCourseRequestDTO,
   CourseResponseDTO,
-  DeleteResponseDTO,
-  ICourseHttpController,
 } from '@app/contracts';
 import { AdminGuard } from '@app/common';
 import {
@@ -31,7 +29,7 @@ import { rpcCall } from '@app/common';
 
 @ApiTags('Courses')
 @Controller('course')
-export class CourseController implements ICourseHttpController {
+export class CourseController {
   constructor(
     @Inject(COURSE_SERVICE.NAME)
     private readonly courseClient: ClientProxy,
@@ -46,9 +44,7 @@ export class CourseController implements ICourseHttpController {
     description: 'Course created',
     type: CourseResponseDTO,
   })
-  createCourse(
-    @Body() createCourseReqDTO: CreateCourseRequestDTO,
-  ): Promise<CourseResponseDTO> {
+  createCourse(@Body() createCourseReqDTO: CreateCourseRequestDTO) {
     return rpcCall<CourseResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_CREATE,
@@ -63,7 +59,7 @@ export class CourseController implements ICourseHttpController {
     description: 'All courses retrieved',
     type: [CourseResponseDTO],
   })
-  findAllCourses(): Promise<CourseResponseDTO[]> {
+  findAllCourses() {
     return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_ALL,
@@ -78,7 +74,7 @@ export class CourseController implements ICourseHttpController {
     description: 'Published courses retrieved',
     type: [CourseResponseDTO],
   })
-  findAllPublished(): Promise<CourseResponseDTO[]> {
+  findAllPublished() {
     return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED,
@@ -93,8 +89,8 @@ export class CourseController implements ICourseHttpController {
     description: 'Course retrieved',
     type: CourseResponseDTO,
   })
-  findOneCourse(@Param('id') id: string): Promise<CourseResponseDTO> {
-    return rpcCall<CourseResponseDTO>(
+  findOneCourse(@Param('id') id: string) {
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE,
       id,
@@ -108,7 +104,7 @@ export class CourseController implements ICourseHttpController {
     description: 'Course retrieved',
     type: CourseResponseDTO,
   })
-  findBySlug(@Param('slug') slug: string): Promise<CourseResponseDTO> {
+  findBySlug(@Param('slug') slug: string) {
     return rpcCall<CourseResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_SLUG,
@@ -123,9 +119,7 @@ export class CourseController implements ICourseHttpController {
     description: 'Courses retrieved',
     type: [CourseResponseDTO],
   })
-  findBySubject(
-    @Param('subjectId') subjectId: string,
-  ): Promise<CourseResponseDTO[]> {
+  findBySubject(@Param('subjectId') subjectId: string) {
     return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_SUBJECT,
@@ -140,9 +134,7 @@ export class CourseController implements ICourseHttpController {
     description: 'Courses retrieved',
     type: [CourseResponseDTO],
   })
-  findByGrade(
-    @Param('gradeLevelId') gradeLevelId: string,
-  ): Promise<CourseResponseDTO[]> {
+  findByGrade(@Param('gradeLevelId') gradeLevelId: string) {
     return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_GRADE,
@@ -157,7 +149,7 @@ export class CourseController implements ICourseHttpController {
     description: 'Courses retrieved',
     type: [CourseResponseDTO],
   })
-  findByMajor(@Param('majorId') majorId: string): Promise<CourseResponseDTO[]> {
+  findByMajor(@Param('majorId') majorId: string) {
     return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_MAJOR,
@@ -177,7 +169,7 @@ export class CourseController implements ICourseHttpController {
   updateCourse(
     @Param('id') id: string,
     @Body() updateCourseReqDTO: UpdateCourseRequestDTO,
-  ): Promise<CourseResponseDTO> {
+  ) {
     return rpcCall<CourseResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_UPDATE,
@@ -195,10 +187,10 @@ export class CourseController implements ICourseHttpController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Course deleted',
-    type: DeleteResponseDTO,
+    type: String,
   })
-  deleteCourse(@Param('id') id: string): Promise<DeleteResponseDTO> {
-    return rpcCall<DeleteResponseDTO>(
+  deleteCourse(@Param('id') id: string) {
+    return rpcCall<string>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_DELETE,
       id,
@@ -209,13 +201,9 @@ export class CourseController implements ICourseHttpController {
   @UseGuards(AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Publish a course (Admin only)' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Course published',
-    type: CourseResponseDTO,
-  })
-  publishCourse(@Param('id') id: string): Promise<CourseResponseDTO> {
-    return rpcCall<CourseResponseDTO>(
+  @ApiResponse({ status: HttpStatus.OK, description: 'Course published' })
+  publishCourse(@Param('id') id: string) {
+    return rpcCall(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_PUBLISH,
       id,
@@ -226,13 +214,9 @@ export class CourseController implements ICourseHttpController {
   @UseGuards(AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Unpublish a course (Admin only)' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Course unpublished',
-    type: CourseResponseDTO,
-  })
-  unpublishCourse(@Param('id') id: string): Promise<CourseResponseDTO> {
-    return rpcCall<CourseResponseDTO>(
+  @ApiResponse({ status: HttpStatus.OK, description: 'Course unpublished' })
+  unpublishCourse(@Param('id') id: string) {
+    return rpcCall(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_UNPUBLISH,
       id,

@@ -79,7 +79,14 @@ export class TimingInterceptor implements NestInterceptor {
     start: number,
   ): void {
     const durationMs = Date.now() - start;
-    const payload = { kind: 'http', method, url, route, statusCode, durationMs };
+    const payload = {
+      kind: 'http',
+      method,
+      url,
+      route,
+      statusCode,
+      durationMs,
+    };
     const msg = `${method} ${url} ${statusCode} ${durationMs}ms`;
     if (statusCode >= 500) this.logger.error(payload, msg);
     else if (durationMs >= SLOW_REQUEST_MS || statusCode >= 400)

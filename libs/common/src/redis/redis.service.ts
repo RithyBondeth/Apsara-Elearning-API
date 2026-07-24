@@ -25,7 +25,9 @@ export class RedisService {
       const value = await this.client.get(key);
       return value ? (JSON.parse(value) as T) : null;
     } catch (error) {
-      this.logger.error(`Cache GET failed for ${key}: ${(error as Error).message}`);
+      this.logger.error(
+        `Cache GET failed for ${key}: ${(error as Error).message}`,
+      );
       return null;
     }
   }
@@ -37,7 +39,9 @@ export class RedisService {
       if (ttlSeconds) await this.client.set(key, payload, 'EX', ttlSeconds);
       else await this.client.set(key, payload);
     } catch (error) {
-      this.logger.error(`Cache SET failed for ${key}: ${(error as Error).message}`);
+      this.logger.error(
+        `Cache SET failed for ${key}: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -46,7 +50,9 @@ export class RedisService {
     try {
       await this.client.del(key);
     } catch (error) {
-      this.logger.error(`Cache DEL failed for ${key}: ${(error as Error).message}`);
+      this.logger.error(
+        `Cache DEL failed for ${key}: ${(error as Error).message}`,
+      );
     }
   }
 }

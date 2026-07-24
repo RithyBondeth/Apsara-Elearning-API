@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigurationModule, LoggerModule, HealthModule } from '@app/common';
 import { DatabaseModule } from '@app/database';
-import { I_PAYMENT_SERVICE, I_PLAN_SERVICE, I_SUBSCRIPTION_SERVICE } from '@app/contracts';
+import {
+  I_PAYMENT_SERVICE,
+  I_PLAN_SERVICE,
+  I_SUBSCRIPTION_SERVICE,
+} from '@app/contracts';
 import { SubscriptionHealthController } from './health/health.controller';
 import { SubscriptionController } from './controllers/subscription.controller';
 import { PlanService } from './services/plan.service';
@@ -11,9 +15,7 @@ import { PaymentGatewayService } from './payment/payment-gateway.service';
 
 @Module({
   imports: [ConfigurationModule, LoggerModule, DatabaseModule, HealthModule],
-  controllers: [SubscriptionController,
-    SubscriptionHealthController,
-  ],
+  controllers: [SubscriptionController, SubscriptionHealthController],
   providers: [
     // Concrete classes stay injectable (services inject each other directly,
     // keeping real Drizzle return types); the interface tokens alias the same
