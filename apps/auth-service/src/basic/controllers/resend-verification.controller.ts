@@ -11,9 +11,7 @@ import type {
 } from '@app/contracts';
 
 @Controller()
-export class ResendVerificationController
-  implements IResendVerificationRpcController
-{
+export class ResendVerificationController implements IResendVerificationRpcController {
   constructor(
     @Inject(I_EMAIL_VERIFICATION_SERVICE)
     private readonly emailVerificationService: IEmailVerificationService,

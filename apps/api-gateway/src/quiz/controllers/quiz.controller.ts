@@ -12,10 +12,13 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import {
   ASSESSMENT_SERVICE,
-  SubmitAttemptRequestDTO,
-  QuizResponseDTO,
-  AttemptResponseDTO,
   AttemptAnswerResponseDTO,
+  AttemptResponseDTO,
+  IQuizHttpController,
+  QuizResponseDTO,
+  StartAttemptResponseDTO,
+  SubmitAttemptRequestDTO,
+  SubmitAttemptResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import {
@@ -30,7 +33,7 @@ import { rpcCall } from '@app/common';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('quiz')
-export class QuizController {
+export class QuizController implements IQuizHttpController {
   constructor(
     @Inject(ASSESSMENT_SERVICE.NAME) private readonly client: ClientProxy,
   ) {}
@@ -43,10 +46,14 @@ export class QuizController {
     type: [QuizResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  findByLesson(@Param('lessonId') lessonId: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.QUIZ_FIND_ALL, {
-      lessonId,
-    });
+  findByLesson(
+    @Param('lessonId') lessonId: string,
+  ): Promise<QuizResponseDTO[]> {
+    return rpcCall<QuizResponseDTO[]>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.QUIZ_FIND_ALL,
+      { lessonId },
+    );
   }
 
   @Get('attempts')
@@ -57,10 +64,12 @@ export class QuizController {
     type: [AttemptResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  myAttempts(@CurrentUser('id') userId: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_FIND_ALL, {
-      userId,
-    });
+  myAttempts(@CurrentUser('id') userId: string): Promise<AttemptResponseDTO[]> {
+    return rpcCall<AttemptResponseDTO[]>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_FIND_ALL,
+      { userId },
+    );
   }
 
   @Get('attempt/:id')
@@ -75,10 +84,12 @@ export class QuizController {
     description: 'Attempt not found',
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  attempt(@Param('id') id: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_FIND_ONE, {
-      id,
-    });
+  attempt(@Param('id') id: string): Promise<AttemptResponseDTO> {
+    return rpcCall<AttemptResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_FIND_ONE,
+      { id },
+    );
   }
 
   @Get('attempt/:id/answers')
@@ -89,8 +100,8 @@ export class QuizController {
     type: [AttemptAnswerResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  attemptAnswers(@Param('id') id: string) {
-    return rpcCall(
+  attemptAnswers(@Param('id') id: string): Promise<AttemptAnswerResponseDTO[]> {
+    return rpcCall<AttemptAnswerResponseDTO[]>(
       this.client,
       ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_ANSWER_FIND_ALL,
       { attemptId: id },
@@ -103,19 +114,19 @@ export class QuizController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Quiz attempt submitted and graded',
-    type: AttemptResponseDTO,
+    type: SubmitAttemptResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   submit(
     @CurrentUser('id') userId: string,
     @Param('attemptId') attemptId: string,
     @Body() body: SubmitAttemptRequestDTO,
-  ) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_SUBMIT, {
-      userId,
-      attemptId,
-      answers: body.answers,
-    });
+  ): Promise<SubmitAttemptResponseDTO> {
+    return rpcCall<SubmitAttemptResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_SUBMIT,
+      { userId, attemptId, answers: body.answers },
+    );
   }
 
   @Post(':quizId/start')
@@ -124,13 +135,17 @@ export class QuizController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Quiz attempt started successfully',
-    type: AttemptResponseDTO,
+    type: StartAttemptResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  start(@CurrentUser('id') userId: string, @Param('quizId') quizId: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_START, {
-      userId,
-      quizId,
-    });
+  start(
+    @CurrentUser('id') userId: string,
+    @Param('quizId') quizId: string,
+  ): Promise<StartAttemptResponseDTO> {
+    return rpcCall<StartAttemptResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_START,
+      { userId, quizId },
+    );
   }
 }

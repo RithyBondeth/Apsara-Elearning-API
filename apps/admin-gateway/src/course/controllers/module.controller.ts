@@ -12,6 +12,9 @@ import { ClientProxy } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
   CreateModuleRequestDTO,
+  DeleteResponseDTO,
+  IAdminModuleController,
+  ModuleResponseDTO,
   ReorderRequestDTO,
   UpdateModuleRequestDTO,
 } from '@app/contracts';
@@ -21,7 +24,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @ApiTags('Modules')
 @ApiBearerAuth()
 @Controller('courses/:courseId/modules')
-export class ModuleController {
+export class ModuleController implements IAdminModuleController {
   constructor(
     @Inject(COURSE_SERVICE.NAME) private readonly courseClient: ClientProxy,
   ) {}
@@ -30,18 +33,21 @@ export class ModuleController {
   create(
     @Param('courseId') courseId: string,
     @Body() body: CreateModuleRequestDTO,
-  ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_CREATE, {
-      courseId,
-      ...body,
-    });
+  ): Promise<ModuleResponseDTO> {
+    return rpcCall<ModuleResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MODULE_CREATE,
+      { courseId, ...body },
+    );
   }
 
   @Get()
-  findAll(@Param('courseId') courseId: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_FIND_ALL, {
-      courseId,
-    });
+  findAll(@Param('courseId') courseId: string): Promise<ModuleResponseDTO[]> {
+    return rpcCall<ModuleResponseDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MODULE_FIND_ALL,
+      { courseId },
+    );
   }
 
   // Declared before `:id` so the literal path wins.
@@ -49,25 +55,32 @@ export class ModuleController {
   reorder(
     @Param('courseId') courseId: string,
     @Body() body: ReorderRequestDTO,
-  ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_REORDER, {
-      courseId,
-      orderedIds: body.orderedIds,
-    });
+  ): Promise<ModuleResponseDTO[]> {
+    return rpcCall<ModuleResponseDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MODULE_REORDER,
+      { courseId, orderedIds: body.orderedIds },
+    );
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: UpdateModuleRequestDTO) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_UPDATE, {
-      id,
-      ...body,
-    });
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateModuleRequestDTO,
+  ): Promise<ModuleResponseDTO> {
+    return rpcCall<ModuleResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MODULE_UPDATE,
+      { id, ...body },
+    );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_DELETE, {
-      id,
-    });
+  remove(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MODULE_DELETE,
+      { id },
+    );
   }
 }

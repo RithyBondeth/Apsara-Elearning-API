@@ -10,8 +10,11 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import {
   USER_SERVICE,
+  IUserHttpController,
   UpdateAvatarRequestDTO,
   UpdateUserRequestDTO,
+  UserBadgeResponseDTO,
+  UserResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import {
@@ -26,7 +29,7 @@ import { rpcCall } from '@app/common';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('user')
-export class UserController {
+export class UserController implements IUserHttpController {
   constructor(
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
   ) {}
@@ -36,12 +39,15 @@ export class UserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Profile retrieved successfully',
+    type: UserResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  getProfile(@CurrentUser('id') userId: string) {
-    return rpcCall(this.userClient, USER_SERVICE.ACTIONS.FIND_ONE, {
-      id: userId,
-    });
+  getProfile(@CurrentUser('id') userId: string): Promise<UserResponseDTO> {
+    return rpcCall<UserResponseDTO>(
+      this.userClient,
+      USER_SERVICE.ACTIONS.FIND_ONE,
+      { id: userId },
+    );
   }
 
   @Patch('me')
@@ -49,16 +55,18 @@ export class UserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Profile updated successfully',
+    type: UserResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   updateProfile(
     @CurrentUser('id') userId: string,
     @Body() dto: UpdateUserRequestDTO,
-  ) {
-    return rpcCall(this.userClient, USER_SERVICE.ACTIONS.UPDATE, {
-      id: userId,
-      ...dto,
-    });
+  ): Promise<UserResponseDTO> {
+    return rpcCall<UserResponseDTO>(
+      this.userClient,
+      USER_SERVICE.ACTIONS.UPDATE,
+      { id: userId, ...dto },
+    );
   }
 
   @Patch('me/avatar')
@@ -66,16 +74,18 @@ export class UserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Avatar updated successfully',
+    type: UserResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   updateAvatar(
     @CurrentUser('id') userId: string,
     @Body() dto: UpdateAvatarRequestDTO,
-  ) {
-    return rpcCall(this.userClient, USER_SERVICE.ACTIONS.UPDATE_AVATAR, {
-      id: userId,
-      avatar: dto.avatar,
-    });
+  ): Promise<UserResponseDTO> {
+    return rpcCall<UserResponseDTO>(
+      this.userClient,
+      USER_SERVICE.ACTIONS.UPDATE_AVATAR,
+      { id: userId, avatar: dto.avatar },
+    );
   }
 
   @Get('me/badges')
@@ -83,11 +93,16 @@ export class UserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Badges retrieved successfully',
+    type: [UserBadgeResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  getMyBadges(@CurrentUser('id') userId: string) {
-    return rpcCall(this.userClient, USER_SERVICE.ACTIONS.BADGE_FIND_BY_USER, {
-      userId,
-    });
+  getMyBadges(
+    @CurrentUser('id') userId: string,
+  ): Promise<UserBadgeResponseDTO[]> {
+    return rpcCall<UserBadgeResponseDTO[]>(
+      this.userClient,
+      USER_SERVICE.ACTIONS.BADGE_FIND_BY_USER,
+      { userId },
+    );
   }
 }

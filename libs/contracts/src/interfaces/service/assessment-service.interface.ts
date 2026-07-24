@@ -1,7 +1,46 @@
-/**
- * DI tokens + service contracts for assessment-service.
- * Loose signatures — Drizzle rows re-typed at the gateway via rpcCall<T>.
- */
+import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
+import {
+  AttemptAnswerDTO,
+  AttemptAnswerResponseDTO,
+  AttemptResponseDTO,
+} from '../../dtos/assessment/attempt.dto';
+import {
+  OptionResponseDTO,
+  QuestionResponseDTO,
+  ReorderResponseDTO,
+  StartAttemptResponseDTO,
+  SubmissionResultResponseDTO,
+  SubmitAttemptResponseDTO,
+} from '../../dtos/assessment/assessment-responses.dto';
+import {
+  ChallengeResponseDTO,
+  CreateChallengeRequestDTO,
+  UpdateChallengeRequestDTO,
+} from '../../dtos/assessment/challenge.dto';
+import {
+  CreateOptionRequestDTO,
+  UpdateOptionRequestDTO,
+} from '../../dtos/assessment/option.dto';
+import {
+  CreateQuestionRequestDTO,
+  UpdateQuestionRequestDTO,
+} from '../../dtos/assessment/question.dto';
+import {
+  CreateQuizRequestDTO,
+  QuizResponseDTO,
+  UpdateQuizRequestDTO,
+} from '../../dtos/assessment/quiz.dto';
+import {
+  CreateSubmissionRequestDTO,
+  SubmissionResponseDTO,
+} from '../../dtos/assessment/submission.dto';
+import {
+  CreateTestCaseRequestDTO,
+  TestCaseResponseDTO,
+  UpdateTestCaseRequestDTO,
+} from '../../dtos/assessment/test-case.dto';
+
+/** DI tokens + service contracts for assessment-service. */
 
 export const I_ATTEMPT_SERVICE = 'IAttemptService';
 export const I_AUTHORING_SERVICE = 'IAuthoringService';
@@ -9,46 +48,87 @@ export const I_CHALLENGE_SERVICE = 'IChallengeService';
 export const I_SUBMISSION_SERVICE = 'ISubmissionService';
 
 export interface IAttemptService {
-  start(...args: any[]): Promise<unknown>;
-  submit(...args: any[]): Promise<unknown>;
-  findAllByUser(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  findByQuiz(...args: any[]): Promise<unknown>;
-  findAnswers(...args: any[]): Promise<unknown>;
+  start(userId: string, quizId: string): Promise<StartAttemptResponseDTO>;
+  submit(
+    userId: string,
+    attemptId: string,
+    answers: AttemptAnswerDTO[],
+  ): Promise<SubmitAttemptResponseDTO>;
+  findAllByUser(userId: string): Promise<AttemptResponseDTO[]>;
+  findOne(id: string): Promise<AttemptResponseDTO>;
+  findByQuiz(userId: string, quizId: string): Promise<AttemptResponseDTO[]>;
+  findAnswers(attemptId: string): Promise<AttemptAnswerResponseDTO[]>;
 }
 
 export interface IAuthoringService {
-  createQuiz(...args: any[]): Promise<unknown>;
-  findQuizzesByLesson(...args: any[]): Promise<unknown>;
-  findQuiz(...args: any[]): Promise<unknown>;
-  updateQuiz(...args: any[]): Promise<unknown>;
-  removeQuiz(...args: any[]): Promise<unknown>;
-  createQuestion(...args: any[]): Promise<unknown>;
-  findQuestionsByQuiz(...args: any[]): Promise<unknown>;
-  updateQuestion(...args: any[]): Promise<unknown>;
-  removeQuestion(...args: any[]): Promise<unknown>;
-  reorderQuestions(...args: any[]): Promise<unknown>;
-  createOption(...args: any[]): Promise<unknown>;
-  findOptionsByQuestion(...args: any[]): Promise<unknown>;
-  updateOption(...args: any[]): Promise<unknown>;
-  removeOption(...args: any[]): Promise<unknown>;
+  createQuiz(
+    lessonId: string,
+    dto: CreateQuizRequestDTO,
+  ): Promise<QuizResponseDTO>;
+  findQuizzesByLesson(lessonId: string): Promise<QuizResponseDTO[]>;
+  findQuiz(id: string): Promise<QuizResponseDTO>;
+  updateQuiz(id: string, dto: UpdateQuizRequestDTO): Promise<QuizResponseDTO>;
+  removeQuiz(id: string): Promise<DeleteResponseDTO>;
+  createQuestion(
+    quizId: string,
+    dto: CreateQuestionRequestDTO,
+  ): Promise<QuestionResponseDTO>;
+  findQuestionsByQuiz(quizId: string): Promise<QuestionResponseDTO[]>;
+  updateQuestion(
+    id: string,
+    dto: UpdateQuestionRequestDTO,
+  ): Promise<QuestionResponseDTO>;
+  removeQuestion(id: string): Promise<DeleteResponseDTO>;
+  reorderQuestions(orderedIds: string[]): Promise<ReorderResponseDTO>;
+  createOption(
+    questionId: string,
+    dto: CreateOptionRequestDTO,
+  ): Promise<OptionResponseDTO>;
+  findOptionsByQuestion(questionId: string): Promise<OptionResponseDTO[]>;
+  updateOption(
+    id: string,
+    dto: UpdateOptionRequestDTO,
+  ): Promise<OptionResponseDTO>;
+  removeOption(id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface IChallengeService {
-  createChallenge(...args: any[]): Promise<unknown>;
-  findChallengesByLesson(...args: any[]): Promise<unknown>;
-  findChallenge(...args: any[]): Promise<unknown>;
-  updateChallenge(...args: any[]): Promise<unknown>;
-  removeChallenge(...args: any[]): Promise<unknown>;
-  createTestCase(...args: any[]): Promise<unknown>;
-  findTestCases(...args: any[]): Promise<unknown>;
-  updateTestCase(...args: any[]): Promise<unknown>;
-  removeTestCase(...args: any[]): Promise<unknown>;
+  createChallenge(
+    lessonId: string,
+    dto: CreateChallengeRequestDTO,
+  ): Promise<ChallengeResponseDTO>;
+  findChallengesByLesson(lessonId: string): Promise<ChallengeResponseDTO[]>;
+  findChallenge(id: string): Promise<ChallengeResponseDTO>;
+  updateChallenge(
+    id: string,
+    dto: UpdateChallengeRequestDTO,
+  ): Promise<ChallengeResponseDTO>;
+  removeChallenge(id: string): Promise<DeleteResponseDTO>;
+  createTestCase(
+    challengeId: string,
+    dto: CreateTestCaseRequestDTO,
+  ): Promise<TestCaseResponseDTO>;
+  findTestCases(
+    challengeId: string,
+    includeHidden?: boolean,
+  ): Promise<TestCaseResponseDTO[]>;
+  updateTestCase(
+    id: string,
+    dto: UpdateTestCaseRequestDTO,
+  ): Promise<TestCaseResponseDTO>;
+  removeTestCase(id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface ISubmissionService {
-  create(...args: any[]): Promise<unknown>;
-  findAllByUser(...args: any[]): Promise<unknown>;
-  findByChallenge(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
+  create(
+    userId: string,
+    challengeId: string,
+    dto: CreateSubmissionRequestDTO,
+  ): Promise<SubmissionResultResponseDTO>;
+  findAllByUser(userId: string): Promise<SubmissionResponseDTO[]>;
+  findByChallenge(
+    userId: string,
+    challengeId: string,
+  ): Promise<SubmissionResponseDTO[]>;
+  findOne(id: string): Promise<SubmissionResponseDTO>;
 }

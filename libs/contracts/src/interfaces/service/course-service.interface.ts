@@ -1,10 +1,57 @@
+import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
+import {
+  CourseResponseDTO,
+  CreateCourseRequestDTO,
+  UpdateCourseRequestDTO,
+} from '../../dtos/course/course.dto';
+import {
+  EnrollmentResponseDTO,
+  EnrollmentCheckResponseDTO,
+  UnenrollResponseDTO,
+} from '../../dtos/course/enrollment.dto';
+import {
+  CreateFacultyRequestDTO,
+  FacultyResponseDTO,
+  UpdateFacultyRequestDTO,
+} from '../../dtos/course/faculty.dto';
+import {
+  CreateGradeLevelRequestDTO,
+  GradeLevelResponseDTO,
+  UpdateGradeLevelRequestDTO,
+} from '../../dtos/course/grade-level.dto';
+import {
+  CreateLessonRequestDTO,
+  LessonResponseDTO,
+  UpdateLessonRequestDTO,
+} from '../../dtos/course/lesson.dto';
+import {
+  LessonCompletionResponseDTO,
+  LessonProgressResponseDTO,
+} from '../../dtos/course/lesson-progress.dto';
+import {
+  CreateMajorRequestDTO,
+  MajorResponseDTO,
+  UpdateMajorRequestDTO,
+} from '../../dtos/course/major.dto';
+import {
+  CreateModuleRequestDTO,
+  ModuleResponseDTO,
+  UpdateModuleRequestDTO,
+} from '../../dtos/course/module.dto';
+import {
+  CreateProgrammingCategoryRequestDTO,
+  ProgrammingCategoryResponseDTO,
+  UpdateProgrammingCategoryRequestDTO,
+} from '../../dtos/course/programming-category.dto';
+import {
+  CreateSubjectRequestDTO,
+  SubjectResponseDTO,
+  UpdateSubjectRequestDTO,
+} from '../../dtos/course/subject.dto';
+
 /**
  * DI tokens + service contracts for course-service. Controllers depend on
  * these; the module binds each concrete implementation.
- *
- * Signatures are intentionally loose (`...args`, `Promise<unknown>`): these
- * resolve to Drizzle row shapes re-typed at the gateway via `rpcCall<T>`, so
- * pinning them here would only duplicate the inferred query types.
  */
 
 export const I_COURSE_SERVICE = 'ICourseService';
@@ -19,94 +66,114 @@ export const I_PROGRAMMING_CATEGORY_SERVICE = 'IProgrammingCategoryService';
 export const I_SUBJECT_SERVICE = 'ISubjectService';
 
 export interface ICourseService {
-  create(...args: any[]): Promise<unknown>;
-  findAll(...args: any[]): Promise<unknown>;
-  findPublished(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  findBySlug(...args: any[]): Promise<unknown>;
-  findBySubject(...args: any[]): Promise<unknown>;
-  findByGrade(...args: any[]): Promise<unknown>;
-  findByMajor(...args: any[]): Promise<unknown>;
-  findByCategory(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
-  setPublished(...args: any[]): Promise<unknown>;
+  create(dto: CreateCourseRequestDTO): Promise<CourseResponseDTO>;
+  findAll(): Promise<CourseResponseDTO[]>;
+  findPublished(): Promise<CourseResponseDTO[]>;
+  findOne(id: string): Promise<CourseResponseDTO>;
+  findBySlug(slug: string): Promise<CourseResponseDTO>;
+  findBySubject(subjectId: string): Promise<CourseResponseDTO[]>;
+  findByGrade(gradeLevelId: string): Promise<CourseResponseDTO[]>;
+  findByMajor(majorId: string): Promise<CourseResponseDTO[]>;
+  findByCategory(categoryId: string): Promise<CourseResponseDTO[]>;
+  update(id: string, dto: UpdateCourseRequestDTO): Promise<CourseResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
+  setPublished(id: string, published: boolean): Promise<CourseResponseDTO>;
 }
 
 export interface IEnrollmentService {
-  enroll(...args: any[]): Promise<unknown>;
-  unenroll(...args: any[]): Promise<unknown>;
-  findByUser(...args: any[]): Promise<unknown>;
-  findByCourse(...args: any[]): Promise<unknown>;
-  check(...args: any[]): Promise<unknown>;
+  enroll(userId: string, courseId: string): Promise<EnrollmentResponseDTO>;
+  unenroll(userId: string, courseId: string): Promise<UnenrollResponseDTO>;
+  findByUser(userId: string): Promise<EnrollmentResponseDTO[]>;
+  findByCourse(courseId: string): Promise<EnrollmentResponseDTO[]>;
+  check(userId: string, courseId: string): Promise<EnrollmentCheckResponseDTO>;
 }
 
 export interface IFacultyService {
-  create(...args: any[]): Promise<unknown>;
-  findAll(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  findBySlug(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
+  create(dto: CreateFacultyRequestDTO): Promise<FacultyResponseDTO>;
+  findAll(): Promise<FacultyResponseDTO[]>;
+  findOne(id: string): Promise<FacultyResponseDTO>;
+  findBySlug(slug: string): Promise<FacultyResponseDTO>;
+  update(id: string, dto: UpdateFacultyRequestDTO): Promise<FacultyResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface IGradeLevelService {
-  create(...args: any[]): Promise<unknown>;
-  findAll(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
+  create(dto: CreateGradeLevelRequestDTO): Promise<GradeLevelResponseDTO>;
+  findAll(): Promise<GradeLevelResponseDTO[]>;
+  findOne(id: string): Promise<GradeLevelResponseDTO>;
+  update(
+    id: string,
+    dto: UpdateGradeLevelRequestDTO,
+  ): Promise<GradeLevelResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface ILessonService {
-  create(...args: any[]): Promise<unknown>;
-  findAllByModule(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  findBySlug(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
-  reorder(...args: any[]): Promise<unknown>;
+  create(
+    moduleId: string,
+    dto: CreateLessonRequestDTO,
+  ): Promise<LessonResponseDTO>;
+  findAllByModule(moduleId: string): Promise<LessonResponseDTO[]>;
+  findOne(id: string): Promise<LessonResponseDTO>;
+  findBySlug(slug: string): Promise<LessonResponseDTO>;
+  update(id: string, dto: UpdateLessonRequestDTO): Promise<LessonResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
+  reorder(moduleId: string, orderedIds: string[]): Promise<LessonResponseDTO[]>;
 }
 
 export interface ILessonProgressService {
-  markComplete(...args: any[]): Promise<unknown>;
-  findByUser(...args: any[]): Promise<unknown>;
-  findByLesson(...args: any[]): Promise<unknown>;
-  recalculate(...args: any[]): Promise<unknown>;
+  markComplete(
+    userId: string,
+    lessonId: string,
+  ): Promise<LessonCompletionResponseDTO>;
+  findByUser(userId: string): Promise<LessonProgressResponseDTO[]>;
+  findByLesson(
+    userId: string,
+    lessonId: string,
+  ): Promise<LessonProgressResponseDTO>;
+  recalculate(userId: string, courseId: string): Promise<EnrollmentResponseDTO>;
 }
 
 export interface IMajorService {
-  create(...args: any[]): Promise<unknown>;
-  findAll(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  findBySlug(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
+  create(dto: CreateMajorRequestDTO): Promise<MajorResponseDTO>;
+  findAll(facultyId?: string): Promise<MajorResponseDTO[]>;
+  findOne(id: string): Promise<MajorResponseDTO>;
+  findBySlug(slug: string): Promise<MajorResponseDTO>;
+  update(id: string, dto: UpdateMajorRequestDTO): Promise<MajorResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface IModuleService {
-  create(...args: any[]): Promise<unknown>;
-  findAllByCourse(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
-  reorder(...args: any[]): Promise<unknown>;
+  create(
+    courseId: string,
+    dto: CreateModuleRequestDTO,
+  ): Promise<ModuleResponseDTO>;
+  findAllByCourse(courseId: string): Promise<ModuleResponseDTO[]>;
+  findOne(id: string): Promise<ModuleResponseDTO>;
+  update(id: string, dto: UpdateModuleRequestDTO): Promise<ModuleResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
+  reorder(courseId: string, orderedIds: string[]): Promise<ModuleResponseDTO[]>;
 }
 
 export interface IProgrammingCategoryService {
-  create(...args: any[]): Promise<unknown>;
-  findAll(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  findBySlug(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
+  create(
+    dto: CreateProgrammingCategoryRequestDTO,
+  ): Promise<ProgrammingCategoryResponseDTO>;
+  findAll(): Promise<ProgrammingCategoryResponseDTO[]>;
+  findOne(id: string): Promise<ProgrammingCategoryResponseDTO>;
+  findBySlug(slug: string): Promise<ProgrammingCategoryResponseDTO>;
+  update(
+    id: string,
+    dto: UpdateProgrammingCategoryRequestDTO,
+  ): Promise<ProgrammingCategoryResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface ISubjectService {
-  create(...args: any[]): Promise<unknown>;
-  findAll(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  findBySlug(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
+  create(dto: CreateSubjectRequestDTO): Promise<SubjectResponseDTO>;
+  findAll(): Promise<SubjectResponseDTO[]>;
+  findOne(id: string): Promise<SubjectResponseDTO>;
+  findBySlug(slug: string): Promise<SubjectResponseDTO>;
+  update(id: string, dto: UpdateSubjectRequestDTO): Promise<SubjectResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
 }

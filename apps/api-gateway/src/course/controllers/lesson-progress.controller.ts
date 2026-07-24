@@ -9,7 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE, LessonProgressResponseDTO } from '@app/contracts';
+import {
+  COURSE_SERVICE,
+  EnrollmentResponseDTO,
+  ILessonProgressHttpController,
+  LessonCompletionResponseDTO,
+  LessonProgressResponseDTO,
+} from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import {
   ApiBearerAuth,
@@ -23,7 +29,7 @@ import { rpcCall } from '@app/common';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('lesson-progress')
-export class LessonProgressController {
+export class LessonProgressController implements ILessonProgressHttpController {
   constructor(
     @Inject(COURSE_SERVICE.NAME)
     private readonly courseClient: ClientProxy,
@@ -35,14 +41,14 @@ export class LessonProgressController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Lesson marked as complete',
-    type: LessonProgressResponseDTO,
+    type: LessonCompletionResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   markComplete(
     @CurrentUser('id') userId: string,
     @Param('lessonId') lessonId: string,
-  ) {
-    return rpcCall(
+  ): Promise<LessonCompletionResponseDTO> {
+    return rpcCall<LessonCompletionResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRESS_MARK_COMPLETE,
       { userId, lessonId },
@@ -57,8 +63,10 @@ export class LessonProgressController {
     type: [LessonProgressResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  myProgress(@CurrentUser('id') userId: string) {
-    return rpcCall(
+  myProgress(
+    @CurrentUser('id') userId: string,
+  ): Promise<LessonProgressResponseDTO[]> {
+    return rpcCall<LessonProgressResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRESS_FIND_BY_USER,
       { userId },
@@ -76,8 +84,8 @@ export class LessonProgressController {
   progressForLesson(
     @CurrentUser('id') userId: string,
     @Param('lessonId') lessonId: string,
-  ) {
-    return rpcCall(
+  ): Promise<LessonProgressResponseDTO> {
+    return rpcCall<LessonProgressResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRESS_FIND_BY_LESSON,
       { userId, lessonId },
@@ -90,19 +98,17 @@ export class LessonProgressController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Progress recalculated',
+    type: EnrollmentResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   recalculate(
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
-  ) {
-    return rpcCall(
+  ): Promise<EnrollmentResponseDTO> {
+    return rpcCall<EnrollmentResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRESS_CALCULATE,
-      {
-        userId,
-        courseId,
-      },
+      { userId, courseId },
     );
   }
 }

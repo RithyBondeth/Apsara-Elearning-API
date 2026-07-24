@@ -15,6 +15,8 @@ import {
   CreateCourseRequestDTO,
   UpdateCourseRequestDTO,
   CourseResponseDTO,
+  DeleteResponseDTO,
+  IAdminCourseController,
 } from '@app/contracts';
 import { rpcCall } from '@app/common';
 import {
@@ -27,7 +29,7 @@ import {
 @ApiTags('Courses')
 @ApiBearerAuth()
 @Controller('courses')
-export class CourseController {
+export class CourseController implements IAdminCourseController {
   constructor(
     @Inject(COURSE_SERVICE.NAME) private readonly courseClient: ClientProxy,
   ) {}
@@ -39,8 +41,8 @@ export class CourseController {
     description: 'Course created successfully',
     type: CourseResponseDTO,
   })
-  create(@Body() body: CreateCourseRequestDTO) {
-    return rpcCall(
+  create(@Body() body: CreateCourseRequestDTO): Promise<CourseResponseDTO> {
+    return rpcCall<CourseResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_CREATE,
       body,
@@ -54,8 +56,8 @@ export class CourseController {
     description: 'Return all courses',
     type: [CourseResponseDTO],
   })
-  findAll() {
-    return rpcCall(
+  findAll(): Promise<CourseResponseDTO[]> {
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_ALL,
       {},
@@ -73,10 +75,12 @@ export class CourseController {
     status: HttpStatus.NOT_FOUND,
     description: 'Course not found',
   })
-  findOne(@Param('id') id: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE, {
-      id,
-    });
+  findOne(@Param('id') id: string): Promise<CourseResponseDTO> {
+    return rpcCall<CourseResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE,
+      { id },
+    );
   }
 
   @Patch(':id')
@@ -90,11 +94,15 @@ export class CourseController {
     status: HttpStatus.NOT_FOUND,
     description: 'Course not found',
   })
-  update(@Param('id') id: string, @Body() body: UpdateCourseRequestDTO) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_UPDATE, {
-      id,
-      ...body,
-    });
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateCourseRequestDTO,
+  ): Promise<CourseResponseDTO> {
+    return rpcCall<CourseResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_UPDATE,
+      { id, ...body },
+    );
   }
 
   @Delete(':id')
@@ -102,14 +110,17 @@ export class CourseController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Course deleted successfully',
+    type: DeleteResponseDTO,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'Course not found',
   })
-  remove(@Param('id') id: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.COURSE_DELETE, {
-      id,
-    });
+  remove(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_DELETE,
+      { id },
+    );
   }
 }

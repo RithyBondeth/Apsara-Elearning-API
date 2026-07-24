@@ -8,14 +8,24 @@ import { quizQuestions } from '@app/database/schemas/course/quizzes/quiz-questio
 import { quizOptions } from '@app/database/schemas/course/quizzes/quiz-option.schema';
 import { quizAttempts } from '@app/database/schemas/course/quizzes/quiz-attempt.schema';
 import { quizAttemptAnswers } from '@app/database/schemas/course/quizzes/quiz-attempt-answer.schema';
-import { AttemptAnswerDTO, DRIZZLE, USER_SERVICE } from '@app/contracts';
+import {
+  AttemptAnswerDTO,
+  AttemptAnswerResponseDTO,
+  AttemptResponseDTO,
+  DRIZZLE,
+  IAttemptService,
+  QuizResponseDTO,
+  StartAttemptResponseDTO,
+  SubmitAttemptResponseDTO,
+  USER_SERVICE,
+} from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 import { gradeAnswer, GradableQuestion } from './graders';
 
 const PASS_THRESHOLD = 70;
 
 @Injectable()
-export class AttemptService {
+export class AttemptService implements IAttemptService {
   private readonly logger = new Logger(AttemptService.name);
 
   constructor(
@@ -24,7 +34,10 @@ export class AttemptService {
   ) {}
 
   /** Creates an attempt and returns the quiz with all answer keys stripped. */
-  async start(userId: string, quizId: string) {
+  async start(
+    userId: string,
+    quizId: string,
+  ): Promise<StartAttemptResponseDTO> {
     const [quiz] = await this.db
       .select()
       .from(quizzes)
@@ -57,15 +70,15 @@ export class AttemptService {
       .values({ quizId, userId, totalQuestions: questions.length })
       .returning();
 
-    return {
-      attempt,
-      quiz,
+    return new StartAttemptResponseDTO({
+      attempt: new AttemptResponseDTO(attempt),
+      quiz: new QuizResponseDTO(quiz),
       questions: questions.map((q) => ({
         id: q.id,
         type: q.type,
         question: q.question,
-        points: q.points,
-        order: q.order,
+        points: q.points ?? 1,
+        order: q.order ?? 0,
         // NOTE: options intentionally exclude `isCorrect`, and `correctAnswer`
         // is never returned — only the renderable prompt derived from it.
         options: options
@@ -73,10 +86,14 @@ export class AttemptService {
           .map((o) => ({ id: o.id, answer: o.answer })),
         prompt: this.buildPrompt(q),
       })),
-    };
+    });
   }
 
-  async submit(userId: string, attemptId: string, answers: AttemptAnswerDTO[]) {
+  async submit(
+    userId: string,
+    attemptId: string,
+    answers: AttemptAnswerDTO[],
+  ): Promise<SubmitAttemptResponseDTO> {
     const [attempt] = await this.db
       .select()
       .from(quizAttempts)
@@ -252,8 +269,8 @@ export class AttemptService {
     this.logger.log(
       `User ${userId} submitted attempt ${attemptId}: ${score}% (${passed ? 'pass' : 'fail'})`,
     );
-    return {
-      attempt: updated,
+    return new SubmitAttemptResponseDTO({
+      attempt: new AttemptResponseDTO(updated),
       score,
       passed,
       correctAnswers: correct,
@@ -263,42 +280,48 @@ export class AttemptService {
       needsReview,
       xpAwarded,
       review,
-    };
+    });
   }
 
-  findAllByUser(userId: string) {
-    return this.db
+  async findAllByUser(userId: string): Promise<AttemptResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(quizAttempts)
       .where(eq(quizAttempts.userId, userId))
       .orderBy(quizAttempts.createdAt);
+    return rows.map((row) => new AttemptResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<AttemptResponseDTO> {
     const [found] = await this.db
       .select()
       .from(quizAttempts)
       .where(eq(quizAttempts.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Attempt not found');
-    return found;
+    return new AttemptResponseDTO(found);
   }
 
-  findByQuiz(userId: string, quizId: string) {
-    return this.db
+  async findByQuiz(
+    userId: string,
+    quizId: string,
+  ): Promise<AttemptResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(quizAttempts)
       .where(
         and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizId, quizId)),
       )
       .orderBy(quizAttempts.createdAt);
+    return rows.map((row) => new AttemptResponseDTO(row));
   }
 
-  findAnswers(attemptId: string) {
-    return this.db
+  async findAnswers(attemptId: string): Promise<AttemptAnswerResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(quizAttemptAnswers)
       .where(eq(quizAttemptAnswers.attemptId, attemptId));
+    return rows.map((row) => new AttemptAnswerResponseDTO(row));
   }
 
   /**

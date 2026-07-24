@@ -5,7 +5,10 @@ import { majors } from '@app/database/schemas/course/major.schema';
 import { faculties } from '@app/database/schemas/course/faculty.schema';
 import {
   CreateMajorRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  IMajorService,
+  MajorResponseDTO,
   UpdateMajorRequestDTO,
 } from '@app/contracts';
 import {
@@ -15,12 +18,12 @@ import {
 } from '@app/common';
 
 @Injectable()
-export class MajorService {
+export class MajorService implements IMajorService {
   private readonly logger = new Logger(MajorService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(dto: CreateMajorRequestDTO) {
+  async create(dto: CreateMajorRequestDTO): Promise<MajorResponseDTO> {
     await this.ensureSlugAvailable(dto.slug);
     if (dto.facultyId) await this.ensureFacultyExists(dto.facultyId);
     const [created] = await this.db
@@ -34,37 +37,41 @@ export class MajorService {
       })
       .returning();
     this.logger.log(`Major created: ${created.slug}`);
-    return created;
+    return new MajorResponseDTO(created);
   }
 
-  findAll(facultyId?: string) {
+  async findAll(facultyId?: string): Promise<MajorResponseDTO[]> {
     const query = this.db.select().from(majors);
-    if (facultyId)
-      return query.where(eq(majors.facultyId, facultyId)).orderBy(majors.name);
-    return query.orderBy(majors.name);
+    const rows = facultyId
+      ? await query.where(eq(majors.facultyId, facultyId)).orderBy(majors.name)
+      : await query.orderBy(majors.name);
+    return rows.map((row) => new MajorResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<MajorResponseDTO> {
     const [found] = await this.db
       .select()
       .from(majors)
       .where(eq(majors.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Major not found');
-    return found;
+    return new MajorResponseDTO(found);
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string): Promise<MajorResponseDTO> {
     const [found] = await this.db
       .select()
       .from(majors)
       .where(eq(majors.slug, slug))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Major not found');
-    return found;
+    return new MajorResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateMajorRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateMajorRequestDTO,
+  ): Promise<MajorResponseDTO> {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
     if (dto.facultyId) await this.ensureFacultyExists(dto.facultyId);
@@ -74,17 +81,17 @@ export class MajorService {
       .where(eq(majors.id, id))
       .returning();
     this.logger.log(`Major updated: ${id}`);
-    return updated;
+    return new MajorResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(majors)
       .where(eq(majors.id, id))
       .returning();
     if (!deleted) throw new RpcNotFoundException('Major not found');
     this.logger.log(`Major deleted: ${id}`);
-    return { message: 'Major deleted successfully', id };
+    return new DeleteResponseDTO({ message: 'Major deleted successfully', id });
   }
 
   private async ensureSlugAvailable(slug: string, exceptId?: string) {

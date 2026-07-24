@@ -1,14 +1,20 @@
 import { Controller, Inject } from '@nestjs/common';
 import { I_CONVERSATION_SERVICE, I_MESSAGE_SERVICE } from '@app/contracts';
-import type { IConversationService, IMessageRpcController, IMessageService } from '@app/contracts';
+import type {
+  IConversationService,
+  IMessageRpcController,
+  IMessageService,
+} from '@app/contracts';
 import { AI_SERVICE } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('message')
 export class MessageController implements IMessageRpcController {
   constructor(
-    @Inject(I_MESSAGE_SERVICE) private readonly messagesService: IMessageService,
-    @Inject(I_CONVERSATION_SERVICE) private readonly conversationsService: IConversationService,
+    @Inject(I_MESSAGE_SERVICE)
+    private readonly messagesService: IMessageService,
+    @Inject(I_CONVERSATION_SERVICE)
+    private readonly conversationsService: IConversationService,
   ) {}
 
   @MessagePattern(AI_SERVICE.ACTIONS.MESSAGE_SEND)

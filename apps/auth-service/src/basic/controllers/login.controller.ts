@@ -6,10 +6,7 @@ import {
   LoginRequestDTO,
   LoginResponseDTO,
 } from '@app/contracts';
-import type {
-  ILoginService,
-  ILoginRpcController,
-} from '@app/contracts';
+import type { ILoginService, ILoginRpcController } from '@app/contracts';
 
 @Controller()
 export class LoginController implements ILoginRpcController {

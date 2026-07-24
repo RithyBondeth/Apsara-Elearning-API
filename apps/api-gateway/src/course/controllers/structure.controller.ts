@@ -11,6 +11,7 @@ import {
   COURSE_SERVICE,
   FacultyResponseDTO,
   GradeLevelResponseDTO,
+  IStructureHttpController,
   MajorResponseDTO,
 } from '@app/contracts';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -22,7 +23,7 @@ import { rpcCall } from '@app/common';
  */
 @ApiTags('Structure')
 @Controller()
-export class StructureController {
+export class StructureController implements IStructureHttpController {
   constructor(
     @Inject(COURSE_SERVICE.NAME)
     private readonly courseClient: ClientProxy,
@@ -36,8 +37,8 @@ export class StructureController {
     description: 'All grade levels retrieved',
     type: [GradeLevelResponseDTO],
   })
-  findAllGradeLevels() {
-    return rpcCall(
+  findAllGradeLevels(): Promise<GradeLevelResponseDTO[]> {
+    return rpcCall<GradeLevelResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.GRADE_LEVEL_FIND_ALL,
       {},
@@ -51,8 +52,8 @@ export class StructureController {
     description: 'Grade level retrieved',
     type: GradeLevelResponseDTO,
   })
-  findOneGradeLevel(@Param('id') id: string) {
-    return rpcCall(
+  findOneGradeLevel(@Param('id') id: string): Promise<GradeLevelResponseDTO> {
+    return rpcCall<GradeLevelResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.GRADE_LEVEL_FIND_ONE,
       id,
@@ -67,8 +68,8 @@ export class StructureController {
     description: 'All faculties retrieved',
     type: [FacultyResponseDTO],
   })
-  findAllFaculties() {
-    return rpcCall(
+  findAllFaculties(): Promise<FacultyResponseDTO[]> {
+    return rpcCall<FacultyResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.FACULTY_FIND_ALL,
       {},
@@ -82,8 +83,8 @@ export class StructureController {
     description: 'Faculty retrieved',
     type: FacultyResponseDTO,
   })
-  findFacultyBySlug(@Param('slug') slug: string) {
-    return rpcCall(
+  findFacultyBySlug(@Param('slug') slug: string): Promise<FacultyResponseDTO> {
+    return rpcCall<FacultyResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.FACULTY_FIND_BY_SLUG,
       slug,
@@ -97,8 +98,8 @@ export class StructureController {
     description: 'Faculty retrieved',
     type: FacultyResponseDTO,
   })
-  findOneFaculty(@Param('id') id: string) {
-    return rpcCall(
+  findOneFaculty(@Param('id') id: string): Promise<FacultyResponseDTO> {
+    return rpcCall<FacultyResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.FACULTY_FIND_ONE,
       id,
@@ -114,10 +115,14 @@ export class StructureController {
     description: 'All majors retrieved',
     type: [MajorResponseDTO],
   })
-  findAllMajors(@Query('facultyId') facultyId?: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MAJOR_FIND_ALL, {
-      facultyId,
-    });
+  findAllMajors(
+    @Query('facultyId') facultyId?: string,
+  ): Promise<MajorResponseDTO[]> {
+    return rpcCall<MajorResponseDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MAJOR_FIND_ALL,
+      { facultyId },
+    );
   }
 
   @Get('major/slug/:slug')
@@ -127,8 +132,8 @@ export class StructureController {
     description: 'Major retrieved',
     type: MajorResponseDTO,
   })
-  findMajorBySlug(@Param('slug') slug: string) {
-    return rpcCall(
+  findMajorBySlug(@Param('slug') slug: string): Promise<MajorResponseDTO> {
+    return rpcCall<MajorResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.MAJOR_FIND_BY_SLUG,
       slug,
@@ -142,8 +147,8 @@ export class StructureController {
     description: 'Major retrieved',
     type: MajorResponseDTO,
   })
-  findOneMajor(@Param('id') id: string) {
-    return rpcCall(
+  findOneMajor(@Param('id') id: string): Promise<MajorResponseDTO> {
+    return rpcCall<MajorResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.MAJOR_FIND_ONE,
       id,

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import type { DtoInit } from '../../types/dto-init';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateSubjectRequestDTO {
@@ -38,6 +39,11 @@ export class UpdateSubjectRequestDTO extends PartialType(
 ) {}
 
 export class SubjectResponseDTO extends CreateSubjectRequestDTO {
+  constructor(partial: DtoInit<SubjectResponseDTO> = {}) {
+    super();
+    Object.assign(this, partial);
+  }
+
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   id: string;
 

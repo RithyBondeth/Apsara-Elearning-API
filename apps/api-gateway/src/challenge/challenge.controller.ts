@@ -12,9 +12,11 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import {
   ASSESSMENT_SERVICE,
-  CreateSubmissionRequestDTO,
   ChallengeResponseDTO,
+  CreateSubmissionRequestDTO,
+  IChallengeHttpController,
   SubmissionResponseDTO,
+  SubmissionResultResponseDTO,
   TestCaseResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
@@ -30,7 +32,7 @@ import { rpcCall } from '@app/common';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('challenge')
-export class ChallengeController {
+export class ChallengeController implements IChallengeHttpController {
   constructor(
     @Inject(ASSESSMENT_SERVICE.NAME)
     private readonly challengeClient: ClientProxy,
@@ -44,13 +46,13 @@ export class ChallengeController {
     type: [ChallengeResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  findByLesson(@Param('lessonId') lessonId: string) {
+  findByLesson(
+    @Param('lessonId') lessonId: string,
+  ): Promise<ChallengeResponseDTO[]> {
     return rpcCall<ChallengeResponseDTO[]>(
       this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL,
-      {
-        lessonId,
-      },
+      { lessonId },
     );
   }
 
@@ -62,8 +64,10 @@ export class ChallengeController {
     type: [SubmissionResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  mySubmissions(@CurrentUser('id') userId: string) {
-    return rpcCall<SubmissionResponseDTO>(
+  mySubmissions(
+    @CurrentUser('id') userId: string,
+  ): Promise<SubmissionResponseDTO[]> {
+    return rpcCall<SubmissionResponseDTO[]>(
       this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_FIND_ALL,
       { userId },
@@ -82,7 +86,7 @@ export class ChallengeController {
     description: 'Submission not found',
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  submission(@Param('id') id: string) {
+  submission(@Param('id') id: string): Promise<SubmissionResponseDTO> {
     return rpcCall<SubmissionResponseDTO>(
       this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_FIND_ONE,
@@ -102,7 +106,7 @@ export class ChallengeController {
     description: 'Challenge not found',
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<ChallengeResponseDTO> {
     const challenge = await rpcCall<ChallengeResponseDTO>(
       this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ONE,
@@ -120,13 +124,11 @@ export class ChallengeController {
     type: [TestCaseResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  testCases(@Param('id') id: string) {
+  testCases(@Param('id') id: string): Promise<TestCaseResponseDTO[]> {
     return rpcCall<TestCaseResponseDTO[]>(
       this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL,
-      {
-        challengeId: id,
-      },
+      { challengeId: id },
     );
   }
 
@@ -136,15 +138,15 @@ export class ChallengeController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Solution submitted and evaluated',
-    type: SubmissionResponseDTO,
+    type: SubmissionResultResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   submit(
     @CurrentUser('id') userId: string,
     @Param('id') challengeId: string,
     @Body() dto: CreateSubmissionRequestDTO,
-  ) {
-    return rpcCall<SubmissionResponseDTO>(
+  ): Promise<SubmissionResultResponseDTO> {
+    return rpcCall<SubmissionResultResponseDTO>(
       this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_CREATE,
       {

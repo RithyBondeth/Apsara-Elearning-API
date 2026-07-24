@@ -4,18 +4,23 @@ import { asc, eq } from 'drizzle-orm';
 import { gradeLevels } from '@app/database/schemas/course/grade-level.schema';
 import {
   CreateGradeLevelRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  GradeLevelResponseDTO,
+  IGradeLevelService,
   UpdateGradeLevelRequestDTO,
 } from '@app/contracts';
 import { RpcConflictException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class GradeLevelService {
+export class GradeLevelService implements IGradeLevelService {
   private readonly logger = new Logger(GradeLevelService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(dto: CreateGradeLevelRequestDTO) {
+  async create(
+    dto: CreateGradeLevelRequestDTO,
+  ): Promise<GradeLevelResponseDTO> {
     await this.ensureGradeAvailable(dto.grade);
     const [created] = await this.db
       .insert(gradeLevels)
@@ -28,24 +33,31 @@ export class GradeLevelService {
       })
       .returning();
     this.logger.log(`Grade level created: ${created.name}`);
-    return created;
+    return new GradeLevelResponseDTO(created);
   }
 
-  findAll() {
-    return this.db.select().from(gradeLevels).orderBy(asc(gradeLevels.order));
+  async findAll(): Promise<GradeLevelResponseDTO[]> {
+    const rows = await this.db
+      .select()
+      .from(gradeLevels)
+      .orderBy(asc(gradeLevels.order));
+    return rows.map((row) => new GradeLevelResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<GradeLevelResponseDTO> {
     const [found] = await this.db
       .select()
       .from(gradeLevels)
       .where(eq(gradeLevels.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Grade level not found');
-    return found;
+    return new GradeLevelResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateGradeLevelRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateGradeLevelRequestDTO,
+  ): Promise<GradeLevelResponseDTO> {
     await this.findOne(id);
     if (dto.grade !== undefined) await this.ensureGradeAvailable(dto.grade, id);
     const [updated] = await this.db
@@ -54,17 +66,20 @@ export class GradeLevelService {
       .where(eq(gradeLevels.id, id))
       .returning();
     this.logger.log(`Grade level updated: ${id}`);
-    return updated;
+    return new GradeLevelResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(gradeLevels)
       .where(eq(gradeLevels.id, id))
       .returning();
     if (!deleted) throw new RpcNotFoundException('Grade level not found');
     this.logger.log(`Grade level deleted: ${id}`);
-    return { message: 'Grade level deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Grade level deleted successfully',
+      id,
+    });
   }
 
   private async ensureGradeAvailable(grade: number, exceptId?: string) {

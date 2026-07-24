@@ -2,16 +2,25 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, eq } from 'drizzle-orm';
 import { aiConversations } from '@app/database/schemas/ai/ai-conversation.schema';
-import { CreateConversationRequestDTO, DRIZZLE } from '@app/contracts';
+import {
+  ConversationResponseDTO,
+  CreateConversationRequestDTO,
+  DeleteResponseDTO,
+  DRIZZLE,
+  IConversationService,
+} from '@app/contracts';
 import { RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class ConversationService {
+export class ConversationService implements IConversationService {
   private readonly logger = new Logger(ConversationService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(userId: string, dto: CreateConversationRequestDTO) {
+  async create(
+    userId: string,
+    dto: CreateConversationRequestDTO,
+  ): Promise<ConversationResponseDTO> {
     const [created] = await this.db
       .insert(aiConversations)
       .values({
@@ -22,19 +31,23 @@ export class ConversationService {
       })
       .returning();
     this.logger.log(`Conversation created: ${created.id} for ${userId}`);
-    return created;
+    return new ConversationResponseDTO(created);
   }
 
-  findAllByUser(userId: string) {
-    return this.db
+  async findAllByUser(userId: string): Promise<ConversationResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(aiConversations)
       .where(eq(aiConversations.userId, userId))
       .orderBy(aiConversations.updatedAt);
+    return rows.map((row) => new ConversationResponseDTO(row));
   }
 
   /** Fetches a conversation and enforces ownership. */
-  async findOneOwned(userId: string, id: string) {
+  async findOneOwned(
+    userId: string,
+    id: string,
+  ): Promise<ConversationResponseDTO> {
     const [found] = await this.db
       .select()
       .from(aiConversations)
@@ -43,10 +56,10 @@ export class ConversationService {
       )
       .limit(1);
     if (!found) throw new RpcNotFoundException('Conversation not found');
-    return found;
+    return new ConversationResponseDTO(found);
   }
 
-  async remove(userId: string, id: string) {
+  async remove(userId: string, id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(aiConversations)
       .where(
@@ -54,6 +67,9 @@ export class ConversationService {
       )
       .returning({ id: aiConversations.id });
     if (!deleted) throw new RpcNotFoundException('Conversation not found');
-    return { message: 'Conversation deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Conversation deleted successfully',
+      id,
+    });
   }
 }

@@ -2,7 +2,11 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { HealthCheckResult, HealthCheckService } from '@nestjs/terminus';
 import { DrizzleHealthIndicator } from '@app/common';
-import { AI_SERVICE, HEALTH_PATTERN, IHealthRpcController } from '@app/contracts';
+import {
+  AI_SERVICE,
+  HEALTH_PATTERN,
+  IHealthRpcController,
+} from '@app/contracts';
 
 @Controller()
 export class AiHealthController implements IHealthRpcController {

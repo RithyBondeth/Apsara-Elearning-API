@@ -30,8 +30,10 @@ export class HealthController {
     @Inject(AUTH_SERVICE.NAME) private readonly authClient: ClientProxy,
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
     @Inject(COURSE_SERVICE.NAME) private readonly courseClient: ClientProxy,
-    @Inject(ASSESSMENT_SERVICE.NAME) private readonly assessmentClient: ClientProxy,
-    @Inject(SUBSCRIPTION_SERVICE.NAME) private readonly subscriptionClient: ClientProxy,
+    @Inject(ASSESSMENT_SERVICE.NAME)
+    private readonly assessmentClient: ClientProxy,
+    @Inject(SUBSCRIPTION_SERVICE.NAME)
+    private readonly subscriptionClient: ClientProxy,
     @Inject(AI_SERVICE.NAME) private readonly aiClient: ClientProxy,
   ) {}
 

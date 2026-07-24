@@ -12,11 +12,17 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
+  ActiveSubscriptionResponseDTO,
+  CancelSubscriptionResponseDTO,
+  ISubscriptionHttpController,
+  PaymentResponseDTO,
+  PaymentWebhookResponseDTO,
+  PlanResponseDTO,
   SUBSCRIPTION_SERVICE,
   SubscribeRequestDTO,
-  PlanResponseDTO,
+  SubscribeResponseDTO,
+  SubscriptionCheckResponseDTO,
   SubscriptionResponseDTO,
-  PaymentResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard, WebhookGuard } from '@app/common';
 import {
@@ -30,7 +36,7 @@ import { rpcCall } from '@app/common';
 
 @ApiTags('Subscription')
 @Controller('subscription')
-export class SubscriptionController {
+export class SubscriptionController implements ISubscriptionHttpController {
   constructor(
     @Inject(SUBSCRIPTION_SERVICE.NAME) private readonly client: ClientProxy,
   ) {}
@@ -43,8 +49,12 @@ export class SubscriptionController {
     description: 'Plans retrieved successfully',
     type: [PlanResponseDTO],
   })
-  plans() {
-    return rpcCall(this.client, SUBSCRIPTION_SERVICE.ACTIONS.PLAN_FIND_ALL, {});
+  plans(): Promise<PlanResponseDTO[]> {
+    return rpcCall<PlanResponseDTO[]>(
+      this.client,
+      SUBSCRIPTION_SERVICE.ACTIONS.PLAN_FIND_ALL,
+      {},
+    );
   }
 
   @Get('plans/:id')
@@ -55,10 +65,12 @@ export class SubscriptionController {
     type: PlanResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Plan not found' })
-  plan(@Param('id') id: string) {
-    return rpcCall(this.client, SUBSCRIPTION_SERVICE.ACTIONS.PLAN_FIND_ONE, {
-      id,
-    });
+  plan(@Param('id') id: string): Promise<PlanResponseDTO> {
+    return rpcCall<PlanResponseDTO>(
+      this.client,
+      SUBSCRIPTION_SERVICE.ACTIONS.PLAN_FIND_ONE,
+      { id },
+    );
   }
 
   // ---- Provider callback — verified via shared secret (WebhookGuard) ----
@@ -69,9 +81,12 @@ export class SubscriptionController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Webhook processed successfully',
+    type: PaymentWebhookResponseDTO,
   })
-  webhook(@Body() body: { transactionId?: string; status?: string }) {
-    return rpcCall(
+  webhook(
+    @Body() body: { transactionId?: string; status?: string },
+  ): Promise<PaymentWebhookResponseDTO> {
+    return rpcCall<PaymentWebhookResponseDTO>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_WEBHOOK,
       body,
@@ -88,16 +103,18 @@ export class SubscriptionController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Subscription initiated successfully',
+    type: SubscribeResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   subscribe(
     @CurrentUser('id') userId: string,
     @Body() dto: SubscribeRequestDTO,
-  ) {
-    return rpcCall(this.client, SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIBE, {
-      userId,
-      planId: dto.planId,
-    });
+  ): Promise<SubscribeResponseDTO> {
+    return rpcCall<SubscribeResponseDTO>(
+      this.client,
+      SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIBE,
+      { userId, planId: dto.planId },
+    );
   }
 
   @Get('me')
@@ -107,11 +124,13 @@ export class SubscriptionController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Subscription retrieved successfully',
-    type: SubscriptionResponseDTO,
+    type: ActiveSubscriptionResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  active(@CurrentUser('id') userId: string) {
-    return rpcCall(
+  active(
+    @CurrentUser('id') userId: string,
+  ): Promise<ActiveSubscriptionResponseDTO | null> {
+    return rpcCall<ActiveSubscriptionResponseDTO | null>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_FIND_ACTIVE,
       { userId },
@@ -125,10 +144,13 @@ export class SubscriptionController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Subscription status checked successfully',
+    type: SubscriptionCheckResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  check(@CurrentUser('id') userId: string) {
-    return rpcCall(
+  check(
+    @CurrentUser('id') userId: string,
+  ): Promise<SubscriptionCheckResponseDTO> {
+    return rpcCall<SubscriptionCheckResponseDTO>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_CHECK,
       { userId },
@@ -145,8 +167,10 @@ export class SubscriptionController {
     type: [SubscriptionResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  history(@CurrentUser('id') userId: string) {
-    return rpcCall(
+  history(
+    @CurrentUser('id') userId: string,
+  ): Promise<SubscriptionResponseDTO[]> {
+    return rpcCall<SubscriptionResponseDTO[]>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_FIND_BY_USER,
       { userId },
@@ -163,8 +187,8 @@ export class SubscriptionController {
     type: [PaymentResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  payments(@CurrentUser('id') userId: string) {
-    return rpcCall(
+  payments(@CurrentUser('id') userId: string): Promise<PaymentResponseDTO[]> {
+    return rpcCall<PaymentResponseDTO[]>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_FIND_BY_USER,
       { userId },
@@ -179,10 +203,14 @@ export class SubscriptionController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Subscription cancelled successfully',
+    type: CancelSubscriptionResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  cancel(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return rpcCall(
+  cancel(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<CancelSubscriptionResponseDTO> {
+    return rpcCall<CancelSubscriptionResponseDTO>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_CANCEL,
       { userId, id },

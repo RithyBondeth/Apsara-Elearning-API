@@ -1,12 +1,16 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { I_CONVERSATION_SERVICE } from '@app/contracts';
-import type { IConversationService } from '@app/contracts';
+import type { IConversationService, IMessageService } from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { aiMessages } from '@app/database/schemas/ai/ai-message.schema';
 import { aiConversations } from '@app/database/schemas/ai/ai-conversation.schema';
 import { aiUsageTracking } from '@app/database/schemas/ai/ai-usage-tracking.schema';
-import { DRIZZLE } from '@app/contracts';
+import {
+  AiMessageResponseDTO,
+  DRIZZLE,
+  SendMessageResponseDTO,
+} from '@app/contracts';
 import { IChatTurn } from '@app/contracts/interfaces/ai/ai-service.interface';
 import {
   AiGatewayChatOptions,
@@ -15,21 +19,25 @@ import {
 import { APSARA_SYSTEM_PROMPT } from '../anthropic/system-prompt';
 
 @Injectable()
-export class MessageService {
+export class MessageService implements IMessageService {
   private readonly logger = new Logger(MessageService.name);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly ai: AiGatewayService,
-    @Inject(I_CONVERSATION_SERVICE) private readonly conversations: IConversationService,
+    @Inject(I_CONVERSATION_SERVICE)
+    private readonly conversations: IConversationService,
   ) {}
 
-  findByConversation(conversationId: string) {
-    return this.db
+  async findByConversation(
+    conversationId: string,
+  ): Promise<AiMessageResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(aiMessages)
       .where(eq(aiMessages.conversationId, conversationId))
       .orderBy(aiMessages.createdAt);
+    return rows.map((row) => new AiMessageResponseDTO(row));
   }
 
   async send(
@@ -37,7 +45,7 @@ export class MessageService {
     conversationId: string,
     content: string,
     options?: AiGatewayChatOptions,
-  ) {
+  ): Promise<SendMessageResponseDTO> {
     // Ownership check (throws 404 if not the user's conversation).
     await this.conversations.findOneOwned(userId, conversationId);
 
@@ -96,6 +104,9 @@ export class MessageService {
         result.mock ? 'mock' : 'live'
       }, ${result.completionTokens} out tokens)`,
     );
-    return { message: assistant, mock: result.mock };
+    return new SendMessageResponseDTO({
+      message: new AiMessageResponseDTO(assistant),
+      mock: result.mock,
+    });
   }
 }

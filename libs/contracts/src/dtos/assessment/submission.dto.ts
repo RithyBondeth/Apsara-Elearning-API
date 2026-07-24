@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import type { DtoInit } from '../../types/dto-init';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class CreateSubmissionRequestDTO {
@@ -17,6 +18,11 @@ export class CreateSubmissionRequestDTO {
 }
 
 export class SubmissionResponseDTO extends CreateSubmissionRequestDTO {
+  constructor(partial: DtoInit<SubmissionResponseDTO> = {}) {
+    super();
+    Object.assign(this, partial);
+  }
+
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   id: string;
 

@@ -5,19 +5,24 @@ import { badges } from '@app/database/schemas/user/badge.schema';
 import { userBadges } from '@app/database/schemas/user/user-badge.schema';
 import { user } from '@app/database/schemas/user/user.schema';
 import {
+  AwardBadgeResponseDTO,
+  BadgeResponseDTO,
   CreateBadgeRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  IBadgeService,
   UpdateBadgeRequestDTO,
+  UserBadgeResponseDTO,
 } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class BadgeService {
+export class BadgeService implements IBadgeService {
   private readonly logger = new Logger(BadgeService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(dto: CreateBadgeRequestDTO) {
+  async create(dto: CreateBadgeRequestDTO): Promise<BadgeResponseDTO> {
     const [created] = await this.db
       .insert(badges)
       .values({
@@ -28,43 +33,47 @@ export class BadgeService {
       })
       .returning();
     this.logger.log(`Badge created: ${created.name}`);
-    return created;
+    return new BadgeResponseDTO(created);
   }
 
-  findAll() {
-    return this.db.select().from(badges).orderBy(badges.xpRequired);
+  async findAll(): Promise<BadgeResponseDTO[]> {
+    const rows = await this.db.select().from(badges).orderBy(badges.xpRequired);
+    return rows.map((row) => new BadgeResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<BadgeResponseDTO> {
     const [found] = await this.db
       .select()
       .from(badges)
       .where(eq(badges.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Badge not found');
-    return found;
+    return new BadgeResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateBadgeRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateBadgeRequestDTO,
+  ): Promise<BadgeResponseDTO> {
     const [updated] = await this.db
       .update(badges)
       .set({ ...dto, updatedAt: new Date() })
       .where(eq(badges.id, id))
       .returning();
     if (!updated) throw new RpcNotFoundException('Badge not found');
-    return updated;
+    return new BadgeResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(badges)
       .where(eq(badges.id, id))
       .returning({ id: badges.id });
     if (!deleted) throw new RpcNotFoundException('Badge not found');
-    return { message: 'Badge deleted successfully', id };
+    return new DeleteResponseDTO({ message: 'Badge deleted successfully', id });
   }
 
-  async award(userId: string, badgeId: string) {
+  async award(userId: string, badgeId: string): Promise<AwardBadgeResponseDTO> {
     const [u] = await this.db
       .select({ id: user.id })
       .from(user)
@@ -80,11 +89,13 @@ export class BadgeService {
       .onConflictDoNothing()
       .returning();
     this.logger.log(`Badge ${badgeId} awarded to ${userId}`);
-    return awarded ?? { userId, badgeId, alreadyOwned: true };
+    return new AwardBadgeResponseDTO(
+      awarded ?? { userId, badgeId, alreadyOwned: true },
+    );
   }
 
-  findByUser(userId: string) {
-    return this.db
+  async findByUser(userId: string): Promise<UserBadgeResponseDTO[]> {
+    const rows = await this.db
       .select({
         badgeId: badges.id,
         name: badges.name,
@@ -97,5 +108,6 @@ export class BadgeService {
       .innerJoin(badges, eq(userBadges.badgeId, badges.id))
       .where(eq(userBadges.userId, userId))
       .orderBy(userBadges.earnedAt);
+    return rows.map((row) => new UserBadgeResponseDTO(row));
   }
 }

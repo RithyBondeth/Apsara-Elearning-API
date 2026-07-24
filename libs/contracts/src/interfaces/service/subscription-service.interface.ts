@@ -1,31 +1,58 @@
-/**
- * DI tokens + service contracts for subscription-service.
- * Loose signatures — Drizzle rows re-typed at the gateway via rpcCall<T>.
- */
+import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
+import { PaymentResponseDTO } from '../../dtos/subscription/payment.dto';
+import {
+  CreatePlanRequestDTO,
+  PlanResponseDTO,
+  UpdatePlanRequestDTO,
+} from '../../dtos/subscription/plan.dto';
+import {
+  ActiveSubscriptionResponseDTO,
+  CancelSubscriptionResponseDTO,
+  PaymentWebhookResponseDTO,
+  SubscribeResponseDTO,
+  SubscriptionCheckResponseDTO,
+} from '../../dtos/subscription/subscription-responses.dto';
+import { SubscriptionResponseDTO } from '../../dtos/subscription/subscription.dto';
+
+/** DI tokens + service contracts for subscription-service. */
 
 export const I_PAYMENT_SERVICE = 'IPaymentService';
 export const I_PLAN_SERVICE = 'IPlanService';
 export const I_SUBSCRIPTION_SERVICE = 'ISubscriptionService';
 
+/** Persisted payment input — `amount` carried as a fixed-2 decimal string. */
+export interface RecordPaymentInput {
+  userId: string;
+  subscriptionId?: string | null;
+  amount: string;
+  currency: string;
+  provider: string;
+  transactionId: string;
+  status: string;
+}
+
 export interface IPaymentService {
-  record(...args: any[]): Promise<unknown>;
-  findByUser(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  webhook(...args: any[]): Promise<unknown>;
+  record(input: RecordPaymentInput): Promise<PaymentResponseDTO>;
+  findByUser(userId: string): Promise<PaymentResponseDTO[]>;
+  findOne(id: string): Promise<PaymentResponseDTO>;
+  webhook(payload: {
+    transactionId?: string;
+    status?: string;
+  }): Promise<PaymentWebhookResponseDTO>;
 }
 
 export interface IPlanService {
-  create(...args: any[]): Promise<unknown>;
-  findAll(...args: any[]): Promise<unknown>;
-  findOne(...args: any[]): Promise<unknown>;
-  update(...args: any[]): Promise<unknown>;
-  remove(...args: any[]): Promise<unknown>;
+  create(dto: CreatePlanRequestDTO): Promise<PlanResponseDTO>;
+  findAll(): Promise<PlanResponseDTO[]>;
+  findOne(id: string): Promise<PlanResponseDTO>;
+  update(id: string, dto: UpdatePlanRequestDTO): Promise<PlanResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface ISubscriptionService {
-  subscribe(...args: any[]): Promise<unknown>;
-  findByUser(...args: any[]): Promise<unknown>;
-  findActive(...args: any[]): Promise<unknown>;
-  check(...args: any[]): Promise<unknown>;
-  cancel(...args: any[]): Promise<unknown>;
+  subscribe(userId: string, planId: string): Promise<SubscribeResponseDTO>;
+  findByUser(userId: string): Promise<SubscriptionResponseDTO[]>;
+  findActive(userId: string): Promise<ActiveSubscriptionResponseDTO | null>;
+  check(userId: string): Promise<SubscriptionCheckResponseDTO>;
+  cancel(userId: string, id: string): Promise<CancelSubscriptionResponseDTO>;
 }

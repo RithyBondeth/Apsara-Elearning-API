@@ -5,10 +5,7 @@ import {
   I_TOKEN_SERVICE,
   MessageResponseDTO,
 } from '@app/contracts';
-import type {
-  ITokenService,
-  ILogoutRpcController,
-} from '@app/contracts';
+import type { ITokenService, ILogoutRpcController } from '@app/contracts';
 
 @Controller()
 export class LogoutController implements ILogoutRpcController {

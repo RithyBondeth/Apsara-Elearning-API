@@ -9,7 +9,13 @@ import {
   CreateOptionRequestDTO,
   CreateQuestionRequestDTO,
   CreateQuizRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  IAuthoringService,
+  OptionResponseDTO,
+  QuestionResponseDTO,
+  QuizResponseDTO,
+  ReorderResponseDTO,
   UpdateOptionRequestDTO,
   UpdateQuestionRequestDTO,
   UpdateQuizRequestDTO,
@@ -17,13 +23,16 @@ import {
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class AuthoringService {
+export class AuthoringService implements IAuthoringService {
   private readonly logger = new Logger(AuthoringService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   // ---- Quiz ----
-  async createQuiz(lessonId: string, dto: CreateQuizRequestDTO) {
+  async createQuiz(
+    lessonId: string,
+    dto: CreateQuizRequestDTO,
+  ): Promise<QuizResponseDTO> {
     const [lesson] = await this.db
       .select({ id: lessons.id })
       .from(lessons)
@@ -41,44 +50,54 @@ export class AuthoringService {
       })
       .returning();
     this.logger.log(`Quiz created: ${created.id}`);
-    return created;
+    return new QuizResponseDTO(created);
   }
 
-  findQuizzesByLesson(lessonId: string) {
-    return this.db.select().from(quizzes).where(eq(quizzes.lessonId, lessonId));
+  async findQuizzesByLesson(lessonId: string): Promise<QuizResponseDTO[]> {
+    const rows = await this.db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.lessonId, lessonId));
+    return rows.map((row) => new QuizResponseDTO(row));
   }
 
-  async findQuiz(id: string) {
+  async findQuiz(id: string): Promise<QuizResponseDTO> {
     const [found] = await this.db
       .select()
       .from(quizzes)
       .where(eq(quizzes.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Quiz not found');
-    return found;
+    return new QuizResponseDTO(found);
   }
 
-  async updateQuiz(id: string, dto: UpdateQuizRequestDTO) {
+  async updateQuiz(
+    id: string,
+    dto: UpdateQuizRequestDTO,
+  ): Promise<QuizResponseDTO> {
     const [updated] = await this.db
       .update(quizzes)
       .set({ ...dto, updatedAt: new Date() })
       .where(eq(quizzes.id, id))
       .returning();
     if (!updated) throw new RpcNotFoundException('Quiz not found');
-    return updated;
+    return new QuizResponseDTO(updated);
   }
 
-  async removeQuiz(id: string) {
+  async removeQuiz(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(quizzes)
       .where(eq(quizzes.id, id))
       .returning({ id: quizzes.id });
     if (!deleted) throw new RpcNotFoundException('Quiz not found');
-    return { message: 'Quiz deleted successfully', id };
+    return new DeleteResponseDTO({ message: 'Quiz deleted successfully', id });
   }
 
   // ---- Question ----
-  async createQuestion(quizId: string, dto: CreateQuestionRequestDTO) {
+  async createQuestion(
+    quizId: string,
+    dto: CreateQuestionRequestDTO,
+  ): Promise<QuestionResponseDTO> {
     await this.findQuiz(quizId);
     const [created] = await this.db
       .insert(quizQuestions)
@@ -92,37 +111,44 @@ export class AuthoringService {
         order: dto.order,
       })
       .returning();
-    return created;
+    return new QuestionResponseDTO(created);
   }
 
-  findQuestionsByQuiz(quizId: string) {
-    return this.db
+  async findQuestionsByQuiz(quizId: string): Promise<QuestionResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(quizQuestions)
       .where(eq(quizQuestions.quizId, quizId))
       .orderBy(quizQuestions.order);
+    return rows.map((row) => new QuestionResponseDTO(row));
   }
 
-  async updateQuestion(id: string, dto: UpdateQuestionRequestDTO) {
+  async updateQuestion(
+    id: string,
+    dto: UpdateQuestionRequestDTO,
+  ): Promise<QuestionResponseDTO> {
     const [updated] = await this.db
       .update(quizQuestions)
       .set({ ...dto, updatedAt: new Date() })
       .where(eq(quizQuestions.id, id))
       .returning();
     if (!updated) throw new RpcNotFoundException('Question not found');
-    return updated;
+    return new QuestionResponseDTO(updated);
   }
 
-  async removeQuestion(id: string) {
+  async removeQuestion(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(quizQuestions)
       .where(eq(quizQuestions.id, id))
       .returning({ id: quizQuestions.id });
     if (!deleted) throw new RpcNotFoundException('Question not found');
-    return { message: 'Question deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Question deleted successfully',
+      id,
+    });
   }
 
-  async reorderQuestions(orderedIds: string[]) {
+  async reorderQuestions(orderedIds: string[]): Promise<ReorderResponseDTO> {
     // Sequential updates.
     for (let i = 0; i < orderedIds.length; i++) {
       await this.db
@@ -130,11 +156,17 @@ export class AuthoringService {
         .set({ order: i, updatedAt: new Date() })
         .where(eq(quizQuestions.id, orderedIds[i]));
     }
-    return { message: 'Questions reordered', count: orderedIds.length };
+    return new ReorderResponseDTO({
+      message: 'Questions reordered',
+      count: orderedIds.length,
+    });
   }
 
   // ---- Option ----
-  async createOption(questionId: string, dto: CreateOptionRequestDTO) {
+  async createOption(
+    questionId: string,
+    dto: CreateOptionRequestDTO,
+  ): Promise<OptionResponseDTO> {
     const [question] = await this.db
       .select({ id: quizQuestions.id })
       .from(quizQuestions)
@@ -150,32 +182,41 @@ export class AuthoringService {
         isCorrect: dto.isCorrect ?? false,
       })
       .returning();
-    return created;
+    return new OptionResponseDTO(created);
   }
 
-  findOptionsByQuestion(questionId: string) {
-    return this.db
+  async findOptionsByQuestion(
+    questionId: string,
+  ): Promise<OptionResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(quizOptions)
       .where(eq(quizOptions.questionId, questionId));
+    return rows.map((row) => new OptionResponseDTO(row));
   }
 
-  async updateOption(id: string, dto: UpdateOptionRequestDTO) {
+  async updateOption(
+    id: string,
+    dto: UpdateOptionRequestDTO,
+  ): Promise<OptionResponseDTO> {
     const [updated] = await this.db
       .update(quizOptions)
       .set({ ...dto, updatedAt: new Date() })
       .where(eq(quizOptions.id, id))
       .returning();
     if (!updated) throw new RpcNotFoundException('Option not found');
-    return updated;
+    return new OptionResponseDTO(updated);
   }
 
-  async removeOption(id: string) {
+  async removeOption(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(quizOptions)
       .where(eq(quizOptions.id, id))
       .returning({ id: quizOptions.id });
     if (!deleted) throw new RpcNotFoundException('Option not found');
-    return { message: 'Option deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Option deleted successfully',
+      id,
+    });
   }
 }

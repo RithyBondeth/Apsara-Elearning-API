@@ -3,14 +3,23 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, desc, eq, gt, isNull, or } from 'drizzle-orm';
 import { subscriptions } from '@app/database/schemas/subscription/subscription.schema';
 import { plans } from '@app/database/schemas/subscription/plan.schema';
-import { DRIZZLE } from '@app/contracts';
+import {
+  ActiveSubscriptionResponseDTO,
+  CancelSubscriptionResponseDTO,
+  DRIZZLE,
+  ISubscriptionService,
+  PlanResponseDTO,
+  SubscribeResponseDTO,
+  SubscriptionCheckResponseDTO,
+  SubscriptionResponseDTO,
+} from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 import { PaymentGatewayService } from '../payment/payment-gateway.service';
 import { PlanService } from './plan.service';
 import { PaymentService } from './payment.service';
 
 @Injectable()
-export class SubscriptionService {
+export class SubscriptionService implements ISubscriptionService {
   private readonly logger = new Logger(SubscriptionService.name);
 
   constructor(
@@ -20,11 +29,15 @@ export class SubscriptionService {
     private readonly gateway: PaymentGatewayService,
   ) {}
 
-  async subscribe(userId: string, planId: string) {
+  async subscribe(
+    userId: string,
+    planId: string,
+  ): Promise<SubscribeResponseDTO> {
     const plan = await this.planService.findOne(planId);
+    const price = plan.price.toFixed(2);
 
     // Charge through the (mock) payment gateway.
-    const charge = await this.gateway.charge(plan.price, 'USD');
+    const charge = await this.gateway.charge(price, 'USD');
     if (charge.status !== 'succeeded') {
       throw new RpcBadRequestException('Payment failed');
     }
@@ -48,7 +61,7 @@ export class SubscriptionService {
     const payment = await this.paymentService.record({
       userId,
       subscriptionId: subscription.id,
-      amount: plan.price,
+      amount: price,
       currency: 'USD',
       provider: charge.provider,
       transactionId: charge.transactionId,
@@ -56,18 +69,25 @@ export class SubscriptionService {
     });
 
     this.logger.log(`User ${userId} subscribed to ${plan.slug}`);
-    return { subscription, plan, payment };
+    return new SubscribeResponseDTO({
+      subscription: new SubscriptionResponseDTO(subscription),
+      plan,
+      payment,
+    });
   }
 
-  findByUser(userId: string) {
-    return this.db
+  async findByUser(userId: string): Promise<SubscriptionResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(subscriptions)
       .where(eq(subscriptions.userId, userId))
       .orderBy(desc(subscriptions.createdAt));
+    return rows.map((row) => new SubscriptionResponseDTO(row));
   }
 
-  async findActive(userId: string) {
+  async findActive(
+    userId: string,
+  ): Promise<ActiveSubscriptionResponseDTO | null> {
     const [row] = await this.db
       .select({ subscription: subscriptions, plan: plans })
       .from(subscriptions)
@@ -75,19 +95,29 @@ export class SubscriptionService {
       .where(this.activeWhere(userId))
       .orderBy(desc(subscriptions.createdAt))
       .limit(1);
-    return row ?? null;
+    if (!row) return null;
+    return new ActiveSubscriptionResponseDTO({
+      subscription: new SubscriptionResponseDTO(row.subscription),
+      plan: new PlanResponseDTO({
+        ...row.plan,
+        price: Number(row.plan.price),
+      }),
+    });
   }
 
-  async check(userId: string) {
+  async check(userId: string): Promise<SubscriptionCheckResponseDTO> {
     const active = await this.findActive(userId);
-    return {
+    return new SubscriptionCheckResponseDTO({
       subscribed: !!active,
       subscription: active?.subscription ?? null,
       plan: active?.plan ?? null,
-    };
+    });
   }
 
-  async cancel(userId: string, id: string) {
+  async cancel(
+    userId: string,
+    id: string,
+  ): Promise<CancelSubscriptionResponseDTO> {
     const [cancelled] = await this.db
       .update(subscriptions)
       .set({ active: false, updatedAt: new Date() })
@@ -95,7 +125,11 @@ export class SubscriptionService {
       .returning();
     if (!cancelled) throw new RpcNotFoundException('Subscription not found');
     this.logger.log(`Subscription cancelled: ${id}`);
-    return { message: 'Subscription cancelled', id, subscription: cancelled };
+    return new CancelSubscriptionResponseDTO({
+      message: 'Subscription cancelled',
+      id,
+      subscription: new SubscriptionResponseDTO(cancelled),
+    });
   }
 
   private activeWhere(userId: string) {
@@ -109,7 +143,7 @@ export class SubscriptionService {
     );
   }
 
-  private computeExpiry(period: string, from: Date): Date | null {
+  private computeExpiry(period: string | undefined, from: Date): Date | null {
     if (period === 'lifetime') return null;
     const d = new Date(from);
     if (period === 'yearly') d.setFullYear(d.getFullYear() + 1);

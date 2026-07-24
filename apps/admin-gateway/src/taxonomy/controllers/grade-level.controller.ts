@@ -12,6 +12,9 @@ import { ClientProxy } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
   CreateGradeLevelRequestDTO,
+  DeleteResponseDTO,
+  GradeLevelResponseDTO,
+  IAdminGradeLevelController,
   UpdateGradeLevelRequestDTO,
 } from '@app/contracts';
 import { rpcCall } from '@app/common';
@@ -20,15 +23,17 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 @ApiTags('Grade levels')
 @ApiBearerAuth()
 @Controller('grade-levels')
-export class GradeLevelController {
+export class GradeLevelController implements IAdminGradeLevelController {
   constructor(
     @Inject(COURSE_SERVICE.NAME) private readonly courseClient: ClientProxy,
   ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a grade level (Grade 1–12)' })
-  create(@Body() body: CreateGradeLevelRequestDTO) {
-    return rpcCall(
+  create(
+    @Body() body: CreateGradeLevelRequestDTO,
+  ): Promise<GradeLevelResponseDTO> {
+    return rpcCall<GradeLevelResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.GRADE_LEVEL_CREATE,
       body,
@@ -37,8 +42,8 @@ export class GradeLevelController {
 
   @Get()
   @ApiOperation({ summary: 'List all grade levels' })
-  findAll() {
-    return rpcCall(
+  findAll(): Promise<GradeLevelResponseDTO[]> {
+    return rpcCall<GradeLevelResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.GRADE_LEVEL_FIND_ALL,
       {},
@@ -47,8 +52,8 @@ export class GradeLevelController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a grade level by id' })
-  findOne(@Param('id') id: string) {
-    return rpcCall(
+  findOne(@Param('id') id: string): Promise<GradeLevelResponseDTO> {
+    return rpcCall<GradeLevelResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.GRADE_LEVEL_FIND_ONE,
       { id },
@@ -57,26 +62,24 @@ export class GradeLevelController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a grade level' })
-  update(@Param('id') id: string, @Body() body: UpdateGradeLevelRequestDTO) {
-    return rpcCall(
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateGradeLevelRequestDTO,
+  ): Promise<GradeLevelResponseDTO> {
+    return rpcCall<GradeLevelResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.GRADE_LEVEL_UPDATE,
-      {
-        id,
-        ...body,
-      },
+      { id, ...body },
     );
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a grade level' })
-  remove(@Param('id') id: string) {
-    return rpcCall(
+  remove(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.GRADE_LEVEL_DELETE,
-      {
-        id,
-      },
+      { id },
     );
   }
 }

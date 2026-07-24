@@ -1,6 +1,9 @@
 import { Controller, Inject } from '@nestjs/common';
 import { I_AUTHORING_SERVICE } from '@app/contracts';
-import type { IAuthoringRpcController, IAuthoringService } from '@app/contracts';
+import type {
+  IAuthoringRpcController,
+  IAuthoringService,
+} from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   ASSESSMENT_SERVICE,
@@ -15,7 +18,9 @@ import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class AuthoringController implements IAuthoringRpcController {
-  constructor(@Inject(I_AUTHORING_SERVICE) private readonly authoring: IAuthoringService) {}
+  constructor(
+    @Inject(I_AUTHORING_SERVICE) private readonly authoring: IAuthoringService,
+  ) {}
 
   // ---- Quiz ----
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.QUIZ_CREATE)

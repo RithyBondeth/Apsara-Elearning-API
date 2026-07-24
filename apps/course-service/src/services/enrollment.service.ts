@@ -3,16 +3,25 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { and, eq } from 'drizzle-orm';
 import { enrollments } from '@app/database/schemas/course/enrollment.schema';
 import { courses } from '@app/database/schemas/course/course.schema';
-import { DRIZZLE } from '@app/contracts';
+import {
+  DRIZZLE,
+  EnrollmentResponseDTO,
+  EnrollmentCheckResponseDTO,
+  UnenrollResponseDTO,
+  IEnrollmentService,
+} from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class EnrollmentService {
+export class EnrollmentService implements IEnrollmentService {
   private readonly logger = new Logger(EnrollmentService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async enroll(userId: string, courseId: string) {
+  async enroll(
+    userId: string,
+    courseId: string,
+  ): Promise<EnrollmentResponseDTO> {
     const [course] = await this.db
       .select()
       .from(courses)
@@ -35,10 +44,13 @@ export class EnrollmentService {
       .values({ userId, courseId })
       .returning();
     this.logger.log(`User ${userId} enrolled in course ${courseId}`);
-    return created;
+    return new EnrollmentResponseDTO(created);
   }
 
-  async unenroll(userId: string, courseId: string) {
+  async unenroll(
+    userId: string,
+    courseId: string,
+  ): Promise<UnenrollResponseDTO> {
     const [deleted] = await this.db
       .delete(enrollments)
       .where(
@@ -47,28 +59,39 @@ export class EnrollmentService {
       .returning();
     if (!deleted) throw new RpcNotFoundException('Enrollment not found');
     this.logger.log(`User ${userId} unenrolled from course ${courseId}`);
-    return { message: 'Unenrolled successfully', courseId };
+    return new UnenrollResponseDTO({
+      message: 'Unenrolled successfully',
+      courseId,
+    });
   }
 
-  findByUser(userId: string) {
-    return this.db
+  async findByUser(userId: string): Promise<EnrollmentResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(enrollments)
       .where(eq(enrollments.userId, userId))
       .orderBy(enrollments.enrolledAt);
+    return rows.map((row) => new EnrollmentResponseDTO(row));
   }
 
-  findByCourse(courseId: string) {
-    return this.db
+  async findByCourse(courseId: string): Promise<EnrollmentResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(enrollments)
       .where(eq(enrollments.courseId, courseId))
       .orderBy(enrollments.enrolledAt);
+    return rows.map((row) => new EnrollmentResponseDTO(row));
   }
 
-  async check(userId: string, courseId: string) {
+  async check(
+    userId: string,
+    courseId: string,
+  ): Promise<EnrollmentCheckResponseDTO> {
     const enrollment = await this.findEnrollment(userId, courseId);
-    return { enrolled: !!enrollment, enrollment: enrollment ?? null };
+    return new EnrollmentCheckResponseDTO({
+      enrolled: !!enrollment,
+      enrollment: enrollment ? new EnrollmentResponseDTO(enrollment) : null,
+    });
   }
 
   private async findEnrollment(userId: string, courseId: string) {

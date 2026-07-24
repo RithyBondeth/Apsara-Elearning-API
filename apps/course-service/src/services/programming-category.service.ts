@@ -4,18 +4,23 @@ import { eq } from 'drizzle-orm';
 import { programmingCategories } from '@app/database/schemas/course/programming-category.schema';
 import {
   CreateProgrammingCategoryRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  IProgrammingCategoryService,
+  ProgrammingCategoryResponseDTO,
   UpdateProgrammingCategoryRequestDTO,
 } from '@app/contracts';
 import { RpcConflictException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class ProgrammingCategoryService {
+export class ProgrammingCategoryService implements IProgrammingCategoryService {
   private readonly logger = new Logger(ProgrammingCategoryService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(dto: CreateProgrammingCategoryRequestDTO) {
+  async create(
+    dto: CreateProgrammingCategoryRequestDTO,
+  ): Promise<ProgrammingCategoryResponseDTO> {
     await this.ensureSlugAvailable(dto.slug);
     const [created] = await this.db
       .insert(programmingCategories)
@@ -29,17 +34,18 @@ export class ProgrammingCategoryService {
       })
       .returning();
     this.logger.log(`Programming category created: ${created.slug}`);
-    return created;
+    return new ProgrammingCategoryResponseDTO(created);
   }
 
-  findAll() {
-    return this.db
+  async findAll(): Promise<ProgrammingCategoryResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(programmingCategories)
       .orderBy(programmingCategories.name);
+    return rows.map((row) => new ProgrammingCategoryResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ProgrammingCategoryResponseDTO> {
     const [found] = await this.db
       .select()
       .from(programmingCategories)
@@ -47,10 +53,10 @@ export class ProgrammingCategoryService {
       .limit(1);
     if (!found)
       throw new RpcNotFoundException('Programming category not found');
-    return found;
+    return new ProgrammingCategoryResponseDTO(found);
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string): Promise<ProgrammingCategoryResponseDTO> {
     const [found] = await this.db
       .select()
       .from(programmingCategories)
@@ -58,10 +64,13 @@ export class ProgrammingCategoryService {
       .limit(1);
     if (!found)
       throw new RpcNotFoundException('Programming category not found');
-    return found;
+    return new ProgrammingCategoryResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateProgrammingCategoryRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateProgrammingCategoryRequestDTO,
+  ): Promise<ProgrammingCategoryResponseDTO> {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
     const [updated] = await this.db
@@ -70,10 +79,10 @@ export class ProgrammingCategoryService {
       .where(eq(programmingCategories.id, id))
       .returning();
     this.logger.log(`Programming category updated: ${id}`);
-    return updated;
+    return new ProgrammingCategoryResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(programmingCategories)
       .where(eq(programmingCategories.id, id))
@@ -82,7 +91,10 @@ export class ProgrammingCategoryService {
       throw new RpcNotFoundException('Programming category not found');
     }
     this.logger.log(`Programming category deleted: ${id}`);
-    return { message: 'Programming category deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Programming category deleted successfully',
+      id,
+    });
   }
 
   private async ensureSlugAvailable(slug: string, exceptId?: string) {

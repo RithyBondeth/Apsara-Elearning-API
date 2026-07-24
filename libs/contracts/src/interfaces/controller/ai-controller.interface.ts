@@ -1,20 +1,51 @@
-/**
- * RPC controller contracts for ai-service — one per controller.
- */
+import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
+import {
+  ConversationResponseDTO,
+  CreateConversationRequestDTO,
+} from '../../dtos/ai/conversation.dto';
+import {
+  AiMessageResponseDTO,
+  SendMessageResponseDTO,
+} from '../../dtos/ai/message.dto';
+import {
+  AiUsageResponseDTO,
+  CreditsResponseDTO,
+} from '../../dtos/ai/usage.dto';
+
+/** RPC controller contracts for ai-service. */
 
 export interface IUsageRpcController {
-  findUsage(payload: unknown): Promise<unknown>;
-  checkCredits(payload: unknown): Promise<unknown>;
+  findUsage(payload: { userId: string }): Promise<AiUsageResponseDTO[]>;
+  checkCredits(payload: { userId: string }): Promise<CreditsResponseDTO>;
 }
 
 export interface IMessageRpcController {
-  sendMessage(payload: unknown): Promise<unknown>;
-  findMessages(payload: unknown): Promise<unknown>;
+  sendMessage(payload: {
+    userId: string;
+    conversationId: string;
+    content: string;
+    provider?: 'anthropic' | 'openai' | 'deepseek' | 'gemini';
+    model?: string;
+  }): Promise<SendMessageResponseDTO>;
+  findMessages(payload: {
+    userId: string;
+    conversationId: string;
+  }): Promise<AiMessageResponseDTO[]>;
 }
 
 export interface IConversationRpcController {
-  createConversation(payload: unknown): Promise<unknown>;
-  findConversations(payload: unknown): Promise<unknown>;
-  findConversation(payload: unknown): Promise<unknown>;
-  removeConversation(payload: unknown): Promise<unknown>;
+  createConversation(
+    payload: CreateConversationRequestDTO & { userId: string },
+  ): Promise<ConversationResponseDTO>;
+  findConversations(payload: {
+    userId: string;
+  }): Promise<ConversationResponseDTO[]>;
+  findConversation(payload: {
+    userId: string;
+    id: string;
+  }): Promise<ConversationResponseDTO>;
+  removeConversation(payload: {
+    userId: string;
+    id: string;
+  }): Promise<DeleteResponseDTO>;
 }

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import type { DtoInit } from '../../types/dto-init';
 import {
   IsIn,
   IsInt,
@@ -48,6 +49,10 @@ export class CreatePlanRequestDTO {
 export class UpdatePlanRequestDTO extends PartialType(CreatePlanRequestDTO) {}
 
 export class PlanResponseDTO {
+  constructor(partial: DtoInit<PlanResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
   @ApiProperty({ example: '3c4e5f6d-1a2b-3c4d-5e6f-7a8b9c0d1e2f' })
   id: string;
 

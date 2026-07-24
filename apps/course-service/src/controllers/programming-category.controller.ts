@@ -6,13 +6,17 @@ import {
   UpdateProgrammingCategoryRequestDTO,
   I_PROGRAMMING_CATEGORY_SERVICE,
 } from '@app/contracts';
-import type { IProgrammingCategoryService, IProgrammingCategoryRpcController } from '@app/contracts';
+import type {
+  IProgrammingCategoryService,
+  IProgrammingCategoryRpcController,
+} from '@app/contracts';
 import { idOf, slugOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class ProgrammingCategoryController implements IProgrammingCategoryRpcController {
   constructor(
-    @Inject(I_PROGRAMMING_CATEGORY_SERVICE) private readonly programmingCategoryService: IProgrammingCategoryService,
+    @Inject(I_PROGRAMMING_CATEGORY_SERVICE)
+    private readonly programmingCategoryService: IProgrammingCategoryService,
   ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_CREATE)

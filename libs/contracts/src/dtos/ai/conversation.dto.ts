@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { DtoInit } from '../../types/dto-init';
 import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateConversationRequestDTO {
@@ -40,7 +41,7 @@ export class ConversationResponseDTO {
   @ApiProperty()
   updatedAt!: Date;
 
-  constructor(partial: Partial<ConversationResponseDTO>) {
+  constructor(partial: DtoInit<ConversationResponseDTO> = {}) {
     Object.assign(this, partial);
   }
 }

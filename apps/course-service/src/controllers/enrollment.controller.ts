@@ -1,7 +1,10 @@
 import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { COURSE_SERVICE, I_ENROLLMENT_SERVICE } from '@app/contracts';
-import type { IEnrollmentService, IEnrollmentRpcController } from '@app/contracts';
+import type {
+  IEnrollmentService,
+  IEnrollmentRpcController,
+} from '@app/contracts';
 
 interface UserCoursePayload {
   userId: string;
@@ -11,7 +14,8 @@ interface UserCoursePayload {
 @Controller()
 export class EnrollmentController implements IEnrollmentRpcController {
   constructor(
-    @Inject(I_ENROLLMENT_SERVICE) private readonly enrollmentService: IEnrollmentService,
+    @Inject(I_ENROLLMENT_SERVICE)
+    private readonly enrollmentService: IEnrollmentService,
   ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.ENROLL)

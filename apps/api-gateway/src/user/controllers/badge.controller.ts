@@ -1,12 +1,16 @@
 import { Controller, Get, HttpStatus, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { USER_SERVICE } from '@app/contracts';
+import {
+  BadgeResponseDTO,
+  IBadgeHttpController,
+  USER_SERVICE,
+} from '@app/contracts';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { rpcCall } from '@app/common';
 
 @ApiTags('Badges')
 @Controller('badge')
-export class BadgeController {
+export class BadgeController implements IBadgeHttpController {
   constructor(
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
   ) {}
@@ -16,8 +20,13 @@ export class BadgeController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'All badges retrieved, ordered by xpRequired',
+    type: [BadgeResponseDTO],
   })
-  findAll() {
-    return rpcCall(this.userClient, USER_SERVICE.ACTIONS.BADGE_FIND_ALL, {});
+  findAll(): Promise<BadgeResponseDTO[]> {
+    return rpcCall<BadgeResponseDTO[]>(
+      this.userClient,
+      USER_SERVICE.ACTIONS.BADGE_FIND_ALL,
+      {},
+    );
   }
 }

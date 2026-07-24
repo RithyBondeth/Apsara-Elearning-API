@@ -12,8 +12,12 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import {
   ASSESSMENT_SERVICE,
+  ChallengeResponseDTO,
   CreateChallengeRequestDTO,
   CreateTestCaseRequestDTO,
+  DeleteResponseDTO,
+  IAdminChallengeController,
+  TestCaseResponseDTO,
   UpdateChallengeRequestDTO,
   UpdateTestCaseRequestDTO,
 } from '@app/contracts';
@@ -28,7 +32,7 @@ import {
 @ApiTags('Coding Challenges (Admin)')
 @ApiBearerAuth()
 @Controller()
-export class ChallengeController {
+export class ChallengeController implements IAdminChallengeController {
   constructor(
     @Inject(ASSESSMENT_SERVICE.NAME) private readonly client: ClientProxy,
   ) {}
@@ -40,48 +44,61 @@ export class ChallengeController {
   create(
     @Param('lessonId') lessonId: string,
     @Body() body: CreateChallengeRequestDTO,
-  ) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_CREATE, {
-      lessonId,
-      ...body,
-    });
+  ): Promise<ChallengeResponseDTO> {
+    return rpcCall<ChallengeResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_CREATE,
+      { lessonId, ...body },
+    );
   }
 
   @Get('lessons/:lessonId/challenges')
   @ApiOperation({ summary: 'Get all challenges for a lesson' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Challenges retrieved' })
-  findAll(@Param('lessonId') lessonId: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL, {
-      lessonId,
-    });
+  findAll(
+    @Param('lessonId') lessonId: string,
+  ): Promise<ChallengeResponseDTO[]> {
+    return rpcCall<ChallengeResponseDTO[]>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL,
+      { lessonId },
+    );
   }
 
   @Get('challenges/:id')
   @ApiOperation({ summary: 'Get a challenge by ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Challenge retrieved' })
-  findOne(@Param('id') id: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ONE, {
-      id,
-    });
+  findOne(@Param('id') id: string): Promise<ChallengeResponseDTO> {
+    return rpcCall<ChallengeResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ONE,
+      { id },
+    );
   }
 
   @Patch('challenges/:id')
   @ApiOperation({ summary: 'Update a challenge' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Challenge updated' })
-  update(@Param('id') id: string, @Body() body: UpdateChallengeRequestDTO) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_UPDATE, {
-      id,
-      ...body,
-    });
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateChallengeRequestDTO,
+  ): Promise<ChallengeResponseDTO> {
+    return rpcCall<ChallengeResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_UPDATE,
+      { id, ...body },
+    );
   }
 
   @Delete('challenges/:id')
   @ApiOperation({ summary: 'Delete a challenge' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Challenge deleted' })
-  remove(@Param('id') id: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_DELETE, {
-      id,
-    });
+  remove(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_DELETE,
+      { id },
+    );
   }
 
   // ---- Test cases ----
@@ -91,11 +108,12 @@ export class ChallengeController {
   createTestCase(
     @Param('challengeId') challengeId: string,
     @Body() body: CreateTestCaseRequestDTO,
-  ) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_CREATE, {
-      challengeId,
-      ...body,
-    });
+  ): Promise<TestCaseResponseDTO> {
+    return rpcCall<TestCaseResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_CREATE,
+      { challengeId, ...body },
+    );
   }
 
   @Get('challenges/:challengeId/test-cases')
@@ -103,11 +121,14 @@ export class ChallengeController {
     summary: 'Get all test cases (including hidden) for a challenge',
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Test cases retrieved' })
-  findTestCases(@Param('challengeId') challengeId: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL, {
-      challengeId,
-      includeHidden: true,
-    });
+  findTestCases(
+    @Param('challengeId') challengeId: string,
+  ): Promise<TestCaseResponseDTO[]> {
+    return rpcCall<TestCaseResponseDTO[]>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL,
+      { challengeId, includeHidden: true },
+    );
   }
 
   @Patch('test-cases/:id')
@@ -116,19 +137,22 @@ export class ChallengeController {
   updateTestCase(
     @Param('id') id: string,
     @Body() body: UpdateTestCaseRequestDTO,
-  ) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_UPDATE, {
-      id,
-      ...body,
-    });
+  ): Promise<TestCaseResponseDTO> {
+    return rpcCall<TestCaseResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_UPDATE,
+      { id, ...body },
+    );
   }
 
   @Delete('test-cases/:id')
   @ApiOperation({ summary: 'Delete a test case' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Test case deleted' })
-  removeTestCase(@Param('id') id: string) {
-    return rpcCall(this.client, ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_DELETE, {
-      id,
-    });
+  removeTestCase(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_DELETE,
+      { id },
+    );
   }
 }

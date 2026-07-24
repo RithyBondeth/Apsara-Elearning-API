@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import type { DtoInit } from '../../types/dto-init';
 import {
   IsIn,
   IsNotEmpty,
@@ -53,7 +54,19 @@ export class AiMessageResponseDTO {
   @ApiProperty({ required: false, example: 'claude-opus-4-8' })
   model?: string;
 
-  constructor(partial: Partial<AiMessageResponseDTO>) {
+  constructor(partial: DtoInit<AiMessageResponseDTO> = {}) {
     Object.assign(this, partial);
   }
+}
+
+export class SendMessageResponseDTO {
+  constructor(partial: DtoInit<SendMessageResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ type: AiMessageResponseDTO })
+  message: AiMessageResponseDTO;
+
+  @ApiProperty({ example: false, description: 'True when the reply is mocked' })
+  mock: boolean;
 }

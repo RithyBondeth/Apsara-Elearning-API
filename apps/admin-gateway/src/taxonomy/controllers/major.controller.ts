@@ -13,6 +13,9 @@ import { ClientProxy } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
   CreateMajorRequestDTO,
+  DeleteResponseDTO,
+  IAdminMajorController,
+  MajorResponseDTO,
   UpdateMajorRequestDTO,
 } from '@app/contracts';
 import { rpcCall } from '@app/common';
@@ -26,15 +29,15 @@ import {
 @ApiTags('Majors')
 @ApiBearerAuth()
 @Controller('majors')
-export class MajorController {
+export class MajorController implements IAdminMajorController {
   constructor(
     @Inject(COURSE_SERVICE.NAME) private readonly courseClient: ClientProxy,
   ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a major' })
-  create(@Body() body: CreateMajorRequestDTO) {
-    return rpcCall(
+  create(@Body() body: CreateMajorRequestDTO): Promise<MajorResponseDTO> {
+    return rpcCall<MajorResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.MAJOR_CREATE,
       body,
@@ -44,34 +47,44 @@ export class MajorController {
   @Get()
   @ApiOperation({ summary: 'List majors, optionally filtered by faculty' })
   @ApiQuery({ name: 'facultyId', required: false })
-  findAll(@Query('facultyId') facultyId?: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MAJOR_FIND_ALL, {
-      facultyId,
-    });
+  findAll(@Query('facultyId') facultyId?: string): Promise<MajorResponseDTO[]> {
+    return rpcCall<MajorResponseDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MAJOR_FIND_ALL,
+      { facultyId },
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a major by id' })
-  findOne(@Param('id') id: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MAJOR_FIND_ONE, {
-      id,
-    });
+  findOne(@Param('id') id: string): Promise<MajorResponseDTO> {
+    return rpcCall<MajorResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MAJOR_FIND_ONE,
+      { id },
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a major' })
-  update(@Param('id') id: string, @Body() body: UpdateMajorRequestDTO) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MAJOR_UPDATE, {
-      id,
-      ...body,
-    });
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateMajorRequestDTO,
+  ): Promise<MajorResponseDTO> {
+    return rpcCall<MajorResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MAJOR_UPDATE,
+      { id, ...body },
+    );
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a major' })
-  remove(@Param('id') id: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MAJOR_DELETE, {
-      id,
-    });
+  remove(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MAJOR_DELETE,
+      { id },
+    );
   }
 }

@@ -7,14 +7,18 @@ import {
   Query,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE, ModuleResponseDTO } from '@app/contracts';
+import {
+  COURSE_SERVICE,
+  IModuleHttpController,
+  ModuleResponseDTO,
+} from '@app/contracts';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { rpcCall } from '@app/common';
 
 // Public read-only access to modules. Mutations go through the admin gateway.
 @ApiTags('Modules')
 @Controller('module')
-export class ModuleController {
+export class ModuleController implements IModuleHttpController {
   constructor(
     @Inject(COURSE_SERVICE.NAME)
     private readonly courseClient: ClientProxy,
@@ -27,10 +31,14 @@ export class ModuleController {
     description: 'Modules retrieved successfully',
     type: [ModuleResponseDTO],
   })
-  findAllByCourse(@Query('courseId') courseId: string) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.MODULE_FIND_ALL, {
-      courseId,
-    });
+  findAllByCourse(
+    @Query('courseId') courseId: string,
+  ): Promise<ModuleResponseDTO[]> {
+    return rpcCall<ModuleResponseDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.MODULE_FIND_ALL,
+      { courseId },
+    );
   }
 
   @Get(':id')
@@ -44,8 +52,8 @@ export class ModuleController {
     status: HttpStatus.NOT_FOUND,
     description: 'Module not found',
   })
-  findOne(@Param('id') id: string) {
-    return rpcCall(
+  findOne(@Param('id') id: string): Promise<ModuleResponseDTO> {
+    return rpcCall<ModuleResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.MODULE_FIND_ONE,
       id,

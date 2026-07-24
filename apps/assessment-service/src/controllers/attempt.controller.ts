@@ -7,7 +7,9 @@ import { idOf } from '@app/utils';
 
 @Controller()
 export class AttemptController implements IAttemptRpcController {
-  constructor(@Inject(I_ATTEMPT_SERVICE) private readonly attempts: IAttemptService) {}
+  constructor(
+    @Inject(I_ATTEMPT_SERVICE) private readonly attempts: IAttemptService,
+  ) {}
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_START)
   start(@Payload() payload: { userId: string; quizId: string }) {

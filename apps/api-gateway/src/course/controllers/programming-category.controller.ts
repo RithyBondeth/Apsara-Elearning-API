@@ -17,6 +17,8 @@ import {
   UpdateProgrammingCategoryRequestDTO,
   ProgrammingCategoryResponseDTO,
   CourseResponseDTO,
+  DeleteResponseDTO,
+  IProgrammingCategoryHttpController,
 } from '@app/contracts';
 import { AdminGuard } from '@app/common';
 import {
@@ -29,7 +31,7 @@ import { rpcCall } from '@app/common';
 
 @ApiTags('Programming Categories')
 @Controller('programming-category')
-export class ProgrammingCategoryController {
+export class ProgrammingCategoryController implements IProgrammingCategoryHttpController {
   constructor(
     @Inject(COURSE_SERVICE.NAME)
     private readonly courseClient: ClientProxy,
@@ -46,8 +48,8 @@ export class ProgrammingCategoryController {
   })
   createCategory(
     @Body() createCategoryReqDTO: CreateProgrammingCategoryRequestDTO,
-  ) {
-    return rpcCall(
+  ): Promise<ProgrammingCategoryResponseDTO> {
+    return rpcCall<ProgrammingCategoryResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_CREATE,
       createCategoryReqDTO,
@@ -61,8 +63,8 @@ export class ProgrammingCategoryController {
     description: 'All programming categories retrieved',
     type: [ProgrammingCategoryResponseDTO],
   })
-  findAllCategories() {
-    return rpcCall(
+  findAllCategories(): Promise<ProgrammingCategoryResponseDTO[]> {
+    return rpcCall<ProgrammingCategoryResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_FIND_ALL,
       {},
@@ -76,8 +78,10 @@ export class ProgrammingCategoryController {
     description: 'Programming category retrieved',
     type: ProgrammingCategoryResponseDTO,
   })
-  findBySlug(@Param('slug') slug: string) {
-    return rpcCall(
+  findBySlug(
+    @Param('slug') slug: string,
+  ): Promise<ProgrammingCategoryResponseDTO> {
+    return rpcCall<ProgrammingCategoryResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_FIND_BY_SLUG,
       slug,
@@ -91,8 +95,8 @@ export class ProgrammingCategoryController {
     description: 'Courses retrieved',
     type: [CourseResponseDTO],
   })
-  findCoursesByCategory(@Param('id') id: string) {
-    return rpcCall(
+  findCoursesByCategory(@Param('id') id: string): Promise<CourseResponseDTO[]> {
+    return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_CATEGORY,
       id,
@@ -106,8 +110,10 @@ export class ProgrammingCategoryController {
     description: 'Programming category retrieved',
     type: ProgrammingCategoryResponseDTO,
   })
-  findOneCategory(@Param('id') id: string) {
-    return rpcCall(
+  findOneCategory(
+    @Param('id') id: string,
+  ): Promise<ProgrammingCategoryResponseDTO> {
+    return rpcCall<ProgrammingCategoryResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_FIND_ONE,
       id,
@@ -126,8 +132,8 @@ export class ProgrammingCategoryController {
   updateCategory(
     @Param('id') id: string,
     @Body() updateCategoryReqDTO: UpdateProgrammingCategoryRequestDTO,
-  ) {
-    return rpcCall(
+  ): Promise<ProgrammingCategoryResponseDTO> {
+    return rpcCall<ProgrammingCategoryResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_UPDATE,
       { id, ...updateCategoryReqDTO },
@@ -141,9 +147,10 @@ export class ProgrammingCategoryController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Programming category deleted',
+    type: DeleteResponseDTO,
   })
-  deleteCategory(@Param('id') id: string) {
-    return rpcCall(
+  deleteCategory(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.PROGRAMMING_CATEGORY_DELETE,
       id,

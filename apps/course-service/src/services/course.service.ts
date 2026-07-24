@@ -7,8 +7,11 @@ import { gradeLevels } from '@app/database/schemas/course/grade-level.schema';
 import { majors } from '@app/database/schemas/course/major.schema';
 import { programmingCategories } from '@app/database/schemas/course/programming-category.schema';
 import {
+  CourseResponseDTO,
   CreateCourseRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  ICourseService,
   UpdateCourseRequestDTO,
 } from '@app/contracts';
 import {
@@ -18,12 +21,12 @@ import {
 } from '@app/common';
 
 @Injectable()
-export class CourseService {
+export class CourseService implements ICourseService {
   private readonly logger = new Logger(CourseService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(dto: CreateCourseRequestDTO) {
+  async create(dto: CreateCourseRequestDTO): Promise<CourseResponseDTO> {
     await this.ensureSlugAvailable(dto.slug);
     await this.ensurePlacementExists(dto);
     const [created] = await this.db
@@ -46,74 +49,86 @@ export class CourseService {
       })
       .returning();
     this.logger.log(`Course created: ${created.slug}`);
-    return created;
+    return new CourseResponseDTO(created);
   }
 
-  findAll() {
-    return this.db.select().from(courses).orderBy(courses.createdAt);
+  async findAll(): Promise<CourseResponseDTO[]> {
+    const rows = await this.db
+      .select()
+      .from(courses)
+      .orderBy(courses.createdAt);
+    return rows.map((row) => new CourseResponseDTO(row));
   }
 
-  findPublished() {
-    return this.db
+  async findPublished(): Promise<CourseResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(courses)
       .where(eq(courses.published, true))
       .orderBy(courses.createdAt);
+    return rows.map((row) => new CourseResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<CourseResponseDTO> {
     const [found] = await this.db
       .select()
       .from(courses)
       .where(eq(courses.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Course not found');
-    return found;
+    return new CourseResponseDTO(found);
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string): Promise<CourseResponseDTO> {
     const [found] = await this.db
       .select()
       .from(courses)
       .where(eq(courses.slug, slug))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Course not found');
-    return found;
+    return new CourseResponseDTO(found);
   }
 
-  findBySubject(subjectId: string) {
-    return this.db
+  async findBySubject(subjectId: string): Promise<CourseResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(courses)
       .where(eq(courses.subjectId, subjectId))
       .orderBy(courses.createdAt);
+    return rows.map((row) => new CourseResponseDTO(row));
   }
 
-  findByGrade(gradeLevelId: string) {
-    return this.db
+  async findByGrade(gradeLevelId: string): Promise<CourseResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(courses)
       .where(eq(courses.gradeLevelId, gradeLevelId))
       .orderBy(courses.createdAt);
+    return rows.map((row) => new CourseResponseDTO(row));
   }
 
-  findByMajor(majorId: string) {
-    return this.db
+  async findByMajor(majorId: string): Promise<CourseResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(courses)
       .where(eq(courses.majorId, majorId))
       .orderBy(courses.createdAt);
+    return rows.map((row) => new CourseResponseDTO(row));
   }
 
-  findByCategory(categoryId: string) {
-    return this.db
+  async findByCategory(categoryId: string): Promise<CourseResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(courses)
       .where(eq(courses.categoryId, categoryId))
       .orderBy(courses.createdAt);
+    return rows.map((row) => new CourseResponseDTO(row));
   }
 
-  async update(id: string, dto: UpdateCourseRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateCourseRequestDTO,
+  ): Promise<CourseResponseDTO> {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
     await this.ensurePlacementExists(dto);
@@ -123,24 +138,30 @@ export class CourseService {
       .where(eq(courses.id, id))
       .returning();
     this.logger.log(`Course updated: ${id}`);
-    return updated;
+    return new CourseResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(courses)
       .where(eq(courses.id, id))
       .returning();
     if (!deleted) throw new RpcNotFoundException('Course not found');
     this.logger.log(`Course deleted: ${id}`);
-    return { message: 'Course deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Course deleted successfully',
+      id,
+    });
   }
 
-  setPublished(id: string, published: boolean) {
+  setPublished(id: string, published: boolean): Promise<CourseResponseDTO> {
     return this.setPublishState(id, published);
   }
 
-  private async setPublishState(id: string, published: boolean) {
+  private async setPublishState(
+    id: string,
+    published: boolean,
+  ): Promise<CourseResponseDTO> {
     const [updated] = await this.db
       .update(courses)
       .set({ published, updatedAt: new Date() })
@@ -148,7 +169,7 @@ export class CourseService {
       .returning();
     if (!updated) throw new RpcNotFoundException('Course not found');
     this.logger.log(`Course ${published ? 'published' : 'unpublished'}: ${id}`);
-    return updated;
+    return new CourseResponseDTO(updated);
   }
 
   private async ensureSlugAvailable(slug: string, exceptId?: string) {

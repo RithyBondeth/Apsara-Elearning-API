@@ -5,10 +5,15 @@ import { user } from '@app/database/schemas/user/user.schema';
 import { badges } from '@app/database/schemas/user/badge.schema';
 import { userBadges } from '@app/database/schemas/user/user-badge.schema';
 import {
+  AddXpResponseDTO,
   AVATAR_PRESETS,
+  BadgeResponseDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  IUserService,
   TAvatarPreset,
   UpdateUserRequestDTO,
+  UserResponseDTO,
 } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
@@ -34,36 +39,43 @@ const publicColumns = {
 };
 
 @Injectable()
-export class UserService {
+export class UserService implements IUserService {
   private readonly logger = new Logger(UserService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  findAll() {
-    return this.db.select(publicColumns).from(user).orderBy(user.createdAt);
+  async findAll(): Promise<UserResponseDTO[]> {
+    const rows = await this.db
+      .select(publicColumns)
+      .from(user)
+      .orderBy(user.createdAt);
+    return rows.map((row) => new UserResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<UserResponseDTO> {
     const [found] = await this.db
       .select(publicColumns)
       .from(user)
       .where(eq(user.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('User not found');
-    return found;
+    return new UserResponseDTO(found);
   }
 
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<UserResponseDTO> {
     const [found] = await this.db
       .select(publicColumns)
       .from(user)
       .where(eq(user.email, email))
       .limit(1);
     if (!found) throw new RpcNotFoundException('User not found');
-    return found;
+    return new UserResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateUserRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateUserRequestDTO,
+  ): Promise<UserResponseDTO> {
     const [updated] = await this.db
       .update(user)
       .set({ ...dto, updatedAt: new Date() })
@@ -71,10 +83,13 @@ export class UserService {
       .returning(publicColumns);
     if (!updated) throw new RpcNotFoundException('User not found');
     this.logger.log(`User updated: ${id}`);
-    return updated;
+    return new UserResponseDTO(updated);
   }
 
-  async updateAvatar(id: string, avatar: TAvatarPreset) {
+  async updateAvatar(
+    id: string,
+    avatar: TAvatarPreset,
+  ): Promise<UserResponseDTO> {
     // The gateway DTO already checks this, but the action is callable over RPC
     // by any service — the column is free text, so guard the write itself.
     if (!AVATAR_PRESETS.includes(avatar)) {
@@ -90,20 +105,20 @@ export class UserService {
       .returning(publicColumns);
     if (!updated) throw new RpcNotFoundException('User not found');
     this.logger.log(`Avatar updated: ${id} -> ${avatar}`);
-    return updated;
+    return new UserResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(user)
       .where(eq(user.id, id))
       .returning({ id: user.id });
     if (!deleted) throw new RpcNotFoundException('User not found');
     this.logger.log(`User deleted: ${id}`);
-    return { message: 'User deleted successfully', id };
+    return new DeleteResponseDTO({ message: 'User deleted successfully', id });
   }
 
-  async addXp(id: string, amount: number) {
+  async addXp(id: string, amount: number): Promise<AddXpResponseDTO> {
     const [updated] = await this.db
       .update(user)
       .set({ xp: sql`${user.xp} + ${amount}`, updatedAt: new Date() })
@@ -113,10 +128,13 @@ export class UserService {
 
     const awarded = await this.awardEligibleBadges(id, updated.xp ?? 0);
     this.logger.log(`Added ${amount} XP to ${id} (total ${updated.xp})`);
-    return { user: updated, awardedBadges: awarded };
+    return new AddXpResponseDTO({
+      user: new UserResponseDTO(updated),
+      awardedBadges: awarded.map((badge) => new BadgeResponseDTO(badge)),
+    });
   }
 
-  async updateStreak(id: string, reset = false) {
+  async updateStreak(id: string, reset = false): Promise<UserResponseDTO> {
     const [updated] = await this.db
       .update(user)
       .set({
@@ -126,7 +144,7 @@ export class UserService {
       .where(eq(user.id, id))
       .returning(publicColumns);
     if (!updated) throw new RpcNotFoundException('User not found');
-    return updated;
+    return new UserResponseDTO(updated);
   }
 
   /** Awards any XP-threshold badge the user has now earned but doesn't hold. */

@@ -16,6 +16,8 @@ import {
   CreateSubjectRequestDTO,
   UpdateSubjectRequestDTO,
   SubjectResponseDTO,
+  DeleteResponseDTO,
+  ISubjectHttpController,
 } from '@app/contracts';
 import { AdminGuard } from '@app/common';
 import {
@@ -28,7 +30,7 @@ import { rpcCall } from '@app/common';
 
 @ApiTags('Subjects')
 @Controller('subject')
-export class SubjectController {
+export class SubjectController implements ISubjectHttpController {
   constructor(
     @Inject(COURSE_SERVICE.NAME)
     private readonly courseClient: ClientProxy,
@@ -43,8 +45,10 @@ export class SubjectController {
     description: 'Subject created',
     type: SubjectResponseDTO,
   })
-  createSubject(@Body() createSubjectReqDTO: CreateSubjectRequestDTO) {
-    return rpcCall(
+  createSubject(
+    @Body() createSubjectReqDTO: CreateSubjectRequestDTO,
+  ): Promise<SubjectResponseDTO> {
+    return rpcCall<SubjectResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.SUBJECT_CREATE,
       createSubjectReqDTO,
@@ -58,8 +62,8 @@ export class SubjectController {
     description: 'All subjects retrieved',
     type: [SubjectResponseDTO],
   })
-  findAllSubjects() {
-    return rpcCall(
+  findAllSubjects(): Promise<SubjectResponseDTO[]> {
+    return rpcCall<SubjectResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.SUBJECT_FIND_ALL,
       {},
@@ -73,8 +77,8 @@ export class SubjectController {
     description: 'Subject retrieved',
     type: SubjectResponseDTO,
   })
-  findBySlug(@Param('slug') slug: string) {
-    return rpcCall(
+  findBySlug(@Param('slug') slug: string): Promise<SubjectResponseDTO> {
+    return rpcCall<SubjectResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.SUBJECT_FIND_BY_SLUG,
       slug,
@@ -88,8 +92,8 @@ export class SubjectController {
     description: 'Subject retrieved',
     type: SubjectResponseDTO,
   })
-  findOneSubject(@Param('id') id: string) {
-    return rpcCall(
+  findOneSubject(@Param('id') id: string): Promise<SubjectResponseDTO> {
+    return rpcCall<SubjectResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.SUBJECT_FIND_ONE,
       id,
@@ -108,20 +112,28 @@ export class SubjectController {
   updateSubject(
     @Param('id') id: string,
     @Body() updateSubjectReqDTO: UpdateSubjectRequestDTO,
-  ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.SUBJECT_UPDATE, {
-      id,
-      ...updateSubjectReqDTO,
-    });
+  ): Promise<SubjectResponseDTO> {
+    return rpcCall<SubjectResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.SUBJECT_UPDATE,
+      {
+        id,
+        ...updateSubjectReqDTO,
+      },
+    );
   }
 
   @Delete(':id')
   @UseGuards(AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a subject (Admin only)' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Subject deleted' })
-  deleteSubject(@Param('id') id: string) {
-    return rpcCall(
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Subject deleted',
+    type: DeleteResponseDTO,
+  })
+  deleteSubject(@Param('id') id: string): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.SUBJECT_DELETE,
       id,

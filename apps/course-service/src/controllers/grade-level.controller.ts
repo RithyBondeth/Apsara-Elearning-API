@@ -6,13 +6,17 @@ import {
   UpdateGradeLevelRequestDTO,
   I_GRADE_LEVEL_SERVICE,
 } from '@app/contracts';
-import type { IGradeLevelService, IGradeLevelRpcController } from '@app/contracts';
+import type {
+  IGradeLevelService,
+  IGradeLevelRpcController,
+} from '@app/contracts';
 import { idOf, splitUpdate } from '@app/utils';
 
 @Controller()
 export class GradeLevelController implements IGradeLevelRpcController {
   constructor(
-    @Inject(I_GRADE_LEVEL_SERVICE) private readonly gradeLevelService: IGradeLevelService,
+    @Inject(I_GRADE_LEVEL_SERVICE)
+    private readonly gradeLevelService: IGradeLevelService,
   ) {}
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.GRADE_LEVEL_CREATE)

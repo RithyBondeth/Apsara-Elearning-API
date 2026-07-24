@@ -4,18 +4,21 @@ import { eq } from 'drizzle-orm';
 import { faculties } from '@app/database/schemas/course/faculty.schema';
 import {
   CreateFacultyRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  FacultyResponseDTO,
+  IFacultyService,
   UpdateFacultyRequestDTO,
 } from '@app/contracts';
 import { RpcConflictException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class FacultyService {
+export class FacultyService implements IFacultyService {
   private readonly logger = new Logger(FacultyService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(dto: CreateFacultyRequestDTO) {
+  async create(dto: CreateFacultyRequestDTO): Promise<FacultyResponseDTO> {
     await this.ensureSlugAvailable(dto.slug);
     const [created] = await this.db
       .insert(faculties)
@@ -28,34 +31,38 @@ export class FacultyService {
       })
       .returning();
     this.logger.log(`Faculty created: ${created.slug}`);
-    return created;
+    return new FacultyResponseDTO(created);
   }
 
-  findAll() {
-    return this.db.select().from(faculties).orderBy(faculties.name);
+  async findAll(): Promise<FacultyResponseDTO[]> {
+    const rows = await this.db.select().from(faculties).orderBy(faculties.name);
+    return rows.map((row) => new FacultyResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<FacultyResponseDTO> {
     const [found] = await this.db
       .select()
       .from(faculties)
       .where(eq(faculties.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Faculty not found');
-    return found;
+    return new FacultyResponseDTO(found);
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string): Promise<FacultyResponseDTO> {
     const [found] = await this.db
       .select()
       .from(faculties)
       .where(eq(faculties.slug, slug))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Faculty not found');
-    return found;
+    return new FacultyResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateFacultyRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateFacultyRequestDTO,
+  ): Promise<FacultyResponseDTO> {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
     const [updated] = await this.db
@@ -64,17 +71,20 @@ export class FacultyService {
       .where(eq(faculties.id, id))
       .returning();
     this.logger.log(`Faculty updated: ${id}`);
-    return updated;
+    return new FacultyResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(faculties)
       .where(eq(faculties.id, id))
       .returning();
     if (!deleted) throw new RpcNotFoundException('Faculty not found');
     this.logger.log(`Faculty deleted: ${id}`);
-    return { message: 'Faculty deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Faculty deleted successfully',
+      id,
+    });
   }
 
   private async ensureSlugAvailable(slug: string, exceptId?: string) {

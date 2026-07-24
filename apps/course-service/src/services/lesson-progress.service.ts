@@ -7,14 +7,21 @@ import { lessonProgress } from '@app/database/schemas/course/lessons/lesson-prog
 import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
 import { modules } from '@app/database/schemas/course/module.schema';
 import { enrollments } from '@app/database/schemas/course/enrollment.schema';
-import { DRIZZLE, USER_SERVICE } from '@app/contracts';
+import {
+  DRIZZLE,
+  EnrollmentResponseDTO,
+  ILessonProgressService,
+  LessonCompletionResponseDTO,
+  LessonProgressResponseDTO,
+  USER_SERVICE,
+} from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 /** XP granted the first time a lesson is completed. */
 const XP_PER_LESSON = 10;
 
 @Injectable()
-export class LessonProgressService {
+export class LessonProgressService implements ILessonProgressService {
   private readonly logger = new Logger(LessonProgressService.name);
 
   constructor(
@@ -22,7 +29,10 @@ export class LessonProgressService {
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
   ) {}
 
-  async markComplete(userId: string, lessonId: string) {
+  async markComplete(
+    userId: string,
+    lessonId: string,
+  ): Promise<LessonCompletionResponseDTO> {
     const courseId = await this.courseIdForLesson(lessonId);
     await this.ensureEnrolled(userId, courseId);
 
@@ -46,7 +56,12 @@ export class LessonProgressService {
     }
 
     this.logger.log(`User ${userId} completed lesson ${lessonId}`);
-    return { lessonId, completed: true, enrollment, xpAwarded };
+    return new LessonCompletionResponseDTO({
+      lessonId,
+      completed: true,
+      enrollment,
+      xpAwarded,
+    });
   }
 
   private async isCompleted(userId: string, lessonId: string) {
@@ -80,14 +95,18 @@ export class LessonProgressService {
     }
   }
 
-  findByUser(userId: string) {
-    return this.db
+  async findByUser(userId: string): Promise<LessonProgressResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(lessonProgress)
       .where(eq(lessonProgress.userId, userId));
+    return rows.map((row) => new LessonProgressResponseDTO(row));
   }
 
-  async findByLesson(userId: string, lessonId: string) {
+  async findByLesson(
+    userId: string,
+    lessonId: string,
+  ): Promise<LessonProgressResponseDTO> {
     const [found] = await this.db
       .select()
       .from(lessonProgress)
@@ -98,11 +117,16 @@ export class LessonProgressService {
         ),
       )
       .limit(1);
-    return found ?? { userId, lessonId, completed: false };
+    return new LessonProgressResponseDTO(
+      found ?? { userId, lessonId, completed: false },
+    );
   }
 
   /** Recomputes an enrollment's progressPercent / completed flags. */
-  async recalculate(userId: string, courseId: string) {
+  async recalculate(
+    userId: string,
+    courseId: string,
+  ): Promise<EnrollmentResponseDTO> {
     const lessonRows = await this.db
       .select({ id: lessons.id })
       .from(lessons)
@@ -145,7 +169,7 @@ export class LessonProgressService {
       .returning();
 
     if (!updated) throw new RpcNotFoundException('Enrollment not found');
-    return updated;
+    return new EnrollmentResponseDTO(updated);
   }
 
   private async courseIdForLesson(lessonId: string): Promise<string> {

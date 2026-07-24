@@ -4,18 +4,21 @@ import { eq } from 'drizzle-orm';
 import { subjects } from '@app/database/schemas/course/subject.schema';
 import {
   CreateSubjectRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  ISubjectService,
+  SubjectResponseDTO,
   UpdateSubjectRequestDTO,
 } from '@app/contracts';
 import { RpcConflictException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class SubjectService {
+export class SubjectService implements ISubjectService {
   private readonly logger = new Logger(SubjectService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(dto: CreateSubjectRequestDTO) {
+  async create(dto: CreateSubjectRequestDTO): Promise<SubjectResponseDTO> {
     await this.ensureSlugAvailable(dto.slug);
     const [created] = await this.db
       .insert(subjects)
@@ -29,34 +32,38 @@ export class SubjectService {
       })
       .returning();
     this.logger.log(`Subject created: ${created.slug}`);
-    return created;
+    return new SubjectResponseDTO(created);
   }
 
-  findAll() {
-    return this.db.select().from(subjects).orderBy(subjects.name);
+  async findAll(): Promise<SubjectResponseDTO[]> {
+    const rows = await this.db.select().from(subjects).orderBy(subjects.name);
+    return rows.map((row) => new SubjectResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<SubjectResponseDTO> {
     const [found] = await this.db
       .select()
       .from(subjects)
       .where(eq(subjects.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Subject not found');
-    return found;
+    return new SubjectResponseDTO(found);
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string): Promise<SubjectResponseDTO> {
     const [found] = await this.db
       .select()
       .from(subjects)
       .where(eq(subjects.slug, slug))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Subject not found');
-    return found;
+    return new SubjectResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateSubjectRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateSubjectRequestDTO,
+  ): Promise<SubjectResponseDTO> {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
     const [updated] = await this.db
@@ -65,17 +72,20 @@ export class SubjectService {
       .where(eq(subjects.id, id))
       .returning();
     this.logger.log(`Subject updated: ${id}`);
-    return updated;
+    return new SubjectResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(subjects)
       .where(eq(subjects.id, id))
       .returning();
     if (!deleted) throw new RpcNotFoundException('Subject not found');
     this.logger.log(`Subject deleted: ${id}`);
-    return { message: 'Subject deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Subject deleted successfully',
+      id,
+    });
   }
 
   private async ensureSlugAvailable(slug: string, exceptId?: string) {

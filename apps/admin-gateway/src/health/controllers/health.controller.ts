@@ -27,8 +27,10 @@ export class HealthController {
     private readonly internal: InternalServiceHealthIndicator,
     @Inject(COURSE_SERVICE.NAME) private readonly courseClient: ClientProxy,
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
-    @Inject(ASSESSMENT_SERVICE.NAME) private readonly assessmentClient: ClientProxy,
-    @Inject(SUBSCRIPTION_SERVICE.NAME) private readonly subscriptionClient: ClientProxy,
+    @Inject(ASSESSMENT_SERVICE.NAME)
+    private readonly assessmentClient: ClientProxy,
+    @Inject(SUBSCRIPTION_SERVICE.NAME)
+    private readonly subscriptionClient: ClientProxy,
   ) {}
 
   @Get()

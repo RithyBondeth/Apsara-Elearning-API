@@ -5,22 +5,29 @@ import { codingChallenges } from '@app/database/schemas/challenge/coding-challen
 import { challengeTestCases } from '@app/database/schemas/challenge/challenge-test-case.schema';
 import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
 import {
+  ChallengeResponseDTO,
   CreateChallengeRequestDTO,
   CreateTestCaseRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  IChallengeService,
+  TestCaseResponseDTO,
   UpdateChallengeRequestDTO,
   UpdateTestCaseRequestDTO,
 } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class ChallengeService {
+export class ChallengeService implements IChallengeService {
   private readonly logger = new Logger(ChallengeService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
   // ---- Challenge ----
-  async createChallenge(lessonId: string, dto: CreateChallengeRequestDTO) {
+  async createChallenge(
+    lessonId: string,
+    dto: CreateChallengeRequestDTO,
+  ): Promise<ChallengeResponseDTO> {
     const [lesson] = await this.db
       .select({ id: lessons.id })
       .from(lessons)
@@ -40,47 +47,59 @@ export class ChallengeService {
       })
       .returning();
     this.logger.log(`Challenge created: ${created.id}`);
-    return created;
+    return new ChallengeResponseDTO(created);
   }
 
-  findChallengesByLesson(lessonId: string) {
-    return this.db
+  async findChallengesByLesson(
+    lessonId: string,
+  ): Promise<ChallengeResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(codingChallenges)
       .where(eq(codingChallenges.lessonId, lessonId));
+    return rows.map((row) => new ChallengeResponseDTO(row));
   }
 
-  async findChallenge(id: string) {
+  async findChallenge(id: string): Promise<ChallengeResponseDTO> {
     const [found] = await this.db
       .select()
       .from(codingChallenges)
       .where(eq(codingChallenges.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Challenge not found');
-    return found;
+    return new ChallengeResponseDTO(found);
   }
 
-  async updateChallenge(id: string, dto: UpdateChallengeRequestDTO) {
+  async updateChallenge(
+    id: string,
+    dto: UpdateChallengeRequestDTO,
+  ): Promise<ChallengeResponseDTO> {
     const [updated] = await this.db
       .update(codingChallenges)
       .set({ ...dto, updatedAt: new Date() })
       .where(eq(codingChallenges.id, id))
       .returning();
     if (!updated) throw new RpcNotFoundException('Challenge not found');
-    return updated;
+    return new ChallengeResponseDTO(updated);
   }
 
-  async removeChallenge(id: string) {
+  async removeChallenge(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(codingChallenges)
       .where(eq(codingChallenges.id, id))
       .returning({ id: codingChallenges.id });
     if (!deleted) throw new RpcNotFoundException('Challenge not found');
-    return { message: 'Challenge deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Challenge deleted successfully',
+      id,
+    });
   }
 
   // ---- Test cases ----
-  async createTestCase(challengeId: string, dto: CreateTestCaseRequestDTO) {
+  async createTestCase(
+    challengeId: string,
+    dto: CreateTestCaseRequestDTO,
+  ): Promise<TestCaseResponseDTO> {
     await this.findChallenge(challengeId); // 404 if challenge missing
     const [created] = await this.db
       .insert(challengeTestCases)
@@ -92,40 +111,50 @@ export class ChallengeService {
         order: dto.order,
       })
       .returning();
-    return created;
+    return new TestCaseResponseDTO(created);
   }
 
   /** `includeHidden` is for admins; students see visible cases only. */
-  findTestCases(challengeId: string, includeHidden = false) {
+  async findTestCases(
+    challengeId: string,
+    includeHidden = false,
+  ): Promise<TestCaseResponseDTO[]> {
     const where = includeHidden
       ? eq(challengeTestCases.challengeId, challengeId)
       : and(
           eq(challengeTestCases.challengeId, challengeId),
           eq(challengeTestCases.isHidden, false),
         );
-    return this.db
+    const rows = await this.db
       .select()
       .from(challengeTestCases)
       .where(where)
       .orderBy(challengeTestCases.order);
+    return rows.map((row) => new TestCaseResponseDTO(row));
   }
 
-  async updateTestCase(id: string, dto: UpdateTestCaseRequestDTO) {
+  async updateTestCase(
+    id: string,
+    dto: UpdateTestCaseRequestDTO,
+  ): Promise<TestCaseResponseDTO> {
     const [updated] = await this.db
       .update(challengeTestCases)
       .set({ ...dto, updatedAt: new Date() })
       .where(eq(challengeTestCases.id, id))
       .returning();
     if (!updated) throw new RpcNotFoundException('Test case not found');
-    return updated;
+    return new TestCaseResponseDTO(updated);
   }
 
-  async removeTestCase(id: string) {
+  async removeTestCase(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(challengeTestCases)
       .where(eq(challengeTestCases.id, id))
       .returning({ id: challengeTestCases.id });
     if (!deleted) throw new RpcNotFoundException('Test case not found');
-    return { message: 'Test case deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Test case deleted successfully',
+      id,
+    });
   }
 }

@@ -7,6 +7,9 @@ import { challengeSubmissions } from '@app/database/schemas/challenge/challenge-
 import {
   CreateSubmissionRequestDTO,
   DRIZZLE,
+  ISubmissionService,
+  SubmissionResponseDTO,
+  SubmissionResultResponseDTO,
   USER_SERVICE,
 } from '@app/contracts';
 import { RpcNotFoundException } from '@app/common';
@@ -14,7 +17,7 @@ import { ChallengeService } from './challenge.service';
 import { CodeExecutionService } from '../execution/code-execution.service';
 
 @Injectable()
-export class SubmissionService {
+export class SubmissionService implements ISubmissionService {
   private readonly logger = new Logger(SubmissionService.name);
 
   constructor(
@@ -28,7 +31,7 @@ export class SubmissionService {
     userId: string,
     challengeId: string,
     dto: CreateSubmissionRequestDTO,
-  ) {
+  ): Promise<SubmissionResultResponseDTO> {
     const challenge = await this.challenges.findChallenge(challengeId);
 
     // Grade against ALL test cases (hidden included).
@@ -37,7 +40,7 @@ export class SubmissionService {
       dto.language,
       dto.sourceCode,
       testCases.map((t) => ({
-        input: t.input,
+        input: t.input ?? null,
         expectedOutput: t.expectedOutput,
       })),
     );
@@ -73,27 +76,31 @@ export class SubmissionService {
     this.logger.log(
       `Submission ${submission.id}: ${result.passed}/${result.total} (${result.mock ? 'mock' : 'judge0'})`,
     );
-    return {
-      submission,
+    return new SubmissionResultResponseDTO({
+      submission: new SubmissionResponseDTO(submission),
       passed: result.allPassed,
       score,
       testCasesPassed: result.passed,
       testCasesTotal: result.total,
       xpAwarded,
       mock: result.mock,
-    };
+    });
   }
 
-  findAllByUser(userId: string) {
-    return this.db
+  async findAllByUser(userId: string): Promise<SubmissionResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(challengeSubmissions)
       .where(eq(challengeSubmissions.userId, userId))
       .orderBy(challengeSubmissions.createdAt);
+    return rows.map((row) => new SubmissionResponseDTO(row));
   }
 
-  findByChallenge(userId: string, challengeId: string) {
-    return this.db
+  async findByChallenge(
+    userId: string,
+    challengeId: string,
+  ): Promise<SubmissionResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(challengeSubmissions)
       .where(
@@ -103,16 +110,17 @@ export class SubmissionService {
         ),
       )
       .orderBy(challengeSubmissions.createdAt);
+    return rows.map((row) => new SubmissionResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<SubmissionResponseDTO> {
     const [found] = await this.db
       .select()
       .from(challengeSubmissions)
       .where(eq(challengeSubmissions.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Submission not found');
-    return found;
+    return new SubmissionResponseDTO(found);
   }
 
   private async hasPassedBefore(

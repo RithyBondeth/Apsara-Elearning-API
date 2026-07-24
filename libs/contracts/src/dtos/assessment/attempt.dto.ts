@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { DtoInit } from '../../types/dto-init';
 import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
@@ -36,6 +37,11 @@ export class AttemptAnswerDTO {
 }
 
 export class AttemptAnswerResponseDTO extends AttemptAnswerDTO {
+  constructor(partial: DtoInit<AttemptAnswerResponseDTO> = {}) {
+    super();
+    Object.assign(this, partial);
+  }
+
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   id: string;
 }
@@ -50,6 +56,10 @@ export class SubmitAttemptRequestDTO {
 }
 
 export class AttemptResponseDTO {
+  constructor(partial: DtoInit<AttemptResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   id: string;
 

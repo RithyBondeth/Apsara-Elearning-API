@@ -6,10 +6,7 @@ import {
   RegisterRequestDTO,
   RegisterResponseDTO,
 } from '@app/contracts';
-import type {
-  IRegisterService,
-  IRegisterRpcController,
-} from '@app/contracts';
+import type { IRegisterService, IRegisterRpcController } from '@app/contracts';
 
 @Controller()
 export class RegisterController implements IRegisterRpcController {

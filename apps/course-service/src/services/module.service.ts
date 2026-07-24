@@ -5,18 +5,24 @@ import { modules } from '@app/database/schemas/course/module.schema';
 import { courses } from '@app/database/schemas/course/course.schema';
 import {
   CreateModuleRequestDTO,
+  DeleteResponseDTO,
   DRIZZLE,
+  IModuleService,
+  ModuleResponseDTO,
   UpdateModuleRequestDTO,
 } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
 
 @Injectable()
-export class ModuleService {
+export class ModuleService implements IModuleService {
   private readonly logger = new Logger(ModuleService.name);
 
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async create(courseId: string, dto: CreateModuleRequestDTO) {
+  async create(
+    courseId: string,
+    dto: CreateModuleRequestDTO,
+  ): Promise<ModuleResponseDTO> {
     await this.ensureCourseExists(courseId);
     const [created] = await this.db
       .insert(modules)
@@ -28,28 +34,32 @@ export class ModuleService {
       })
       .returning();
     this.logger.log(`Module created: ${created.id} (course ${courseId})`);
-    return created;
+    return new ModuleResponseDTO(created);
   }
 
-  findAllByCourse(courseId: string) {
-    return this.db
+  async findAllByCourse(courseId: string): Promise<ModuleResponseDTO[]> {
+    const rows = await this.db
       .select()
       .from(modules)
       .where(eq(modules.courseId, courseId))
       .orderBy(modules.order);
+    return rows.map((row) => new ModuleResponseDTO(row));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ModuleResponseDTO> {
     const [found] = await this.db
       .select()
       .from(modules)
       .where(eq(modules.id, id))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Module not found');
-    return found;
+    return new ModuleResponseDTO(found);
   }
 
-  async update(id: string, dto: UpdateModuleRequestDTO) {
+  async update(
+    id: string,
+    dto: UpdateModuleRequestDTO,
+  ): Promise<ModuleResponseDTO> {
     await this.findOne(id);
     const [updated] = await this.db
       .update(modules)
@@ -57,21 +67,27 @@ export class ModuleService {
       .where(eq(modules.id, id))
       .returning();
     this.logger.log(`Module updated: ${id}`);
-    return updated;
+    return new ModuleResponseDTO(updated);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<DeleteResponseDTO> {
     const [deleted] = await this.db
       .delete(modules)
       .where(eq(modules.id, id))
       .returning();
     if (!deleted) throw new RpcNotFoundException('Module not found');
     this.logger.log(`Module deleted: ${id}`);
-    return { message: 'Module deleted successfully', id };
+    return new DeleteResponseDTO({
+      message: 'Module deleted successfully',
+      id,
+    });
   }
 
   /** Sets each module's `order` to its index in `orderedIds` (scoped to course). */
-  async reorder(courseId: string, orderedIds: string[]) {
+  async reorder(
+    courseId: string,
+    orderedIds: string[],
+  ): Promise<ModuleResponseDTO[]> {
     await this.ensureCourseExists(courseId);
     // Sequential updates.
     for (let i = 0; i < orderedIds.length; i++) {

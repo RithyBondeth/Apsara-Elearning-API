@@ -10,7 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { COURSE_SERVICE, EnrollmentResponseDTO } from '@app/contracts';
+import {
+  COURSE_SERVICE,
+  EnrollmentResponseDTO,
+  EnrollmentCheckResponseDTO,
+  IEnrollmentHttpController,
+  UnenrollResponseDTO,
+} from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import {
   ApiBearerAuth,
@@ -24,7 +30,7 @@ import { rpcCall } from '@app/common';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('enrollment')
-export class EnrollmentController {
+export class EnrollmentController implements IEnrollmentHttpController {
   constructor(
     @Inject(COURSE_SERVICE.NAME)
     private readonly courseClient: ClientProxy,
@@ -41,11 +47,15 @@ export class EnrollmentController {
   enroll(
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
-  ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.ENROLL, {
-      userId,
-      courseId,
-    });
+  ): Promise<EnrollmentResponseDTO> {
+    return rpcCall<EnrollmentResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.ENROLL,
+      {
+        userId,
+        courseId,
+      },
+    );
   }
 
   @Delete(':courseId')
@@ -54,16 +64,21 @@ export class EnrollmentController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Unenrolled successfully',
+    type: UnenrollResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   unenroll(
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
-  ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.UNENROLL, {
-      userId,
-      courseId,
-    });
+  ): Promise<UnenrollResponseDTO> {
+    return rpcCall<UnenrollResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.UNENROLL,
+      {
+        userId,
+        courseId,
+      },
+    );
   }
 
   @Get()
@@ -74,8 +89,10 @@ export class EnrollmentController {
     type: [EnrollmentResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  myEnrollments(@CurrentUser('id') userId: string) {
-    return rpcCall(
+  myEnrollments(
+    @CurrentUser('id') userId: string,
+  ): Promise<EnrollmentResponseDTO[]> {
+    return rpcCall<EnrollmentResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.ENROLLMENT_FIND_BY_USER,
       { userId },
@@ -87,15 +104,20 @@ export class EnrollmentController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Enrollment status checked',
+    type: EnrollmentCheckResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   check(
     @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
-  ) {
-    return rpcCall(this.courseClient, COURSE_SERVICE.ACTIONS.ENROLLMENT_CHECK, {
-      userId,
-      courseId,
-    });
+  ): Promise<EnrollmentCheckResponseDTO> {
+    return rpcCall<EnrollmentCheckResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.ENROLLMENT_CHECK,
+      {
+        userId,
+        courseId,
+      },
+    );
   }
 }

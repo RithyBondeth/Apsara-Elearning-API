@@ -6,7 +6,9 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('usage')
 export class UsageController implements IUsageRpcController {
-  constructor(@Inject(I_USAGE_SERVICE) private readonly usageService: IUsageService) {}
+  constructor(
+    @Inject(I_USAGE_SERVICE) private readonly usageService: IUsageService,
+  ) {}
 
   @MessagePattern(AI_SERVICE.ACTIONS.USAGE_FIND_BY_USER)
   findUsage(@Payload() payload: { userId: string }) {
