@@ -12,7 +12,7 @@ export class SendMessageRequestDTO {
   @IsString()
   @IsNotEmpty()
   @MaxLength(8000)
-  content: string;
+  content!: string;
 
   @ApiProperty({
     required: false,
@@ -33,23 +33,27 @@ export class SendMessageRequestDTO {
 
 export class AiMessageResponseDTO {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  conversationId: string;
+  conversationId!: string;
 
   @ApiProperty({ example: 'user', enum: ['user', 'assistant', 'system'] })
-  role: 'user' | 'assistant' | 'system';
+  role!: 'user' | 'assistant' | 'system';
 
   @ApiProperty({ example: 'How do I write a for loop in JavaScript?' })
-  content: string;
+  content!: string;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({ required: false, example: 'anthropic' })
   provider?: string;
 
   @ApiProperty({ required: false, example: 'claude-opus-4-8' })
   model?: string;
+
+  constructor(partial: Partial<AiMessageResponseDTO>) {
+    Object.assign(this, partial);
+  }
 }

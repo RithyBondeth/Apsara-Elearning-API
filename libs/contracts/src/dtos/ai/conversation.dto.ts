@@ -20,13 +20,13 @@ export class CreateConversationRequestDTO {
 
 export class ConversationResponseDTO {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  id: string;
+  id!: string;
 
   @ApiPropertyOptional({ example: 'Help with JavaScript loops' })
   title?: string;
 
   @ApiProperty({ example: '6f1e7e2a-0c2a-4c1e-9f0a-1b2c3d4e5f6a' })
-  userId: string;
+  userId!: string;
 
   @ApiPropertyOptional()
   courseId?: string;
@@ -35,8 +35,12 @@ export class ConversationResponseDTO {
   lessonId?: string;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty()
-  updatedAt: Date;
+  updatedAt!: Date;
+
+  constructor(partial: Partial<ConversationResponseDTO>) {
+    Object.assign(this, partial);
+  }
 }
