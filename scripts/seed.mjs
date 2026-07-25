@@ -5,6 +5,7 @@ import 'dotenv/config';
 import postgres from 'postgres';
 import bcrypt from 'bcrypt';
 import { MATH_GRADE_12 } from './content/math-grade-12.mjs';
+import { MATH_GRADE_12_BASIC } from './content/math-grade-12-basic.mjs';
 import { MATH_GRADE_12_PRACTICE } from './content/math-grade-12-practice.mjs';
 import { MATH_GRADE_12_DETAIL } from './content/math-grade-12-detail.mjs';
 import { MATH_GRADE_12_GRAPHS } from './content/math-grade-12-graphs.mjs';
@@ -74,6 +75,7 @@ const BADGE_NAMES = BADGES.map(([name]) => name);
 const DEMO_COURSE_SLUGS = [
   COURSE_SLUG,
   'math',
+  'math-basic',
   'english',
   'python',
   'react',
@@ -411,7 +413,11 @@ async function seed() {
     (${challenge.id}, '2 3', '5', false, 0),
     (${challenge.id}, '10 20', '30', true, 1)`;
 
-  console.log('Creating Grade 12 Mathematics (full Khmer curriculum)…');
+  // Grade 12 maths ships as two separate courses, mirroring the MoEYS
+  // two-book structure: the "Basic" (មូលដ្ឋាន) track and the "Advanced"
+  // (កម្រិតខ្ពស់) track. They share the Mathematics subject / Grade 12 but have
+  // distinct slugs, so the web catalog lists them as two courses.
+  console.log('Creating Grade 12 Mathematics — Advanced track (full Khmer curriculum)…');
   const mathCounts = await createFullCourse(MATH_GRADE_12, {
     subjectId: subjectIds[MATH_GRADE_12.subjectSlug],
     gradeLevelId: gradeIds[MATH_GRADE_12.grade],
@@ -419,6 +425,16 @@ async function seed() {
   console.log(
     `  ${mathCounts.modules} modules, ${mathCounts.lessons} lessons, ` +
       `${mathCounts.quizzes} quizzes, ${mathCounts.questions} questions.`,
+  );
+
+  console.log('Creating Grade 12 Mathematics — Basic track (មូលដ្ឋាន)…');
+  const mathBasicCounts = await createFullCourse(MATH_GRADE_12_BASIC, {
+    subjectId: subjectIds[MATH_GRADE_12_BASIC.subjectSlug],
+    gradeLevelId: gradeIds[MATH_GRADE_12_BASIC.grade],
+  });
+  console.log(
+    `  ${mathBasicCounts.modules} modules, ${mathBasicCounts.lessons} lessons, ` +
+      `${mathBasicCounts.quizzes} quizzes, ${mathBasicCounts.questions} questions.`,
   );
 
   console.log('Creating catalog demo courses (k12 + programming)…');
@@ -577,11 +593,18 @@ async function seed() {
     `                            Quiz (multiple-choice + numeric) and a coding challenge.`,
   );
   console.log(
-    `    "${MATH_GRADE_12.title}" — K–12, Grade 12, Mathematics (Khmer, full curriculum).`,
+    `    "${MATH_GRADE_12.title}" — K–12, Grade 12, Mathematics · Advanced track (Khmer).`,
   );
   console.log(
     `                            ${mathCounts.modules} modules / ${mathCounts.lessons} lessons / ` +
       `${mathCounts.quizzes} quizzes / ${mathCounts.questions} questions.`,
+  );
+  console.log(
+    `    "${MATH_GRADE_12_BASIC.title}" — K–12, Grade 12, Mathematics · Basic track (Khmer).`,
+  );
+  console.log(
+    `                            ${mathBasicCounts.modules} modules / ${mathBasicCounts.lessons} lessons / ` +
+      `${mathBasicCounts.quizzes} quizzes / ${mathBasicCounts.questions} questions.`,
   );
   console.log(`    "English"              — K–12, Grade 12, English.`);
   console.log(
