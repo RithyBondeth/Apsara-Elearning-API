@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { eq } from 'drizzle-orm';
+import { and, eq, ilike, or, type SQL } from 'drizzle-orm';
 import { courses } from '@app/database/schemas/course/course.schema';
 import { subjects } from '@app/database/schemas/course/subject.schema';
 import { gradeLevels } from '@app/database/schemas/course/grade-level.schema';
@@ -12,6 +12,7 @@ import {
   DeleteResponseDTO,
   DRIZZLE,
   ICourseService,
+  SearchCoursesRequestDTO,
   UpdateCourseRequestDTO,
 } from '@app/contracts';
 import {
@@ -66,6 +67,47 @@ export class CourseService implements ICourseService {
       .from(courses)
       .where(eq(courses.published, true))
       .orderBy(courses.createdAt);
+    return rows.map((row) => new CourseResponseDTO(row));
+  }
+
+  /**
+   * Keyword search over PUBLISHED courses only, with optional taxonomy filters
+   * and pagination. Matches the keyword against title / titleKm / description /
+   * descriptionKm (case-insensitive).
+   */
+  async search(dto: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]> {
+    const limit = dto.limit ?? 20;
+    const offset = dto.offset ?? 0;
+
+    const conditions: SQL[] = [eq(courses.published, true)];
+
+    if (dto.q?.trim()) {
+      const pattern = `%${dto.q.trim()}%`;
+      const keyword = or(
+        ilike(courses.title, pattern),
+        ilike(courses.titleKm, pattern),
+        ilike(courses.description, pattern),
+        ilike(courses.descriptionKm, pattern),
+      );
+      if (keyword) conditions.push(keyword);
+    }
+    if (dto.programType) {
+      conditions.push(eq(courses.programType, dto.programType));
+    }
+    if (dto.subjectId) conditions.push(eq(courses.subjectId, dto.subjectId));
+    if (dto.gradeLevelId) {
+      conditions.push(eq(courses.gradeLevelId, dto.gradeLevelId));
+    }
+    if (dto.majorId) conditions.push(eq(courses.majorId, dto.majorId));
+    if (dto.categoryId) conditions.push(eq(courses.categoryId, dto.categoryId));
+
+    const rows = await this.db
+      .select()
+      .from(courses)
+      .where(and(...conditions))
+      .orderBy(courses.createdAt)
+      .limit(limit)
+      .offset(offset);
     return rows.map((row) => new CourseResponseDTO(row));
   }
 

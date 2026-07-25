@@ -2,6 +2,7 @@ import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
   CourseResponseDTO,
   CreateCourseRequestDTO,
+  SearchCoursesRequestDTO,
   UpdateCourseRequestDTO,
 } from '../../dtos/course/course.dto';
 import {
@@ -62,6 +63,7 @@ export interface ICourseHttpController {
   createCourse(dto: CreateCourseRequestDTO): Promise<CourseResponseDTO>;
   findAllCourses(): Promise<CourseResponseDTO[]>;
   findAllPublished(): Promise<CourseResponseDTO[]>;
+  searchCourses(query: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]>;
   findOneCourse(id: string): Promise<CourseResponseDTO>;
   findBySlug(slug: string): Promise<CourseResponseDTO>;
   findBySubject(subjectId: string): Promise<CourseResponseDTO[]>;

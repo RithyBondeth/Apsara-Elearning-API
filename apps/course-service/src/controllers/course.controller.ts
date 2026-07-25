@@ -3,6 +3,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
   CreateCourseRequestDTO,
+  SearchCoursesRequestDTO,
   UpdateCourseRequestDTO,
   I_COURSE_SERVICE,
 } from '@app/contracts';
@@ -28,6 +29,11 @@ export class CourseController implements ICourseRpcController {
   @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED)
   findPublished() {
     return this.courseService.findPublished();
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_SEARCH)
+  search(@Payload() query: SearchCoursesRequestDTO) {
+    return this.courseService.search(query);
   }
 
   @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE)

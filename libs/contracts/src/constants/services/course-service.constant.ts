@@ -45,6 +45,7 @@ export const COURSE_SERVICE = {
     COURSE_CREATE: 'course.course.create',
     COURSE_FIND_ALL: 'course.course.find_all', // all (admin)
     COURSE_FIND_PUBLISHED: 'course.course.find_published', // published only (public)
+    COURSE_SEARCH: 'course.course.search', // keyword search over published courses
     COURSE_FIND_ONE: 'course.course.find_one',
     COURSE_FIND_BY_SLUG: 'course.course.find_by_slug',
     COURSE_FIND_BY_SUBJECT: 'course.course.find_by_subject',

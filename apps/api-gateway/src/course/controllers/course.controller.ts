@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -17,6 +18,7 @@ import {
   CreateCourseRequestDTO,
   UpdateCourseRequestDTO,
   CourseResponseDTO,
+  SearchCoursesRequestDTO,
 } from '@app/contracts';
 import { AdminGuard } from '@app/common';
 import {
@@ -82,6 +84,23 @@ export class CourseController {
     );
   }
 
+  @Get('search')
+  @ApiOperation({ summary: 'Search published courses by keyword + filters' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Matching courses retrieved',
+    type: [CourseResponseDTO],
+  })
+  searchCourses(
+    @Query() query: SearchCoursesRequestDTO,
+  ): Promise<CourseResponseDTO[]> {
+    return rpcCall<CourseResponseDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_SEARCH,
+      query,
+    );
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a course by ID' })
   @ApiResponse({
@@ -89,8 +108,8 @@ export class CourseController {
     description: 'Course retrieved',
     type: CourseResponseDTO,
   })
-  findOneCourse(@Param('id') id: string) {
-    return rpcCall<CourseResponseDTO[]>(
+  findOneCourse(@Param('id') id: string): Promise<CourseResponseDTO> {
+    return rpcCall<CourseResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE,
       id,

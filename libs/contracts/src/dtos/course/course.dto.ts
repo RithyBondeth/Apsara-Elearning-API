@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import type { DtoInit } from '../../types/dto-init';
 import {
   IsBoolean,
@@ -8,6 +9,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   Min,
 } from 'class-validator';
 
@@ -109,6 +111,60 @@ export class CreateCourseRequestDTO {
 export class UpdateCourseRequestDTO extends PartialType(
   CreateCourseRequestDTO,
 ) {}
+
+/**
+ * Keyword search over published courses, with optional taxonomy filters and
+ * pagination. Query params arrive as strings, so numeric fields are coerced.
+ */
+export class SearchCoursesRequestDTO {
+  @ApiPropertyOptional({
+    description: 'Keyword matched against course title / description',
+    example: 'algebra',
+  })
+  @IsString()
+  @IsOptional()
+  q?: string;
+
+  @ApiPropertyOptional({ enum: PROGRAM_TYPES, example: 'k12' })
+  @IsIn(PROGRAM_TYPES)
+  @IsOptional()
+  programType?: ProgramType;
+
+  @ApiPropertyOptional({ description: 'Filter by subject (K–12)' })
+  @IsUUID()
+  @IsOptional()
+  subjectId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by grade level (K–12)' })
+  @IsUUID()
+  @IsOptional()
+  gradeLevelId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by major (university)' })
+  @IsUUID()
+  @IsOptional()
+  majorId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by programming category' })
+  @IsUUID()
+  @IsOptional()
+  categoryId?: string;
+
+  @ApiPropertyOptional({ example: 20, default: 20, minimum: 1, maximum: 100 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  limit?: number;
+
+  @ApiPropertyOptional({ example: 0, default: 0, minimum: 0 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  offset?: number;
+}
 
 export class CourseResponseDTO extends CreateCourseRequestDTO {
   constructor(partial: DtoInit<CourseResponseDTO> = {}) {
