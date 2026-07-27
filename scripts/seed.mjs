@@ -4,48 +4,12 @@
 import 'dotenv/config';
 import postgres from 'postgres';
 import bcrypt from 'bcrypt';
-import { MATH_GRADE_12 } from './content/math-grade-12.mjs';
+import { MATH_GRADE_12_ADVANCED } from './content/math-grade-12-advanced.mjs';
 import { MATH_GRADE_12_BASIC } from './content/math-grade-12-basic.mjs';
-import { MATH_GRADE_12_PRACTICE } from './content/math-grade-12-practice.mjs';
-import { MATH_GRADE_12_DETAIL } from './content/math-grade-12-detail.mjs';
-import { MATH_GRADE_12_GRAPHS } from './content/math-grade-12-graphs.mjs';
-import { MATH_GRADE_12_PRACTICE_2 } from './content/math-grade-12-practice-2.mjs';
-import { MATH_GRADE_12_DETAIL_2 } from './content/math-grade-12-detail-2.mjs';
+import { BIOLOGY_GRADE_12 } from './content/biology-grade-12.mjs';
 
 /** Key-points heading that closes each maths lesson — the detail supplement
  *  is inserted just before it so the summary stays last. */
-const KEY_POINTS_HEADING = '### ចំណុចសំខាន់ត្រូវចងចាំ';
-
-/** Deepens a lesson with its detail supplement (extra worked example + common
- *  mistakes), placed before the key-points summary. No-op without a supplement. */
-function withDetail(slug, content) {
-  const detail = MATH_GRADE_12_DETAIL[slug];
-  if (!detail) return content;
-  return content.includes(KEY_POINTS_HEADING)
-    ? content.replace(KEY_POINTS_HEADING, `${detail}\n\n${KEY_POINTS_HEADING}`)
-    : `${content}\n\n${detail}`;
-}
-
-/** Inserts a lesson's third worked example (detail-2) before the key-points
- *  summary, after the first detail supplement. No-op without one. */
-function withDetail2(slug, content) {
-  const detail = MATH_GRADE_12_DETAIL_2[slug];
-  if (!detail) return content;
-  return content.includes(KEY_POINTS_HEADING)
-    ? content.replace(KEY_POINTS_HEADING, `${detail}\n\n${KEY_POINTS_HEADING}`)
-    : `${content}\n\n${detail}`;
-}
-
-/** Inserts a lesson's SVG graph supplement (```graph blocks) just before the
- *  key-points summary, after any detail supplement. No-op without a graph. */
-function withGraph(slug, content) {
-  const graph = MATH_GRADE_12_GRAPHS[slug];
-  if (!graph) return content;
-  return content.includes(KEY_POINTS_HEADING)
-    ? content.replace(KEY_POINTS_HEADING, `${graph}\n\n${KEY_POINTS_HEADING}`)
-    : `${content}\n\n${graph}`;
-}
-
 const sql = postgres(process.env.DATABASE_URL);
 const saltRounds = parseInt(process.env.BCRYPT_SALT ?? '10', 10);
 
@@ -76,6 +40,7 @@ const DEMO_COURSE_SLUGS = [
   COURSE_SLUG,
   'math',
   'math-basic',
+  'biology',
   'english',
   'python',
   'react',
@@ -288,7 +253,7 @@ async function createFullCourse(curriculum, { subjectId, gradeLevelId }) {
       const [lessonRow] = await sql`
         INSERT INTO lessons (module_id, title, slug, type, content, "order", estimated_minutes)
         VALUES (${moduleRow.id}, ${lesson.title}, ${lesson.slug}, 'article',
-                ${withGraph(lesson.slug, withDetail2(lesson.slug, withDetail(lesson.slug, lesson.content)))}, ${lessonOrder}, ${lesson.minutes})
+                ${lesson.content}, ${lessonOrder}, ${lesson.minutes})
         RETURNING id`;
       counts.lessons++;
       lessonOrder++;
@@ -302,13 +267,7 @@ async function createFullCourse(curriculum, { subjectId, gradeLevelId }) {
         RETURNING id`;
       counts.quizzes++;
 
-      // Extra practice questions (math G12) are appended by lesson slug so every
-      // quiz reaches ~9 questions; undefined for lessons without extras.
-      const questions = [
-        ...lesson.quiz.questions,
-        ...(MATH_GRADE_12_PRACTICE[lesson.slug] ?? []),
-        ...(MATH_GRADE_12_PRACTICE_2[lesson.slug] ?? []),
-      ];
+      const questions = lesson.quiz.questions;
 
       let questionOrder = 0;
       for (const q of questions) {
@@ -418,9 +377,9 @@ async function seed() {
   // (កម្រិតខ្ពស់) track. They share the Mathematics subject / Grade 12 but have
   // distinct slugs, so the web catalog lists them as two courses.
   console.log('Creating Grade 12 Mathematics — Advanced track (full Khmer curriculum)…');
-  const mathCounts = await createFullCourse(MATH_GRADE_12, {
-    subjectId: subjectIds[MATH_GRADE_12.subjectSlug],
-    gradeLevelId: gradeIds[MATH_GRADE_12.grade],
+  const mathCounts = await createFullCourse(MATH_GRADE_12_ADVANCED, {
+    subjectId: subjectIds[MATH_GRADE_12_ADVANCED.subjectSlug],
+    gradeLevelId: gradeIds[MATH_GRADE_12_ADVANCED.grade],
   });
   console.log(
     `  ${mathCounts.modules} modules, ${mathCounts.lessons} lessons, ` +
@@ -435,6 +394,16 @@ async function seed() {
   console.log(
     `  ${mathBasicCounts.modules} modules, ${mathBasicCounts.lessons} lessons, ` +
       `${mathBasicCounts.quizzes} quizzes, ${mathBasicCounts.questions} questions.`,
+  );
+
+  console.log('Creating Grade 12 Biology (ជីវវិទ្យា)…');
+  const bioCounts = await createFullCourse(BIOLOGY_GRADE_12, {
+    subjectId: subjectIds[BIOLOGY_GRADE_12.subjectSlug],
+    gradeLevelId: gradeIds[BIOLOGY_GRADE_12.grade],
+  });
+  console.log(
+    `  ${bioCounts.modules} modules, ${bioCounts.lessons} lessons, ` +
+      `${bioCounts.quizzes} quizzes, ${bioCounts.questions} questions.`,
   );
 
   console.log('Creating catalog demo courses (k12 + programming)…');
@@ -593,7 +562,7 @@ async function seed() {
     `                            Quiz (multiple-choice + numeric) and a coding challenge.`,
   );
   console.log(
-    `    "${MATH_GRADE_12.title}" — K–12, Grade 12, Mathematics · Advanced track (Khmer).`,
+    `    "${MATH_GRADE_12_ADVANCED.title}" — K–12, Grade 12, Mathematics · Advanced track (Khmer).`,
   );
   console.log(
     `                            ${mathCounts.modules} modules / ${mathCounts.lessons} lessons / ` +

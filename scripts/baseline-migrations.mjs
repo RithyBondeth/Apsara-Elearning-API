@@ -1,8 +1,3 @@
-// Marks the current drizzle/ migrations as already-applied in the database,
-// WITHOUT running their SQL. Use this once on a database whose schema was
-// created via `db:push` (so the tables already exist) to make `db:migrate`
-// truthful — it will then treat the baseline as applied and only run *future*
-// migrations. Idempotent. Matches drizzle's own hash/table format.
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
