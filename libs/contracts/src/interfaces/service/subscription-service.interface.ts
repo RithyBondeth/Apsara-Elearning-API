@@ -7,18 +7,25 @@ import {
 } from '../../dtos/subscription/plan.dto';
 import {
   ActiveSubscriptionResponseDTO,
+  BillingPortalResponseDTO,
   CancelSubscriptionResponseDTO,
+  CheckoutSessionResponseDTO,
   PaymentWebhookResponseDTO,
-  SubscribeResponseDTO,
   SubscriptionCheckResponseDTO,
 } from '../../dtos/subscription/subscription-responses.dto';
 import { SubscriptionResponseDTO } from '../../dtos/subscription/subscription.dto';
+import {
+  CreateEntitlementGrantRequestDTO,
+  EntitlementGrantResponseDTO,
+  ResolvedEntitlementDTO,
+} from '../../dtos/subscription/entitlement.dto';
 
 /** DI tokens + service contracts for subscription-service. */
 
 export const I_PAYMENT_SERVICE = 'IPaymentService';
 export const I_PLAN_SERVICE = 'IPlanService';
 export const I_SUBSCRIPTION_SERVICE = 'ISubscriptionService';
+export const I_ENTITLEMENT_ADMIN_SERVICE = 'IEntitlementAdminService';
 
 /** Persisted payment input — `amount` carried as a fixed-2 decimal string. */
 export interface RecordPaymentInput {
@@ -29,6 +36,20 @@ export interface RecordPaymentInput {
   provider: string;
   transactionId: string;
   status: string;
+  providerInvoiceId?: string;
+  providerPaymentIntentId?: string;
+  providerChargeId?: string;
+}
+
+export interface IEntitlementAdminService {
+  resolve(userId: string): Promise<ResolvedEntitlementDTO[]>;
+  findGrants(userId: string): Promise<EntitlementGrantResponseDTO[]>;
+  grant(
+    userId: string,
+    grantedBy: string,
+    dto: CreateEntitlementGrantRequestDTO,
+  ): Promise<EntitlementGrantResponseDTO>;
+  revoke(id: string): Promise<EntitlementGrantResponseDTO>;
 }
 
 export interface IPaymentService {
@@ -36,8 +57,8 @@ export interface IPaymentService {
   findByUser(userId: string): Promise<PaymentResponseDTO[]>;
   findOne(id: string): Promise<PaymentResponseDTO>;
   webhook(payload: {
-    transactionId?: string;
-    status?: string;
+    rawBody: string;
+    signature: string;
   }): Promise<PaymentWebhookResponseDTO>;
 }
 
@@ -50,7 +71,11 @@ export interface IPlanService {
 }
 
 export interface ISubscriptionService {
-  subscribe(userId: string, planId: string): Promise<SubscribeResponseDTO>;
+  createCheckout(
+    userId: string,
+    planId: string,
+  ): Promise<CheckoutSessionResponseDTO>;
+  createBillingPortal(userId: string): Promise<BillingPortalResponseDTO>;
   findByUser(userId: string): Promise<SubscriptionResponseDTO[]>;
   findActive(userId: string): Promise<ActiveSubscriptionResponseDTO | null>;
   check(userId: string): Promise<SubscriptionCheckResponseDTO>;

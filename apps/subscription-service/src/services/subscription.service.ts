@@ -1,22 +1,36 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, desc, eq, gt, isNull, or } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  isNotNull,
+  isNull,
+  lte,
+  notInArray,
+  or,
+} from 'drizzle-orm';
 import { subscriptions } from '@app/database/schemas/subscription/subscription.schema';
 import { plans } from '@app/database/schemas/subscription/plan.schema';
 import {
   ActiveSubscriptionResponseDTO,
+  BillingPortalResponseDTO,
   CancelSubscriptionResponseDTO,
+  CheckoutSessionResponseDTO,
   DRIZZLE,
   ISubscriptionService,
   PlanResponseDTO,
-  SubscribeResponseDTO,
   SubscriptionCheckResponseDTO,
   SubscriptionResponseDTO,
 } from '@app/contracts';
-import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import {
+  RpcBadRequestException,
+  RpcConflictException,
+  RpcNotFoundException,
+} from '@app/common';
 import { PaymentGatewayService } from '../payment/payment-gateway.service';
 import { PlanService } from './plan.service';
-import { PaymentService } from './payment.service';
 
 @Injectable()
 export class SubscriptionService implements ISubscriptionService {
@@ -25,55 +39,54 @@ export class SubscriptionService implements ISubscriptionService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly planService: PlanService,
-    private readonly paymentService: PaymentService,
     private readonly gateway: PaymentGatewayService,
   ) {}
 
-  async subscribe(
+  async createCheckout(
     userId: string,
     planId: string,
-  ): Promise<SubscribeResponseDTO> {
+  ): Promise<CheckoutSessionResponseDTO> {
+    if (await this.hasOpenStripeSubscription(userId)) {
+      throw new RpcConflictException(
+        'An active subscription already exists; use the billing portal to manage it',
+      );
+    }
     const plan = await this.planService.findOne(planId);
-    const price = plan.price.toFixed(2);
-
-    // Charge through the (mock) payment gateway.
-    const charge = await this.gateway.charge(price, 'USD');
-    if (charge.status !== 'succeeded') {
-      throw new RpcBadRequestException('Payment failed');
+    if (!plan.stripePriceId) {
+      throw new RpcBadRequestException(
+        'This plan is not configured for Stripe Checkout',
+      );
+    }
+    if (plan.billingPeriod === 'lifetime') {
+      throw new RpcBadRequestException(
+        'Lifetime plans are not supported by recurring Checkout',
+      );
     }
 
-    // One active subscription at a time — deactivate any prior ones.
-    await this.db
-      .update(subscriptions)
-      .set({ active: false, updatedAt: new Date() })
-      .where(
-        and(eq(subscriptions.userId, userId), eq(subscriptions.active, true)),
-      );
-
-    const startsAt = new Date();
-    const expiresAt = this.computeExpiry(plan.billingPeriod, startsAt);
-
-    const [subscription] = await this.db
-      .insert(subscriptions)
-      .values({ userId, planId, startsAt, expiresAt, active: true })
-      .returning();
-
-    const payment = await this.paymentService.record({
+    const customerId = await this.findStripeCustomerId(userId);
+    const session = await this.gateway.createCheckoutSession({
       userId,
-      subscriptionId: subscription.id,
-      amount: price,
-      currency: 'USD',
-      provider: charge.provider,
-      transactionId: charge.transactionId,
-      status: charge.status,
+      planId,
+      priceId: plan.stripePriceId,
+      customerId,
+      trialDays: plan.trialDays,
     });
+    if (!session.url) {
+      throw new RpcBadRequestException('Stripe did not return a checkout URL');
+    }
+    return new CheckoutSessionResponseDTO({
+      sessionId: session.id,
+      url: session.url,
+    });
+  }
 
-    this.logger.log(`User ${userId} subscribed to ${plan.slug}`);
-    return new SubscribeResponseDTO({
-      subscription: new SubscriptionResponseDTO(subscription),
-      plan,
-      payment,
-    });
+  async createBillingPortal(userId: string): Promise<BillingPortalResponseDTO> {
+    const customerId = await this.findStripeCustomerId(userId);
+    if (!customerId) {
+      throw new RpcNotFoundException('No Stripe billing account found');
+    }
+    const session = await this.gateway.createBillingPortalSession(customerId);
+    return new BillingPortalResponseDTO({ url: session.url });
   }
 
   async findByUser(userId: string): Promise<SubscriptionResponseDTO[]> {
@@ -96,12 +109,10 @@ export class SubscriptionService implements ISubscriptionService {
       .orderBy(desc(subscriptions.createdAt))
       .limit(1);
     if (!row) return null;
+    const resolvedPlan = await this.planService.findOne(row.plan.id);
     return new ActiveSubscriptionResponseDTO({
       subscription: new SubscriptionResponseDTO(row.subscription),
-      plan: new PlanResponseDTO({
-        ...row.plan,
-        price: Number(row.plan.price),
-      }),
+      plan: resolvedPlan,
     });
   }
 
@@ -118,36 +129,100 @@ export class SubscriptionService implements ISubscriptionService {
     userId: string,
     id: string,
   ): Promise<CancelSubscriptionResponseDTO> {
+    const [owned] = await this.db
+      .select()
+      .from(subscriptions)
+      .where(and(eq(subscriptions.id, id), eq(subscriptions.userId, userId)))
+      .limit(1);
+    if (!owned) throw new RpcNotFoundException('Subscription not found');
+    if (!owned.providerSubscriptionId) {
+      throw new RpcBadRequestException(
+        'Subscription is not connected to Stripe',
+      );
+    }
+
+    const stripeSubscription = await this.gateway.cancelAtPeriodEnd(
+      owned.providerSubscriptionId,
+    );
+    const periodEnd = this.periodEnd(stripeSubscription);
     const [cancelled] = await this.db
       .update(subscriptions)
-      .set({ active: false, updatedAt: new Date() })
-      .where(and(eq(subscriptions.id, id), eq(subscriptions.userId, userId)))
+      .set({
+        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+        status: stripeSubscription.status,
+        currentPeriodEnd: periodEnd,
+        expiresAt: periodEnd,
+        updatedAt: new Date(),
+      })
+      .where(eq(subscriptions.id, owned.id))
       .returning();
-    if (!cancelled) throw new RpcNotFoundException('Subscription not found');
-    this.logger.log(`Subscription cancelled: ${id}`);
+
+    this.logger.log(`Subscription scheduled for cancellation: ${id}`);
     return new CancelSubscriptionResponseDTO({
-      message: 'Subscription cancelled',
+      message: 'Subscription will cancel at the end of the billing period',
       id,
       subscription: new SubscriptionResponseDTO(cancelled),
     });
   }
 
   private activeWhere(userId: string) {
+    const now = new Date();
     return and(
       eq(subscriptions.userId, userId),
       eq(subscriptions.active, true),
+      or(isNull(subscriptions.startsAt), lte(subscriptions.startsAt, now)),
       or(
+        gt(subscriptions.graceEndsAt, now),
         isNull(subscriptions.expiresAt),
-        gt(subscriptions.expiresAt, new Date()),
+        gt(subscriptions.expiresAt, now),
       ),
     );
   }
 
-  private computeExpiry(period: string | undefined, from: Date): Date | null {
-    if (period === 'lifetime') return null;
-    const d = new Date(from);
-    if (period === 'yearly') d.setFullYear(d.getFullYear() + 1);
-    else d.setMonth(d.getMonth() + 1); // monthly (default)
-    return d;
+  private async findStripeCustomerId(
+    userId: string,
+  ): Promise<string | undefined> {
+    const [row] = await this.db
+      .select({ customerId: subscriptions.providerCustomerId })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.provider, 'stripe'),
+          isNotNull(subscriptions.providerCustomerId),
+        ),
+      )
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1);
+    return row?.customerId ?? undefined;
+  }
+
+  private async hasOpenStripeSubscription(userId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: subscriptions.id })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.provider, 'stripe'),
+          isNotNull(subscriptions.providerSubscriptionId),
+          notInArray(subscriptions.status, [
+            'canceled',
+            'incomplete_expired',
+            'unpaid',
+          ]),
+        ),
+      )
+      .limit(1);
+    return !!row;
+  }
+
+  private periodEnd(subscription: {
+    items: { data: Array<{ current_period_end: number }> };
+  }): Date | null {
+    const timestamps = subscription.items.data.map(
+      (item) => item.current_period_end,
+    );
+    return timestamps.length ? new Date(Math.max(...timestamps) * 1000) : null;
   }
 }

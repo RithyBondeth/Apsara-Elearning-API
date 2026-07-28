@@ -34,4 +34,4 @@ async function bootstrap() {
     `Subscription service is listening on queue ${configService.get<string>('rabbitmq.subscriptionQueue')}`,
   );
 }
-bootstrap();
+void bootstrap();

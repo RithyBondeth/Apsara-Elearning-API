@@ -47,7 +47,13 @@ export class CourseService implements ICourseService {
         difficulty: dto.difficulty,
         estimatedHours: dto.estimatedHours,
         published: dto.published,
-        requiresSubscription: dto.requiresSubscription,
+        requiresSubscription:
+          dto.requiredEntitlement !== undefined
+            ? true
+            : dto.requiresSubscription,
+        requiredEntitlement:
+          dto.requiredEntitlement ??
+          (dto.requiresSubscription ? 'courses:premium' : undefined),
       })
       .returning();
     this.logger.log(`Course created: ${created.slug}`);
@@ -202,9 +208,20 @@ export class CourseService implements ICourseService {
     await this.findOne(id);
     if (dto.slug) await this.ensureSlugAvailable(dto.slug, id);
     await this.ensurePlacementExists(dto);
+    const entitlementPatch =
+      dto.requiredEntitlement !== undefined
+        ? {
+            requiredEntitlement: dto.requiredEntitlement,
+            requiresSubscription: true,
+          }
+        : dto.requiresSubscription === true
+          ? { requiredEntitlement: 'courses:premium' as const }
+          : dto.requiresSubscription === false
+            ? { requiredEntitlement: null }
+            : {};
     const [updated] = await this.db
       .update(courses)
-      .set({ ...dto, updatedAt: new Date() })
+      .set({ ...dto, ...entitlementPatch, updatedAt: new Date() })
       .where(eq(courses.id, id))
       .returning();
     this.logger.log(`Course updated: ${id}`);

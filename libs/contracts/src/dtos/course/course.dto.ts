@@ -12,6 +12,8 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { ENTITLEMENTS } from '../subscription/entitlement.dto';
+import type { EntitlementKey } from '../subscription/entitlement.dto';
 
 export const COURSE_DIFFICULTIES = [
   'beginner',
@@ -114,6 +116,15 @@ export class CreateCourseRequestDTO {
   @IsBoolean()
   @IsOptional()
   requiresSubscription?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ENTITLEMENTS,
+    example: 'courses:premium',
+    description: 'Named capability required to access this course',
+  })
+  @IsIn(ENTITLEMENTS)
+  @IsOptional()
+  requiredEntitlement?: EntitlementKey;
 }
 
 export class UpdateCourseRequestDTO extends PartialType(

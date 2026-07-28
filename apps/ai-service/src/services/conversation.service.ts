@@ -9,18 +9,22 @@ import {
   DRIZZLE,
   IConversationService,
 } from '@app/contracts';
-import { RpcNotFoundException } from '@app/common';
+import { EntitlementService, RpcNotFoundException } from '@app/common';
 
 @Injectable()
 export class ConversationService implements IConversationService {
   private readonly logger = new Logger(ConversationService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: EntitlementService,
+  ) {}
 
   async create(
     userId: string,
     dto: CreateConversationRequestDTO,
   ): Promise<ConversationResponseDTO> {
+    await this.entitlements.assert(userId, 'ai:tutor');
     const [created] = await this.db
       .insert(aiConversations)
       .values({

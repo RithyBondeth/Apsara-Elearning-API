@@ -72,8 +72,23 @@ export class PaymentResponseDTO {
   @ApiProperty({ example: 'pi_3Xyz...' })
   transactionId: string;
 
+  @ApiPropertyOptional({ example: 'in_...' })
+  providerInvoiceId?: string;
+
+  @ApiPropertyOptional({ example: 'pi_...' })
+  providerPaymentIntentId?: string;
+
+  @ApiPropertyOptional({ example: 'ch_...' })
+  providerChargeId?: string;
+
   @ApiProperty({ example: 'succeeded' })
   status: string;
+
+  @ApiProperty({ example: 0 })
+  refundedAmount: number;
+
+  @ApiPropertyOptional({ example: 'partially_refunded' })
+  refundStatus?: string;
 
   @ApiProperty()
   createdAt: Date;

@@ -18,7 +18,15 @@ function serviceWith(...results: unknown[][]) {
   const db = {
     select: jest.fn().mockImplementation(() => queries.shift()),
   };
-  return { service: new CourseEntitlementService(db as never), db };
+  const entitlementRows = results.length > 1 ? results[results.length - 1] : [];
+  const entitlements = {
+    has: jest.fn().mockResolvedValue(entitlementRows.length > 0),
+  };
+  return {
+    service: new CourseEntitlementService(db as never, entitlements as never),
+    db,
+    entitlements,
+  };
 }
 
 describe('CourseEntitlementService', () => {

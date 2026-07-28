@@ -3,12 +3,14 @@ import {
   I_PAYMENT_SERVICE,
   I_PLAN_SERVICE,
   I_SUBSCRIPTION_SERVICE,
+  I_ENTITLEMENT_ADMIN_SERVICE,
 } from '@app/contracts';
 import type {
   IPaymentService,
   IPlanService,
   ISubscriptionRpcController,
   ISubscriptionService,
+  IEntitlementAdminService,
 } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
@@ -16,6 +18,7 @@ import {
   CreatePlanRequestDTO,
   SUBSCRIPTION_SERVICE,
   UpdatePlanRequestDTO,
+  CreateEntitlementGrantRequestDTO,
 } from '@app/contracts';
 import { idOf, splitUpdate } from '@app/utils';
 
@@ -26,6 +29,8 @@ export class SubscriptionController implements ISubscriptionRpcController {
     @Inject(I_SUBSCRIPTION_SERVICE)
     private readonly subscriptions: ISubscriptionService,
     @Inject(I_PAYMENT_SERVICE) private readonly payments: IPaymentService,
+    @Inject(I_ENTITLEMENT_ADMIN_SERVICE)
+    private readonly entitlementAdmin: IEntitlementAdminService,
   ) {}
 
   // ---- Plans ----
@@ -56,9 +61,14 @@ export class SubscriptionController implements ISubscriptionRpcController {
   }
 
   // ---- Subscriptions ----
-  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIBE)
-  subscribe(@Payload() payload: { userId: string; planId: string }) {
-    return this.subscriptions.subscribe(payload.userId, payload.planId);
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.CHECKOUT_CREATE)
+  createCheckout(@Payload() payload: { userId: string; planId: string }) {
+    return this.subscriptions.createCheckout(payload.userId, payload.planId);
+  }
+
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.BILLING_PORTAL_CREATE)
+  createBillingPortal(@Payload() payload: { userId: string }) {
+    return this.subscriptions.createBillingPortal(payload.userId);
   }
 
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_FIND_BY_USER)
@@ -79,6 +89,37 @@ export class SubscriptionController implements ISubscriptionRpcController {
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_CHECK)
   check(@Payload() payload: { userId: string }) {
     return this.subscriptions.check(payload.userId);
+  }
+
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.ENTITLEMENT_RESOLVE)
+  resolveEntitlements(@Payload() payload: { userId: string }) {
+    return this.entitlementAdmin.resolve(payload.userId);
+  }
+
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.ENTITLEMENT_GRANTS_FIND)
+  findEntitlementGrants(@Payload() payload: { userId: string }) {
+    return this.entitlementAdmin.findGrants(payload.userId);
+  }
+
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.ENTITLEMENT_GRANT_CREATE)
+  createEntitlementGrant(
+    @Payload()
+    payload: {
+      userId: string;
+      grantedBy: string;
+      grant: CreateEntitlementGrantRequestDTO;
+    },
+  ) {
+    return this.entitlementAdmin.grant(
+      payload.userId,
+      payload.grantedBy,
+      payload.grant,
+    );
+  }
+
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.ENTITLEMENT_GRANT_REVOKE)
+  revokeEntitlementGrant(@Payload() payload: { id: string }) {
+    return this.entitlementAdmin.revoke(payload.id);
   }
 
   // ---- Payments ----
@@ -106,7 +147,7 @@ export class SubscriptionController implements ISubscriptionRpcController {
   }
 
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_WEBHOOK)
-  webhook(@Payload() payload: { transactionId?: string; status?: string }) {
+  webhook(@Payload() payload: { rawBody: string; signature: string }) {
     return this.payments.webhook(payload);
   }
 }

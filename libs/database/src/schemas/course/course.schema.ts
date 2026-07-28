@@ -55,5 +55,6 @@ export const courses = pgTable('courses', {
   requiresSubscription: boolean('requires_subscription')
     .notNull()
     .default(false),
+  requiredEntitlement: text('required_entitlement'),
   ...timestamps,
 });

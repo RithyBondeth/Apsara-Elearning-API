@@ -27,7 +27,11 @@ import * as aiMessageSchema from '../schemas/ai/ai-message.schema';
 import * as aiUsageTrackingSchema from '../schemas/ai/ai-usage-tracking.schema';
 import * as planSchema from '../schemas/subscription/plan.schema';
 import * as subscriptionSchema from '../schemas/subscription/subscription.schema';
+import * as planEntitlementSchema from '../schemas/subscription/plan-entitlement.schema';
+import * as userEntitlementGrantSchema from '../schemas/subscription/user-entitlement-grant.schema';
 import * as paymentSchema from '../schemas/payment/payment.schema';
+import * as stripeWebhookEventSchema from '../schemas/payment/stripe-webhook-event.schema';
+import * as paymentRefundSchema from '../schemas/payment/payment-refund.schema';
 
 const schema = {
   ...userSchema,
@@ -56,7 +60,11 @@ const schema = {
   ...aiUsageTrackingSchema,
   ...planSchema,
   ...subscriptionSchema,
+  ...planEntitlementSchema,
+  ...userEntitlementGrantSchema,
   ...paymentSchema,
+  ...stripeWebhookEventSchema,
+  ...paymentRefundSchema,
 };
 
 export const databaseConfig = (

@@ -12,6 +12,7 @@ async function bootstrap() {
     ApiGatewayModule,
     {
       bufferLogs: true,
+      rawBody: true,
     },
   );
   const configService = app.get(ConfigService);

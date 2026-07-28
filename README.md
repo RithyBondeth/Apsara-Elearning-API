@@ -136,7 +136,7 @@ a "First Steps" badge.
 | **Quiz** 🔒 | `GET /quiz/lesson/:lessonId` · `POST /quiz/:quizId/start` · `POST /quiz/attempt/:attemptId/submit` · `GET /quiz/attempts` · `GET /quiz/attempt/:id[/answers]` |
 | **Challenge** 🔒 | `GET /challenge/lesson/:lessonId` · `GET /challenge/:id[/test-cases]` · `POST /challenge/:id/submit` · `GET /challenge/submissions` · `GET /challenge/submission/:id` |
 | **Apsara AI** 🔒 | `POST/GET /ai/conversations` · `GET/DELETE /ai/conversations/:id` · `POST/GET /ai/conversations/:id/messages` · `GET /ai/usage` · `GET /ai/credits` |
-| **Subscription** | public: `GET /subscription/plans[/:id]`, `POST /subscription/webhook` · 🔒: `POST /subscription/subscribe`, `GET /subscription/me\|check\|history\|payments`, `DELETE /subscription/:id` |
+| **Subscription** | public: `GET /subscription/plans[/:id]`, `POST /subscription/webhook` · 🔒: `POST /subscription/checkout`, `POST /subscription/billing-portal`, `GET /subscription/me\|check\|history\|payments\|entitlements`, `DELETE /subscription/:id` |
 
 ### admin-gateway (`/admin`, port 2222) — all routes require an **admin** token
 
@@ -147,7 +147,8 @@ a "First Steps" badge.
 | **Modules** | `/courses/:courseId/modules` (POST, GET) · `PATCH /…/modules/reorder` · `PATCH/DELETE /…/modules/:id` |
 | **Lessons** | `/modules/:moduleId/lessons` (POST, GET, GET `:id`) · `PATCH /…/lessons/reorder` · `PATCH/DELETE /…/lessons/:id` |
 | **Users / Badges** | `GET /users`, `GET/DELETE /users/:id` · `/badges` CRUD · `POST /badges/:id/award/:userId` |
-| **Plans / Payments** | `/plans` CRUD · `POST /payments` (manual record) |
+| **Plans / Payments** | `/plans` CRUD (including entitlement, trial, and grace settings) · `POST /payments` (manual record) |
+| **Entitlements** | `GET /entitlements/users/:userId` · `GET/POST /entitlements/users/:userId/grants` · `DELETE /entitlements/grants/:id` |
 | **Quiz authoring** | `/lessons/:lessonId/quizzes`, `/quizzes/:id`, `/quizzes/:quizId/questions`, `PATCH /questions/reorder`, `/questions/:id`, `/questions/:questionId/options`, `/options/:id` |
 | **Challenge authoring** | `/lessons/:lessonId/challenges`, `/challenges/:id`, `/challenges/:challengeId/test-cases`, `/test-cases/:id` |
 
@@ -204,23 +205,80 @@ auto-awards it.
 | `GEMINI_API_KEY` / `GEMINI_MODEL` | — | enables Gemini chat |
 | `JUDGE0_URL` / `JUDGE0_TOKEN` | — | enables real code execution; **mock grading without it** |
 | `CORS_ORIGINS` | production | comma-separated exact allowed origins; required in production |
-| `WEBHOOK_SECRET` | — | shared secret for the payment webhook (`x-webhook-secret`); check skipped if unset |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | subscription production | Stripe server key and endpoint signing secret; never expose these to the browser |
+| `WEB_APP_URL` | subscription production | HTTPS web-client origin used for Checkout and portal return URLs |
 | `REDIS_URL` | — | distributed rate limiting across replicas; in-memory if unset |
 
 > **Mock modes:** without the selected provider API key the AI tutor returns canned replies,
 > and without `JUDGE0_URL` code grading uses a placeholder (a test passes when its
 > expected output appears in the source). Both become real once the key/URL is set.
 
+## Named entitlements
+
+Access is resolved server-side using `courses:premium`, `ai:tutor`, and
+`certificates`. Plans map to any combination of these capabilities. An active
+paid period, an active Stripe trial, or a configured failed-payment grace period
+activates the plan's capabilities; expiration removes them automatically.
+
+Administrators can create time-bounded `allow` or `deny` grants. An active deny
+overrides both administrative allows and plan access, then an allow overrides a
+plan decision. Revoking a grant preserves its audit record. The browser hydrates
+`GET /subscription/entitlements` into a non-persisted Zustand store for UI
+decisions only; course and AI services always enforce access independently.
+
+Set a course's `requiredEntitlement` to `courses:premium` (the legacy
+`requiresSubscription` field is retained for compatibility). Creating a new AI
+conversation or sending an AI message requires `ai:tutor`.
+
+Apply `migrations/20260728_add_named_entitlements.sql` after the Stripe webhook
+migrations. It maps every existing plan to all three capabilities to preserve
+current behavior; edit each plan afterward to narrow its capability set.
+
 ## Course authorization
 
-Published courses are public by default. Set `requiresSubscription` on a course
-to require an active, unexpired subscription for its lesson content, quizzes,
+Published courses are public by default. Set `requiredEntitlement` on a course
+to require the named capability for its lesson content, quizzes,
 challenges, enrollment, and progress updates. Public course/module endpoints
 never expose unpublished content, and premium lesson lists return metadata with
 `locked: true` while omitting lesson content and video URLs.
 
 Apply `migrations/20260728_add_course_entitlements.sql` before deploying this
 feature. Existing courses remain free because the new column defaults to false.
+
+## Stripe billing
+
+Apply `migrations/20260728_add_stripe_billing.sql`, then set each paid plan's
+`stripePriceId` to its recurring Stripe Price ID. The web client creates hosted
+Checkout Sessions through `POST /subscription/checkout`; it never activates a
+subscription itself. Access is provisioned only after a signed Stripe webhook
+updates the local subscription.
+
+Configure a Stripe webhook endpoint at
+`POST /api/v1/internal/subscription/webhook` for these events:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `checkout.session.async_payment_failed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `refund.created`
+- `refund.updated`
+- `refund.failed`
+
+Webhook event IDs and invoice IDs are stored uniquely. Each event moves through
+`processing`, `processed`, or `failed`; failed and stale-processing deliveries
+can be claimed by a retry, while concurrent duplicates receive a non-2xx
+response so Stripe retries them. Refund IDs are also unique, partial and full
+refund totals are reconciled to the original payment, and a full refund of the
+current paid period revokes access. Cancellation is scheduled in Stripe at the
+end of the paid billing period, and the customer portal handles payment-method
+and invoice management.
+
+Apply `migrations/20260728_harden_stripe_webhooks.sql` after the base Stripe
+billing migration.
 
 ## Database
 

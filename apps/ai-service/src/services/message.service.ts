@@ -17,6 +17,7 @@ import {
   AiGatewayService,
 } from '../providers/ai-gateway.service';
 import { APSARA_SYSTEM_PROMPT } from '../anthropic/system-prompt';
+import { EntitlementService } from '@app/common';
 
 @Injectable()
 export class MessageService implements IMessageService {
@@ -25,6 +26,7 @@ export class MessageService implements IMessageService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly ai: AiGatewayService,
+    private readonly entitlements: EntitlementService,
     @Inject(I_CONVERSATION_SERVICE)
     private readonly conversations: IConversationService,
   ) {}
@@ -46,6 +48,7 @@ export class MessageService implements IMessageService {
     content: string,
     options?: AiGatewayChatOptions,
   ): Promise<SendMessageResponseDTO> {
+    await this.entitlements.assert(userId, 'ai:tutor');
     // Ownership check (throws 404 if not the user's conversation).
     await this.conversations.findOneOwned(userId, conversationId);
 

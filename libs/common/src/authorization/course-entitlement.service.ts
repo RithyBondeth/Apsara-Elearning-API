@@ -1,19 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, eq, gt, isNull, lte, or } from 'drizzle-orm';
-import { DRIZZLE } from '@app/contracts';
+import { eq } from 'drizzle-orm';
+import { DRIZZLE, EntitlementKey } from '@app/contracts';
 import { courses } from '@app/database/schemas/course/course.schema';
 import { modules } from '@app/database/schemas/course/module.schema';
 import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
-import { subscriptions } from '@app/database/schemas/subscription/subscription.schema';
 import {
   RpcForbiddenException,
   RpcNotFoundException,
 } from '../filters/rpc-exceptions';
+import { EntitlementService } from './entitlement.service';
 
 @Injectable()
 export class CourseEntitlementService {
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: EntitlementService,
+  ) {}
 
   async assertPublishedCourse(courseId: string): Promise<void> {
     await this.courseAccess(courseId);
@@ -38,6 +41,7 @@ export class CourseEntitlementService {
         courseId: courses.id,
         published: courses.published,
         requiresSubscription: courses.requiresSubscription,
+        requiredEntitlement: courses.requiredEntitlement,
       })
       .from(modules)
       .innerJoin(courses, eq(modules.courseId, courses.id))
@@ -60,6 +64,7 @@ export class CourseEntitlementService {
         courseId: courses.id,
         published: courses.published,
         requiresSubscription: courses.requiresSubscription,
+        requiredEntitlement: courses.requiredEntitlement,
       })
       .from(lessons)
       .innerJoin(modules, eq(lessons.moduleId, modules.id))
@@ -89,6 +94,7 @@ export class CourseEntitlementService {
         courseId: courses.id,
         published: courses.published,
         requiresSubscription: courses.requiresSubscription,
+        requiredEntitlement: courses.requiredEntitlement,
       })
       .from(courses)
       .where(eq(courses.id, courseId))
@@ -98,30 +104,19 @@ export class CourseEntitlementService {
   }
 
   private async hasContentAccess(
-    course: { requiresSubscription: boolean; courseId: string },
+    course: {
+      requiresSubscription: boolean;
+      requiredEntitlement: string | null;
+      courseId: string;
+    },
     userId?: string,
   ): Promise<boolean> {
-    if (!course.requiresSubscription) return true;
+    const required =
+      (course.requiredEntitlement as EntitlementKey | null) ??
+      (course.requiresSubscription ? 'courses:premium' : null);
+    if (!required) return true;
     if (!userId) return false;
 
-    const [active] = await this.db
-      .select({ id: subscriptions.id })
-      .from(subscriptions)
-      .where(
-        and(
-          eq(subscriptions.userId, userId),
-          eq(subscriptions.active, true),
-          or(
-            isNull(subscriptions.startsAt),
-            lte(subscriptions.startsAt, new Date()),
-          ),
-          or(
-            isNull(subscriptions.expiresAt),
-            gt(subscriptions.expiresAt, new Date()),
-          ),
-        ),
-      )
-      .limit(1);
-    return !!active;
+    return this.entitlements.has(userId, required);
   }
 }

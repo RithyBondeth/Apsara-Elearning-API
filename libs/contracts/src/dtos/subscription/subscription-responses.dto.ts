@@ -1,24 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { DtoInit } from '../../types/dto-init';
-import { PaymentResponseDTO } from './payment.dto';
 import { PlanResponseDTO } from './plan.dto';
 import { SubscriptionResponseDTO } from './subscription.dto';
-
-/** Result of a successful subscribe: the new subscription, plan, and payment. */
-export class SubscribeResponseDTO {
-  constructor(partial: DtoInit<SubscribeResponseDTO> = {}) {
-    Object.assign(this, partial);
-  }
-
-  @ApiProperty({ type: SubscriptionResponseDTO })
-  subscription: SubscriptionResponseDTO;
-
-  @ApiProperty({ type: PlanResponseDTO })
-  plan: PlanResponseDTO;
-
-  @ApiProperty({ type: PaymentResponseDTO })
-  payment: PaymentResponseDTO;
-}
 
 /** The user's current active subscription joined with its plan. */
 export class ActiveSubscriptionResponseDTO {
@@ -71,4 +54,27 @@ export class PaymentWebhookResponseDTO {
 
   @ApiProperty({ example: true })
   handled: boolean;
+}
+
+/** URL for a Stripe-hosted subscription Checkout Session. */
+export class CheckoutSessionResponseDTO {
+  constructor(partial: DtoInit<CheckoutSessionResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ example: 'cs_test_...' })
+  sessionId: string;
+
+  @ApiProperty({ example: 'https://checkout.stripe.com/c/pay/...' })
+  url: string;
+}
+
+/** URL for the Stripe-hosted customer billing portal. */
+export class BillingPortalResponseDTO {
+  constructor(partial: DtoInit<BillingPortalResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ example: 'https://billing.stripe.com/p/session/...' })
+  url: string;
 }

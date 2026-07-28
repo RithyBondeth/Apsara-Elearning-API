@@ -29,6 +29,12 @@ export class SubscriptionResponseDTO {
   currentPeriodEnd?: Date;
 
   @ApiPropertyOptional()
+  trialEndsAt?: Date;
+
+  @ApiPropertyOptional()
+  graceEndsAt?: Date;
+
+  @ApiPropertyOptional()
   cancelAtPeriodEnd?: boolean;
 
   @ApiProperty()

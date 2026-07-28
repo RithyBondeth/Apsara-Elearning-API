@@ -1,30 +1,36 @@
 import {
   Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Inject,
   Param,
   Post,
+  RawBodyRequest,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   ActiveSubscriptionResponseDTO,
+  BillingPortalResponseDTO,
   CancelSubscriptionResponseDTO,
+  CheckoutSessionResponseDTO,
   ISubscriptionHttpController,
   PaymentResponseDTO,
   PaymentWebhookResponseDTO,
   PlanResponseDTO,
   SUBSCRIPTION_SERVICE,
   SubscribeRequestDTO,
-  SubscribeResponseDTO,
   SubscriptionCheckResponseDTO,
   SubscriptionResponseDTO,
+  ResolvedEntitlementDTO,
 } from '@app/contracts';
-import { CurrentUser, JwtAuthGuard, WebhookGuard } from '@app/common';
+import { CurrentUser, JwtAuthGuard } from '@app/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -33,6 +39,7 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { rpcCall } from '@app/common';
+import { Request } from 'express';
 
 @ApiTags('Subscription')
 @Controller('subscription')
@@ -73,28 +80,32 @@ export class SubscriptionController implements ISubscriptionHttpController {
     );
   }
 
-  // ---- Provider callback — verified via shared secret (WebhookGuard) ----
+  // Stripe requires the exact raw request bytes for signature verification.
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(WebhookGuard)
-  @ApiOperation({ summary: 'Payment provider webhook' })
+  @ApiOperation({ summary: 'Signed Stripe webhook' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Webhook processed successfully',
     type: PaymentWebhookResponseDTO,
   })
   webhook(
-    @Body() body: { transactionId?: string; status?: string },
+    @Req() request: RawBodyRequest<Request> | Buffer,
+    @Headers('stripe-signature') signature: string,
   ): Promise<PaymentWebhookResponseDTO> {
+    const rawBody = Buffer.isBuffer(request) ? request : request.rawBody;
+    if (!rawBody || !signature) {
+      throw new BadRequestException('Missing Stripe webhook signature');
+    }
     return rpcCall<PaymentWebhookResponseDTO>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_WEBHOOK,
-      body,
+      { rawBody: rawBody.toString('base64'), signature },
     );
   }
 
   // ---- Authenticated user actions ----
-  @Post('subscribe')
+  @Post('checkout')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
@@ -102,18 +113,39 @@ export class SubscriptionController implements ISubscriptionHttpController {
   @ApiOperation({ summary: 'Subscribe to a plan' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Subscription initiated successfully',
-    type: SubscribeResponseDTO,
+    description: 'Stripe Checkout Session created',
+    type: CheckoutSessionResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  subscribe(
+  createCheckout(
     @CurrentUser('id') userId: string,
     @Body() dto: SubscribeRequestDTO,
-  ): Promise<SubscribeResponseDTO> {
-    return rpcCall<SubscribeResponseDTO>(
+  ): Promise<CheckoutSessionResponseDTO> {
+    return rpcCall<CheckoutSessionResponseDTO>(
       this.client,
-      SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIBE,
+      SUBSCRIPTION_SERVICE.ACTIONS.CHECKOUT_CREATE,
       { userId, planId: dto.planId },
+    );
+  }
+
+  @Post('billing-portal')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a Stripe customer portal session' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Billing portal session created',
+    type: BillingPortalResponseDTO,
+  })
+  createBillingPortal(
+    @CurrentUser('id') userId: string,
+  ): Promise<BillingPortalResponseDTO> {
+    return rpcCall<BillingPortalResponseDTO>(
+      this.client,
+      SUBSCRIPTION_SERVICE.ACTIONS.BILLING_PORTAL_CREATE,
+      { userId },
     );
   }
 
@@ -153,6 +185,21 @@ export class SubscriptionController implements ISubscriptionHttpController {
     return rpcCall<SubscriptionCheckResponseDTO>(
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_CHECK,
+      { userId },
+    );
+  }
+
+  @Get('entitlements')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current named entitlements' })
+  @ApiResponse({ status: HttpStatus.OK, type: [ResolvedEntitlementDTO] })
+  entitlements(
+    @CurrentUser('id') userId: string,
+  ): Promise<ResolvedEntitlementDTO[]> {
+    return rpcCall<ResolvedEntitlementDTO[]>(
+      this.client,
+      SUBSCRIPTION_SERVICE.ACTIONS.ENTITLEMENT_RESOLVE,
       { userId },
     );
   }

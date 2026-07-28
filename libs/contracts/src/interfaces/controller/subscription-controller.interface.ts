@@ -10,12 +10,18 @@ import {
 } from '../../dtos/subscription/plan.dto';
 import {
   ActiveSubscriptionResponseDTO,
+  BillingPortalResponseDTO,
   CancelSubscriptionResponseDTO,
+  CheckoutSessionResponseDTO,
   PaymentWebhookResponseDTO,
-  SubscribeResponseDTO,
   SubscriptionCheckResponseDTO,
 } from '../../dtos/subscription/subscription-responses.dto';
 import { SubscriptionResponseDTO } from '../../dtos/subscription/subscription.dto';
+import {
+  CreateEntitlementGrantRequestDTO,
+  EntitlementGrantResponseDTO,
+  ResolvedEntitlementDTO,
+} from '../../dtos/subscription/entitlement.dto';
 
 /**
  * RPC controller contract for subscription-service — plans, subscriptions, and
@@ -29,10 +35,13 @@ export interface ISubscriptionRpcController {
     payload: UpdatePlanRequestDTO & { id: string },
   ): Promise<PlanResponseDTO>;
   removePlan(payload: string | { id: string }): Promise<DeleteResponseDTO>;
-  subscribe(payload: {
+  createCheckout(payload: {
     userId: string;
     planId: string;
-  }): Promise<SubscribeResponseDTO>;
+  }): Promise<CheckoutSessionResponseDTO>;
+  createBillingPortal(payload: {
+    userId: string;
+  }): Promise<BillingPortalResponseDTO>;
   findByUser(payload: { userId: string }): Promise<SubscriptionResponseDTO[]>;
   findActive(payload: {
     userId: string;
@@ -42,11 +51,19 @@ export interface ISubscriptionRpcController {
     id: string;
   }): Promise<CancelSubscriptionResponseDTO>;
   check(payload: { userId: string }): Promise<SubscriptionCheckResponseDTO>;
+  resolveEntitlements(payload: { userId: string }): Promise<ResolvedEntitlementDTO[]>;
+  findEntitlementGrants(payload: { userId: string }): Promise<EntitlementGrantResponseDTO[]>;
+  createEntitlementGrant(payload: {
+    userId: string;
+    grantedBy: string;
+    grant: CreateEntitlementGrantRequestDTO;
+  }): Promise<EntitlementGrantResponseDTO>;
+  revokeEntitlementGrant(payload: { id: string }): Promise<EntitlementGrantResponseDTO>;
   createPayment(dto: CreatePaymentRequestDTO): Promise<PaymentResponseDTO>;
   findPayments(payload: { userId: string }): Promise<PaymentResponseDTO[]>;
   findPayment(payload: string | { id: string }): Promise<PaymentResponseDTO>;
   webhook(payload: {
-    transactionId?: string;
-    status?: string;
+    rawBody: string;
+    signature: string;
   }): Promise<PaymentWebhookResponseDTO>;
 }

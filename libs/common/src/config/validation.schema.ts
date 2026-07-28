@@ -72,7 +72,17 @@ export const validationSchema = Joi.object({
     then: Joi.string().min(1).required(),
     otherwise: Joi.string().allow('').optional(),
   }),
-  WEBHOOK_SECRET: Joi.string().allow('').optional(),
+  // subscription-service enforces these at startup in production. They stay
+  // optional here so unrelated services do not need billing credentials.
+  STRIPE_SECRET_KEY: Joi.string()
+    .pattern(/^sk_(test|live)_/)
+    .allow('')
+    .optional(),
+  STRIPE_WEBHOOK_SECRET: Joi.string()
+    .pattern(/^whsec_/)
+    .allow('')
+    .optional(),
+  WEB_APP_URL: Joi.string().uri().default('http://localhost:3000'),
 
   // Redis — optional (distributed rate limiting)
   REDIS_URL: Joi.string().allow('').optional(),

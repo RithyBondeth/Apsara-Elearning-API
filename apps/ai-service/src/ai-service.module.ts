@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigurationModule, LoggerModule, HealthModule } from '@app/common';
+import {
+  ConfigurationModule,
+  LoggerModule,
+  HealthModule,
+  EntitlementService,
+} from '@app/common';
 import { DatabaseModule } from '@app/database';
 import {
   I_CONVERSATION_SERVICE,
@@ -28,6 +33,7 @@ import { UsageController } from './controllers/usage.controller';
     AiHealthController,
   ],
   providers: [
+    EntitlementService,
     AiGatewayService,
     AnthropicProvider,
     OpenAiProvider,

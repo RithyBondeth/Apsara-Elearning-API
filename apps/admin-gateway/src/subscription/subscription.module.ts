@@ -3,6 +3,7 @@ import { RabbitmqModule } from '@app/common';
 import { SUBSCRIPTION_SERVICE } from '@app/contracts';
 import { PlanController } from './controllers/plan.controller';
 import { PaymentController } from './controllers/payment.controller';
+import { EntitlementController } from './controllers/entitlement.controller';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { PaymentController } from './controllers/payment.controller';
       },
     ]),
   ],
-  controllers: [PlanController, PaymentController],
+  controllers: [PlanController, PaymentController, EntitlementController],
 })
 export class SubscriptionModule {}

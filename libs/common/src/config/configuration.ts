@@ -76,9 +76,13 @@ export default () => ({
     origins: process.env.CORS_ORIGINS,
   },
 
-  // Payment provider webhook shared secret — optional (skips check if unset)
-  webhook: {
-    secret: process.env.WEBHOOK_SECRET,
+  // Stripe Billing
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+  },
+  web: {
+    appUrl: process.env.WEB_APP_URL ?? 'http://localhost:3000',
   },
 
   // Redis — optional; rate limiting uses it across replicas when set

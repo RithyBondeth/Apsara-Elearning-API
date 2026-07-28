@@ -11,12 +11,14 @@ import {
 import { SubscribeRequestDTO } from '../../dtos/subscription/subscribe.dto';
 import {
   ActiveSubscriptionResponseDTO,
+  BillingPortalResponseDTO,
   CancelSubscriptionResponseDTO,
+  CheckoutSessionResponseDTO,
   PaymentWebhookResponseDTO,
-  SubscribeResponseDTO,
   SubscriptionCheckResponseDTO,
 } from '../../dtos/subscription/subscription-responses.dto';
 import { SubscriptionResponseDTO } from '../../dtos/subscription/subscription.dto';
+import { ResolvedEntitlementDTO } from '../../dtos/subscription/entitlement.dto';
 
 /**
  * HTTP gateway controller contracts for the subscription domain.
@@ -27,16 +29,18 @@ import { SubscriptionResponseDTO } from '../../dtos/subscription/subscription.dt
 export interface ISubscriptionHttpController {
   plans(): Promise<PlanResponseDTO[]>;
   plan(id: string): Promise<PlanResponseDTO>;
-  webhook(body: {
-    transactionId?: string;
-    status?: string;
-  }): Promise<PaymentWebhookResponseDTO>;
-  subscribe(
+  webhook(
+    rawBody: Buffer,
+    signature: string,
+  ): Promise<PaymentWebhookResponseDTO>;
+  createCheckout(
     userId: string,
     dto: SubscribeRequestDTO,
-  ): Promise<SubscribeResponseDTO>;
+  ): Promise<CheckoutSessionResponseDTO>;
+  createBillingPortal(userId: string): Promise<BillingPortalResponseDTO>;
   active(userId: string): Promise<ActiveSubscriptionResponseDTO | null>;
   check(userId: string): Promise<SubscriptionCheckResponseDTO>;
+  entitlements(userId: string): Promise<ResolvedEntitlementDTO[]>;
   history(userId: string): Promise<SubscriptionResponseDTO[]>;
   payments(userId: string): Promise<PaymentResponseDTO[]>;
   cancel(userId: string, id: string): Promise<CancelSubscriptionResponseDTO>;

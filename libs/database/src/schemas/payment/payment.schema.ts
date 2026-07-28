@@ -15,7 +15,16 @@ export const payments = pgTable('payments', {
   amount: numeric('amount', { precision: 10, scale: 2 }),
   currency: varchar('currency'),
   provider: varchar('provider'),
-  transactionId: varchar('transaction_id'),
+  transactionId: varchar('transaction_id').unique(),
+  providerInvoiceId: varchar('provider_invoice_id', { length: 255 }).unique(),
+  providerPaymentIntentId: varchar('provider_payment_intent_id', {
+    length: 255,
+  }).unique(),
+  providerChargeId: varchar('provider_charge_id', { length: 255 }).unique(),
   status: varchar('status'),
+  refundedAmount: numeric('refunded_amount', { precision: 10, scale: 2 })
+    .notNull()
+    .default('0'),
+  refundStatus: varchar('refund_status', { length: 32 }),
   ...timestamps,
 });
