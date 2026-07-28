@@ -15,14 +15,21 @@ export const validationSchema = Joi.object({
   DATABASE_SYNCHRONIZE: Joi.boolean().default(false),
 
   // JWT
-  JWT_ACCESS_SECRET: Joi.string().required(),
+  JWT_ACCESS_SECRET: Joi.string().min(32).required(),
   JWT_ACCESS_EXPIRES: Joi.string().required(),
-  JWT_REFRESH_SECRET: Joi.string().required(),
+  JWT_REFRESH_SECRET: Joi.string().min(32).required(),
   JWT_REFRESH_EXPIRES: Joi.string().required(),
+  JWT_ACTION_SECRET: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string().min(32).optional(),
+  }),
   JWT_EMAIL_EXPIRES: Joi.string().default('1h'),
+  JWT_ISSUER: Joi.string().default('apsara-elearning'),
+  JWT_AUDIENCE: Joi.string().default('apsara-elearning-web'),
 
   // Bcrypt
-  BCRYPT_SALT: Joi.number().default(10),
+  BCRYPT_SALT: Joi.number().integer().min(10).max(15).default(12),
 
   // RabbitMQ
   RABBITMQ_URL: Joi.string().required(),
@@ -60,9 +67,29 @@ export const validationSchema = Joi.object({
   JUDGE0_TOKEN: Joi.string().allow('').optional(),
 
   // Security — optional
-  CORS_ORIGINS: Joi.string().allow('').optional(),
+  CORS_ORIGINS: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(1).required(),
+    otherwise: Joi.string().allow('').optional(),
+  }),
   WEBHOOK_SECRET: Joi.string().allow('').optional(),
 
   // Redis — optional (distributed rate limiting)
   REDIS_URL: Joi.string().allow('').optional(),
+}).custom((environment: Record<string, unknown>, helpers) => {
+  if (environment.JWT_ACCESS_SECRET === environment.JWT_REFRESH_SECRET) {
+    return helpers.error('any.invalid', {
+      message: 'JWT access and refresh secrets must be different',
+    });
+  }
+  if (
+    environment.JWT_ACTION_SECRET &&
+    (environment.JWT_ACTION_SECRET === environment.JWT_ACCESS_SECRET ||
+      environment.JWT_ACTION_SECRET === environment.JWT_REFRESH_SECRET)
+  ) {
+    return helpers.error('any.invalid', {
+      message: 'JWT action secret must be different from session secrets',
+    });
+  }
+  return environment;
 });

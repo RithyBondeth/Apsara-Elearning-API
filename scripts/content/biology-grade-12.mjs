@@ -12,9 +12,8 @@
 //
 // Conventions:
 //  * Khmer only; text lives directly in title/content.
-//  * Diagrams: ```diagram fenced blocks carry inline SVG (labels in Khmer). The
-//    web renders them via a lesson-content ```diagram handler (like ```graph in
-//    maths); the offline preview inlines the SVG directly.
+//  * Visuals: raster biology illustrations include Khmer labels beside numbered callouts and are
+//    served from the web public content folder; captions remain in markdown for accessibility.
 //  * Lesson slugs prefixed `bio-` so they never collide with other courses.
 
 /** Answer-key helpers — shapes must match apps/assessment-service graders. */
@@ -102,34 +101,9 @@ const MODULE_1 = {
 
 រុក្ខជាតិ​កូនីហ្វែរ​មាន **កោណ​ពីរ​ប្រភេទ**៖ កោណ​ឈ្មោល (ផលិត​លម្អង) និង​កោណ​ញី (ផ្ទុក​អូវុល​ដែល​ក្លាយ​ជា​គ្រាប់)។ គ្រាប់​អង្គុយ​ចំហ​នៅ​លើ​ស្រកា​កោណ។
 
-\`\`\`diagram
-<svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <!-- branch -->
-  <path d="M40 250 Q120 220 200 240" stroke="#6b4f2a" stroke-width="8" fill="none" stroke-linecap="round"/>
-  <!-- needle leaves -->
-  <g stroke="#2f8f4e" stroke-width="2">
-    <path d="M70 235 l-14 -20"/><path d="M80 232 l-8 -24"/><path d="M92 231 l2 -26"/>
-    <path d="M104 232 l12 -22"/><path d="M116 234 l18 -18"/>
-  </g>
-  <!-- cone -->
-  <g transform="translate(250 120)">
-    <ellipse cx="60" cy="70" rx="52" ry="80" fill="#8a5a2b"/>
-    <g fill="#6b4321">
-      <path d="M20 20 q40 12 80 0 q-10 18 -40 18 q-30 0 -40 -18z"/>
-      <path d="M14 55 q46 12 92 0 q-12 20 -46 20 q-34 0 -46 -20z"/>
-      <path d="M14 92 q46 12 92 0 q-12 20 -46 20 q-34 0 -46 -20z"/>
-      <path d="M20 128 q40 12 80 0 q-10 18 -40 18 q-30 0 -40 -18z"/>
-    </g>
-    <!-- naked seed on a scale -->
-    <circle cx="98" cy="60" r="8" fill="#f2c14e" stroke="#a97400" stroke-width="1.5"/>
-  </g>
-  <!-- labels -->
-  <text x="30" y="285" font-size="13" fill="#333">មែក​ស្រល់ (កូនីហ្វែរ)</text>
-  <line x1="360" y1="180" x2="410" y2="180" stroke="#a97400" stroke-width="1.5"/>
-  <text x="330" y="205" font-size="13" fill="#a97400">គ្រាប់​នៅ​នល</text>
-  <text x="250" y="290" font-size="13" fill="#8a5a2b">កោណ (cône)</text>
-</svg>
-\`\`\`
+![កោណ និងគ្រាប់របស់ស៊ុមណូស្ពែម](/content/biology-grade-12/bio-gymnosperms-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ កោណឈ្មោលបញ្ចេញលម្អង · ២ កោណញីមានអូវុល/គ្រាប់នៅលើស្រកាដោយគ្មានផ្លែគ្រប។
 
 ## វដ្ត​ជីវិត (សង្ខេប)
 
@@ -233,39 +207,9 @@ const MODULE_1 = {
 - **ស្តាមីន** (étamines) — សរីរាង្គ​ឈ្មោល ផលិត​លម្អង។
 - **ពីស្ទីល** (pistil) — សរីរាង្គ​ញី មាន​អូវែរ (ovaire) ដែល​ផ្ទុក​អូវុល។
 
-\`\`\`diagram
-<svg viewBox="0 0 460 320" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <!-- receptacle & stem -->
-  <line x1="230" y1="250" x2="230" y2="310" stroke="#2f8f4e" stroke-width="6"/>
-  <!-- petals -->
-  <g fill="#e37fb0" stroke="#c25a90" stroke-width="1.5">
-    <ellipse cx="230" cy="120" rx="30" ry="60"/>
-    <ellipse cx="150" cy="175" rx="60" ry="26" transform="rotate(-35 150 175)"/>
-    <ellipse cx="310" cy="175" rx="60" ry="26" transform="rotate(35 310 175)"/>
-    <ellipse cx="185" cy="235" rx="55" ry="24" transform="rotate(30 185 235)"/>
-    <ellipse cx="275" cy="235" rx="55" ry="24" transform="rotate(-30 275 235)"/>
-  </g>
-  <!-- pistil (center) -->
-  <line x1="230" y1="200" x2="230" y2="120" stroke="#7a4fae" stroke-width="4"/>
-  <circle cx="230" cy="118" r="8" fill="#7a4fae"/>
-  <ellipse cx="230" cy="210" rx="14" ry="18" fill="#8f63c4"/>
-  <!-- stamens -->
-  <g stroke="#c99a00" stroke-width="2.5" fill="#f2c14e">
-    <line x1="205" y1="205" x2="188" y2="150"/><circle cx="188" cy="146" r="6"/>
-    <line x1="255" y1="205" x2="272" y2="150"/><circle cx="272" cy="146" r="6"/>
-    <line x1="218" y1="205" x2="210" y2="145"/><circle cx="210" cy="141" r="6"/>
-    <line x1="242" y1="205" x2="250" y2="145"/><circle cx="250" cy="141" r="6"/>
-  </g>
-  <!-- labels -->
-  <text x="20" y="120" font-size="13" fill="#c25a90">ក្លៀបផ្កា (pétale)</text>
-  <line x1="120" y1="116" x2="175" y2="150" stroke="#c25a90" stroke-width="1"/>
-  <text x="300" y="90" font-size="13" fill="#c99a00">ស្តាមីន (ឈ្មោល)</text>
-  <line x1="298" y1="95" x2="272" y2="140" stroke="#c99a00" stroke-width="1"/>
-  <text x="300" y="290" font-size="13" fill="#7a4fae">ពីស្ទីល (ញី)</text>
-  <line x1="298" y1="285" x2="240" y2="220" stroke="#7a4fae" stroke-width="1"/>
-  <text x="20" y="290" font-size="13" fill="#2f8f4e">ដើម​ផ្កា</text>
-</svg>
-\`\`\`
+![រចនាសម្ព័ន្ធផ្កាពេញលេញ](/content/biology-grade-12/bio-angiosperms-1-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ស្ទិចម៉ាត · ២ ស្ទីល · ៣ អូវែរ · ៤ អូវុល · ៥ អង់ទែរ · ៦ ហ្វីឡាម៉ង់ · ៧ ក្រោនផ្កា · ៨ ត្របកផ្កា។
 
 ## ការ​បន្ត​ពូជ
 
@@ -284,39 +228,9 @@ const MODULE_1 = {
 | ឫស | ឫស​ចង្កោម | ឫស​កែវ |
 | ឧទាហរណ៍ | ស្រូវ ពោត ស្មៅ | សណ្ដែក ស្វាយ ក្រូច |
 
-\`\`\`diagram
-<svg viewBox="0 0 460 240" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <!-- monocot leaf: parallel veins -->
-  <g>
-    <path d="M60 30 Q110 20 150 40 Q110 60 60 50 Z" fill="#cdeccf" stroke="#2f8f4e"/>
-    <g stroke="#2f8f4e" stroke-width="1" fill="none">
-      <path d="M66 40 Q108 34 146 42"/><path d="M66 45 Q108 42 145 46"/><path d="M66 36 Q108 28 147 38"/>
-    </g>
-    <text x="70" y="80" font-size="12" fill="#2f8f4e">ស្លឹក​សរសៃ​ស្រប</text>
-    <text x="72" y="98" font-size="12" fill="#555">(ម៉ូណូកូ)</text>
-  </g>
-  <!-- dicot leaf: net veins -->
-  <g>
-    <path d="M300 30 Q360 12 400 40 Q360 68 300 50 Z" fill="#cdeccf" stroke="#2f8f4e"/>
-    <g stroke="#2f8f4e" stroke-width="1" fill="none">
-      <path d="M306 42 L396 40"/><path d="M330 34 L336 46"/><path d="M355 32 L360 46"/><path d="M375 36 L372 47"/>
-    </g>
-    <text x="312" y="80" font-size="12" fill="#2f8f4e">ស្លឹក​សរសៃ​សំណាញ់</text>
-    <text x="322" y="98" font-size="12" fill="#555">(ឌីកូ)</text>
-  </g>
-  <!-- seeds -->
-  <g>
-    <ellipse cx="105" cy="160" rx="34" ry="22" fill="#f2d9a0" stroke="#b9902f"/>
-    <line x1="105" y1="140" x2="105" y2="180" stroke="#b9902f" stroke-dasharray="3 3"/>
-    <text x="55" y="205" font-size="12" fill="#b9902f">ក្លែប​គ្រាប់ ១ (ម៉ូណូកូ)</text>
-  </g>
-  <g>
-    <ellipse cx="350" cy="160" rx="34" ry="22" fill="#f2d9a0" stroke="#b9902f"/>
-    <line x1="350" y1="138" x2="350" y2="182" stroke="#b9902f" stroke-width="2"/>
-    <text x="300" y="205" font-size="12" fill="#b9902f">ក្លែប​គ្រាប់ ២ (ឌីកូ)</text>
-  </g>
-</svg>
-\`\`\`
+![ប្រៀបធៀបម៉ូណូកូទីលេដុន និងឌីកូទីលេដុន](/content/biology-grade-12/bio-angiosperms-2-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ជួរនីមួយៗបង្ហាញ៖ ១ កូទីលេដុន · ២ សរសៃស្លឹក · ៣ ប្រព័ន្ធឫស · ៤ ផ្នែកផ្កា · ៥ បាច់សរសៃនាំក្នុងដើម។ ខាងឆ្វេងជាម៉ូណូកូ និងខាងស្តាំជាឌីកូ។
 
 ## លំហាត់​អនុវត្ត
 
@@ -421,23 +335,9 @@ const MODULE_2 = {
 - **ស៊ីល៉ែម** (xylème) — ដឹក​ជញ្ជូន **ទឹក និង​អំបិល​ខនិជ** ពី​ឫស​ឡើង​ទៅ​ស្លឹក (ទិស​តែ​មួយ ឡើង​លើ)។
 - **ភ្លូអែម** (phloème) — ដឹក​ជញ្ជូន **អាហារ (ស្ករ)** ដែល​ផលិត​ក្នុង​ស្លឹក​ទៅ​គ្រប់​ផ្នែក​នៃ​រុក្ខជាតិ (ទ្វេ​ទិស)។
 
-\`\`\`diagram
-<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <circle cx="150" cy="110" r="90" fill="#eef7ec" stroke="#2f8f4e" stroke-width="2"/>
-  <circle cx="150" cy="110" r="55" fill="#f7f2e0" stroke="#c9b36b"/>
-  <!-- vascular bundles -->
-  <g>
-    <circle cx="150" cy="70" r="10" fill="#4a90d9"/><text x="120" y="45" font-size="11" fill="#4a90d9">ស៊ីល៉ែម</text>
-    <circle cx="150" cy="70" r="4" fill="#2f8f4e" transform="translate(0 22)"/>
-  </g>
-  <circle cx="150" cy="92" r="7" fill="#2f8f4e"/>
-  <line x1="230" y1="70" x2="165" y2="70" stroke="#4a90d9" stroke-width="1"/>
-  <text x="235" y="74" font-size="12" fill="#4a90d9">ទឹក ↑ (ឡើងលើ)</text>
-  <line x1="230" y1="95" x2="160" y2="92" stroke="#2f8f4e" stroke-width="1"/>
-  <text x="235" y="99" font-size="12" fill="#2f8f4e">ភ្លូអែម — អាហារ</text>
-  <text x="95" y="205" font-size="12" fill="#555">កាត់ទទឹងដើមរុក្ខជាតិ</text>
-</svg>
-\`\`\`
+![ដំណឹកនាំក្នុងស៊ីឡែម និងផ្លូអែម](/content/biology-grade-12/bio-plant-transport-growth-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ឫសស្រូបទឹកនិងអំបិលរ៉ែពីដី · ២ ដើមមានស៊ីឡែមដឹកទឹកឡើង និងផ្លូអែមដឹកសារធាតុសរីរាង្គទៅកន្លែងប្រើឬស្តុក · ៣ ស្លឹកបាត់បង់ទឹកតាមរំហួត និងបង្កើតសារធាតុសរីរាង្គ · ៤ បាច់សរសៃនាំដែលស៊ីឡែមមានពណ៌ខៀវ និងផ្លូអែមមានពណ៌ទឹកក្រូច។
 
 ## ការ​ហួត​ទឹក (transpiration)
 
@@ -506,21 +406,9 @@ const MODULE_2 = {
 
 **ការ​ដុះ​គ្រាប់** (germination)៖ គ្រាប់​ស្រូប​ទឹក ⟶ ឫស​ដុះ​មុន (radicelle) ⟶ ដើម​និង​ស្លឹក។
 
-\`\`\`diagram
-<svg viewBox="0 0 460 150" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <g font-size="12" fill="#1a241c" text-anchor="middle">
-    <circle cx="50" cy="60" r="26" fill="#f2d9a0" stroke="#b9902f"/><text x="50" y="64">គ្រាប់</text>
-    <circle cx="170" cy="60" r="26" fill="#cdeccf" stroke="#2f8f4e"/><text x="170" y="58">ឫស</text><text x="170" y="72">ដុះ​មុន</text>
-    <circle cx="300" cy="60" r="26" fill="#a7d9ab" stroke="#2f8f4e"/><text x="300" y="58">ដើម+</text><text x="300" y="72">ស្លឹក</text>
-    <circle cx="420" cy="60" r="26" fill="#7cc785" stroke="#2f8f4e"/><text x="420" y="64">រុក្ខជាតិ</text>
-  </g>
-  <g stroke="#2f8f4e" stroke-width="2" fill="none" marker-end="url(#a)">
-    <line x1="80" y1="60" x2="140" y2="60"/><line x1="200" y1="60" x2="270" y2="60"/><line x1="330" y1="60" x2="390" y2="60"/>
-  </g>
-  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#2f8f4e"/></marker></defs>
-  <text x="230" y="130" font-size="12" fill="#555" text-anchor="middle">ដំណាក់កាលនៃការដុះគ្រាប់ (germination)</text>
-</svg>
-\`\`\`
+![ដំណាក់កាលបន្តពូជភេទរបស់រុក្ខជាតិមានផ្កា](/content/biology-grade-12/bio-plant-reproduction-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ លម្អងធ្លាក់លើស្ទិចម៉ាត · ២ បំពង់លម្អងលូតតាមស្ទីល · ៣ បង្កកំណើតក្នុងអូវុល · ៤ អូវុលក្លាយជាគ្រាប់ និងអូវែរក្លាយជាផ្លែ។
 
 ## ការ​បន្ត​ពូជ​អភេទ (asexuée / végétative)
 
@@ -588,30 +476,9 @@ const MODULE_3 = {
 - **អាក់សូន** (axone) — បញ្ជូន​ចរន្ត​ចេញ ; ស្រោប​ដោយ **ម៉្យេលីន** ដើម្បី​បង្កើន​ល្បឿន។
 - **ស៊ីណាប់** (synapse) — ចន្លោះ​ភ្ជាប់​ណឺរ៉ូន​ពីរ ; សញ្ញា​ឆ្លង​ដោយ​សារ **ណឺរ៉ូ​ត្រង់ស្មៀ​ត័រ** (គីមី)។
 
-\`\`\`diagram
-<svg viewBox="0 0 460 180" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <!-- dendrites -->
-  <g stroke="#7a4fae" stroke-width="2" fill="none">
-    <path d="M60 90 L20 60"/><path d="M60 90 L20 90"/><path d="M60 90 L20 120"/>
-  </g>
-  <!-- cell body -->
-  <circle cx="80" cy="90" r="24" fill="#d9c7f0" stroke="#7a4fae" stroke-width="2"/>
-  <circle cx="80" cy="90" r="8" fill="#7a4fae"/>
-  <!-- axon -->
-  <line x1="104" y1="90" x2="330" y2="90" stroke="#7a4fae" stroke-width="4"/>
-  <!-- myelin -->
-  <g fill="#f2c14e" stroke="#c99a00">
-    <ellipse cx="160" cy="90" rx="18" ry="9"/><ellipse cx="215" cy="90" rx="18" ry="9"/><ellipse cx="270" cy="90" rx="18" ry="9"/>
-  </g>
-  <!-- terminals -->
-  <g stroke="#7a4fae" stroke-width="2" fill="none"><path d="M330 90 L370 70"/><path d="M330 90 L372 90"/><path d="M330 90 L370 110"/></g>
-  <text x="18" y="145" font-size="12" fill="#7a4fae">ដង់ឌ្រីត</text>
-  <text x="60" y="145" font-size="12" fill="#7a4fae">តួ​កោសិកា</text>
-  <text x="200" y="60" font-size="12" fill="#c99a00">ម៉្យេលីន</text>
-  <text x="235" y="145" font-size="12" fill="#7a4fae">អាក់សូន →</text>
-  <text x="345" y="145" font-size="12" fill="#7a4fae">ស៊ីណាប់</text>
-</svg>
-\`\`\`
+![រចនាសម្ព័ន្ធណឺរ៉ូន និងស៊ីណាប់](/content/biology-grade-12/bio-nervous-system-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ដង់ឌ្រីត · ២ តួកោសិកា · ៣ អាក់សូន · ៤ ស្រទាប់មីអេលីន · ៥ ចន្លោះរ៉ង់វីយេ · ៦ ចុងអាក់សូន · ៧ ប៊ូតុងមុនស៊ីណាប់ · ៨ ភ្នាសក្រោយស៊ីណាប់។ ព្រួញបង្ហាញទិសអាំងភ្លុចប្រសាទ។
 
 ## ការ​រៀបចំ​ប្រព័ន្ធ​ប្រសាទ
 
@@ -678,24 +545,9 @@ const MODULE_3 = {
 
 ពន្លឺ​ចូល​តាម **កញ្ចក់​ភ្នែក** (កោណេ) ⟶ ឆ្លង **អ៊ីរីស/រន្ធ​ភ្នែក** (pupille) ⟶ **គ្រីស្តាល់​ភ្នែក** (cristallin) បញ្ចាំង​រូប​លើ **រ៉េទីន** ⟶ ណឺរ៉ូន​បម្លែង​ជា​សញ្ញា ⟶ បញ្ជូន​តាម **ខ្សែ​ប្រសាទ​អុបទិក** ទៅ​ខួរក្បាល។
 
-\`\`\`diagram
-<svg viewBox="0 0 380 230" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <ellipse cx="180" cy="115" rx="130" ry="95" fill="#eef4fb" stroke="#4a90d9" stroke-width="2"/>
-  <!-- cornea/lens -->
-  <path d="M50 115 q10 -45 0 -90" fill="none"/>
-  <ellipse cx="72" cy="115" rx="14" ry="42" fill="#bcd9f5" stroke="#4a90d9"/>
-  <!-- retina -->
-  <path d="M300 55 A120 90 0 0 1 300 175" fill="none" stroke="#e37fb0" stroke-width="6"/>
-  <!-- optic nerve -->
-  <line x1="308" y1="115" x2="360" y2="115" stroke="#7a4fae" stroke-width="6"/>
-  <!-- light ray -->
-  <line x1="20" y1="115" x2="72" y2="115" stroke="#f2c14e" stroke-width="2"/>
-  <text x="45" y="215" font-size="12" fill="#4a90d9">គ្រីស្តាល់​ភ្នែក</text>
-  <text x="240" y="40" font-size="12" fill="#e37fb0">រ៉េទីន</text>
-  <text x="315" y="105" font-size="11" fill="#7a4fae">ខ្សែ​អុបទិក</text>
-  <text x="10" y="105" font-size="11" fill="#c99a00">ពន្លឺ →</text>
-</svg>
-\`\`\`
+![កាយវិភាគភ្នែក និងផ្លូវពន្លឺ](/content/biology-grade-12/bio-sense-organs-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ក័រណេ · ២ អ៊ីរីស · ៣ ប្រស្រីភ្នែក · ៤ កែវភ្នែក · ៥ សាច់ដុំស៊ីលីយែរ · ៦ វីត្រេ · ៧ រ៉េទីន · ៨ ចំណុចខ្វាក់ · ៩ សរសៃប្រសាទអុបទិក។ ពន្លឺត្រូវផ្តុំលើរ៉េទីន។
 
 ## ត្រចៀក (ការ​ស្តាប់ និង​តុល្យភាព)
 
@@ -756,6 +608,10 @@ const MODULE_3 = {
 ## ការ​គ្រប់គ្រង​ស្ករ​ក្នុង​ឈាម
 
 ប៉ង់គ្រេអាស​រក្សា​តម្លៃ​ស្ករ​ថេរ​ដោយ **មតិ​ត្រឡប់​អវិជ្ជមាន**៖
+
+![មតិត្រឡប់អវិជ្ជមានក្នុងការគ្រប់គ្រងគ្លុយកូស](/content/biology-grade-12/bio-endocrine-system-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ កម្រិតគ្លុយកូសក្នុងឈាមកើនឡើង · ២ អាហារកាបូអ៊ីដ្រាតជាប្រភពគ្លុយកូស · ៣ កោសិកាបេតានៃលំពែងបញ្ចេញអាំងស៊ុយលីន · ៤ ថ្លើមនិងសាច់ដុំស្រូបនិងស្តុកគ្លុយកូស · ៥ កម្រិតគ្លុយកូសត្រឡប់ទៅធម្មតា · ៦ ពេលអត់អាហារ កម្រិតគ្លុយកូសធ្លាក់ចុះ · ៧ កោសិកាអាល់ហ្វានៃលំពែងបញ្ចេញគ្លុយកាហ្គុង · ៨ ថ្លើមបំបែកគ្លីកូសែន និងបញ្ចេញគ្លុយកូស · ៩ កម្រិតគ្លុយកូសត្រឡប់ទៅធម្មតា។
 
 - ស្ករ​ក្នុង​ឈាម **ខ្ពស់** ⟹ បញ្ចេញ **អាំងស៊ុយលីន** ⟹ កោសិកា​ស្រូប​ស្ករ ⟹ ស្ករ​ចុះ។
 - ស្ករ​ក្នុង​ឈាម **ទាប** ⟹ បញ្ចេញ **គ្លុយកាហ្គុង** ⟹ ថ្លើម​បញ្ចេញ​ស្ករ ⟹ ស្ករ​ឡើង។
@@ -821,6 +677,10 @@ const MODULE_4 = {
 
 មាន **២០ ប្រភេទ** នៃ​អាស៊ីត​អាមីណេ​ដែល​បង្កើត​ប្រូតេអ៊ីន​ទាំង​អស់​ក្នុង​សារពាង្គកាយ។ ក្នុង​ចំណោម​នេះ​មួយ​ចំនួន​ជា **អាស៊ីត​អាមីណេ​សំខាន់** (essentiels) ដែល​រាងកាយ​មិន​អាច​ផលិត​បាន​ដោយ​ខ្លួន​ឯង ត្រូវ​ទទួល​ពី​អាហារ។
 
+![រចនាសម្ព័ន្ធអាស៊ីតអាមីណេ និងការបង្កើតចំណងប៉ិបទីត](/content/biology-grade-12/bio-amino-acids-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ក្រុមអាមីន · ២ ក្រុមកាបុកស៊ីល · ៣ ក្រុម R · ៤ អ៊ីដ្រូសែន ជាប់នឹងកាបូន α កណ្ដាល។ នៅខាងស្តាំ ក្រុម −OH និង H ចេញជាទឹក ហើយកាបូនកាបូនីលភ្ជាប់នឹងអាសូតបង្កើតចំណងប៉ិបទីត។
+
 ## ចំណង​ប៉ិបទីត
 
 អាស៊ីត​អាមីណេ​ពីរ​ភ្ជាប់​គ្នា​ដោយ **ចំណង​ប៉ិបទីត** (liaison peptidique) រវាង​ក្រុម​កាបុកស៊ីល​នៃ​មួយ​និង​ក្រុម​អាមីន​នៃ​មួយ​ទៀត ដោយ​បញ្ចេញ​ម៉ូលេគុល​ទឹក (ដេអ៊ីដ្រាតាស្យុង)។ ខ្សែ​អាស៊ីត​អាមីណេ​ច្រើន​ភ្ជាប់​គ្នា​បង្កើត​ជា **ប៉ូលីប៉ិបទីត** ⟶ ប្រូតេអ៊ីន។
@@ -872,6 +732,10 @@ const MODULE_4 = {
 2. **ទុតិយ** (secondaire) — ខ្សែ​វេញ​ជា​អេលីស (hélice α) ឬ​ជា​សន្លឹក (feuillet β)។
 3. **តតិយ** (tertiaire) — ខ្សែ​បត់​ជា​រូបរាង​៣ វិមាត្រ។
 4. **ចតុត្ថ** (quaternaire) — ខ្សែ​ប៉ូលីប៉ិបទីត​ច្រើន​រួម​គ្នា (ឧ. អេម៉ូក្លូប៊ីន)។
+
+![កម្រិតរចនាសម្ព័ន្ធប្រូតេអ៊ីនទាំងបួន](/content/biology-grade-12/bio-proteins-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ពីឆ្វេងទៅស្តាំ៖ ១ បឋម (លំដាប់អាស៊ីតអាមីណេ) · ២ ទុតិយ (អេលីស α និងសន្លឹក β) · ៣ តតិយ (ខ្សែមួយបត់ជាបីវិមាត្រ) · ៤ ចតុត្ថ (ខ្សែរងច្រើនរួមជាកុំផ្លិច)។
 
 **រូបរាង​៣ វិមាត្រ​កំណត់​តួនាទី** នៃ​ប្រូតេអ៊ីន។ ការ​ផ្លាស់​ប្ដូរ​រូបរាង (ដេណាទុយរ៉ាស្យុង ដោយ​កំដៅ ឬ pH) ធ្វើ​ឲ្យ​បាត់​បង់​តួនាទី។
 
@@ -932,18 +796,9 @@ const MODULE_4 = {
 
 អង់ស៊ីម​មាន **ទីតាំង​សកម្ម** (site actif) ដែល​មាន​រូបរាង​ត្រូវ​គ្នា​តែ​នឹង **ស៊ុបស្ត្រា** (substrat) ជាក់លាក់ ដូច​សោ​និង​កូនសោ។ ដូច្នេះ​អង់ស៊ីម​មាន **ជាក់លាក់​ភាព** (spécificité) — អង់ស៊ីម​មួយ​សម្រាប់​ស៊ុបស្ត្រា​មួយ។
 
-\`\`\`diagram
-<svg viewBox="0 0 440 170" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <!-- enzyme -->
-  <path d="M40 120 h120 v-30 a25 25 0 0 0 -50 0 a25 25 0 0 1 -50 0 v-30 h-20 z" fill="#a7d9ab" stroke="#2f8f4e" stroke-width="2"/>
-  <!-- substrate fitting -->
-  <path d="M110 62 a24 24 0 0 1 48 0 a24 24 0 0 0 -24 12 a24 24 0 0 0 -24 -12z" fill="#f2c14e" stroke="#c99a00" stroke-width="2"/>
-  <text x="55" y="150" font-size="12" fill="#2f8f4e">អង់ស៊ីម (ទីតាំង​សកម្ម)</text>
-  <text x="110" y="40" font-size="12" fill="#c99a00">ស៊ុបស្ត្រា</text>
-  <text x="250" y="90" font-size="13" fill="#333">សោ ↔ កូនសោ</text>
-  <text x="250" y="112" font-size="12" fill="#555">(រូបរាង​ត្រូវ​គ្នា)</text>
-</svg>
-\`\`\`
+![ដំណើរការរបស់អង់ស៊ីម](/content/biology-grade-12/bio-enzymes-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ស៊ុបស្ត្រាតសមនឹងទីតាំងសកម្ម · ២ កើតកុំផ្លិចអង់ស៊ីម-ស៊ុបស្ត្រាត · ៣ ប្រតិកម្មកើតឡើង · ៤ ផលិតផលចាកចេញ · ៥ អង់ស៊ីមនៅដដែលនិងអាចប្រើម្តងទៀត។
 
 ## កត្តា​ប៉ះពាល់​សកម្មភាព​អង់ស៊ីម
 
@@ -1016,23 +871,9 @@ const MODULE_5 = {
 
 ដូច្នេះ បើ​ខ្សែ​មួយ​មាន​លំដាប់ A-G-C-T នោះ​ខ្សែ​ម្ខាង​ទៀត​គឺ T-C-G-A។ ម៉ូលេគុល ADN មាន **រូបរាង​ដ៏​វេញ​ទ្វេ** (double hélice — Watson & Crick, ១៩៥៣) ដូច​កាំជណ្ដើរ​វេញ។
 
-\`\`\`diagram
-<svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <!-- two backbones -->
-  <path d="M80 20 C130 60 30 100 80 140 C130 180 30 200 80 230" fill="none" stroke="#4a90d9" stroke-width="5"/>
-  <path d="M200 20 C150 60 250 100 200 140 C150 180 250 200 200 230" fill="none" stroke="#e37fb0" stroke-width="5"/>
-  <!-- rungs (base pairs) -->
-  <g font-size="11" text-anchor="middle">
-    <line x1="90" y1="40" x2="190" y2="40" stroke="#c99a00" stroke-width="3"/><text x="140" y="36" fill="#333">A–T</text>
-    <line x1="70" y1="80" x2="210" y2="80" stroke="#2f8f4e" stroke-width="3"/><text x="140" y="76" fill="#333">G–C</text>
-    <line x1="90" y1="120" x2="190" y2="120" stroke="#c99a00" stroke-width="3"/><text x="140" y="116" fill="#333">T–A</text>
-    <line x1="70" y1="160" x2="210" y2="160" stroke="#2f8f4e" stroke-width="3"/><text x="140" y="156" fill="#333">C–G</text>
-    <line x1="90" y1="200" x2="190" y2="200" stroke="#c99a00" stroke-width="3"/><text x="140" y="196" fill="#333">A–T</text>
-  </g>
-  <text x="50" y="15" font-size="11" fill="#4a90d9">ខ្សែ ១</text>
-  <text x="205" y="15" font-size="11" fill="#e37fb0">ខ្សែ ២</text>
-</svg>
-\`\`\`
+![រចនាសម្ព័ន្ធ ADN និងការផ្គូផ្គងបាស](/content/biology-grade-12/bio-dna-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ទិសរបស់ខ្សែ ADN ទីមួយ · ២ ខ្សែបំពេញគ្នាមានទិសផ្ទុយពីខ្សែទីមួយ · ៣ ខ្សែទាំងពីររមួលជាស្ពៀរទ្វេ · ៤ បាសផ្គូផ្គងជាក់លាក់៖ A–T មានចំណងអ៊ីដ្រូសែន ២ និង C–G មានចំណងអ៊ីដ្រូសែន ៣។
 
 ## ការ​ចម្លង ADN (réplication)
 
@@ -1082,23 +923,9 @@ const MODULE_5 = {
 
 ព័ត៌មាន​សេនេទិច​ហូរ​ពី ADN ⟶ ARN ⟶ ប្រូតេអ៊ីន៖
 
-\`\`\`diagram
-<svg viewBox="0 0 460 120" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <g text-anchor="middle" font-size="13">
-    <rect x="20" y="40" width="90" height="44" rx="8" fill="#dbe9fb" stroke="#4a90d9"/><text x="65" y="67">ADN</text>
-    <rect x="185" y="40" width="90" height="44" rx="8" fill="#fbe4ef" stroke="#e37fb0"/><text x="230" y="67">ARN</text>
-    <rect x="350" y="40" width="95" height="44" rx="8" fill="#e3f6e6" stroke="#2f8f4e"/><text x="397" y="67">ប្រូតេអ៊ីន</text>
-  </g>
-  <g stroke="#555" stroke-width="2" fill="none" marker-end="url(#ar)">
-    <line x1="115" y1="62" x2="180" y2="62"/><line x1="280" y1="62" x2="345" y2="62"/>
-  </g>
-  <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#555"/></marker></defs>
-  <text x="145" y="30" font-size="11" fill="#4a90d9" text-anchor="middle">ចម្លង</text>
-  <text x="312" y="30" font-size="11" fill="#2f8f4e" text-anchor="middle">បកប្រែ</text>
-  <text x="145" y="102" font-size="10" fill="#888" text-anchor="middle">(transcription)</text>
-  <text x="312" y="102" font-size="10" fill="#888" text-anchor="middle">(translation)</text>
-</svg>
-\`\`\`
+![ពី ADN ទៅប្រូតេអ៊ីន](/content/biology-grade-12/bio-gene-expression-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ADN ស្ថិតក្នុងណ្វៃយ៉ូ · ២ ចម្លងព័ត៌មានទៅ ARNm · ៣ ARNm ចេញទៅស៊ីតូប្លាស · ៤ រីបូសូមនិង ARNt បកប្រែកូដុង · ៥ ខ្សែអាស៊ីតអាមីណេបត់ជាប្រូតេអ៊ីន។
 
 ## ១. ការ​ចម្លង (transcription)
 
@@ -1153,6 +980,10 @@ ARNm ចេញ​ទៅ **រីបូសូម** ។ ជា​រៀង​រ�
 ## វិស្វកម្ម​សេនេទិច
 
 **បច្ចេកវិទ្យា​ជីវៈ** (biotechnologie) ប្រើ​ភាវៈ​រស់ ឬ​ម៉ូលេគុល​ជីវសាស្ត្រ​ដើម្បី​ផលិត​ផលិតផល​មាន​ប្រយោជន៍។ **វិស្វកម្ម​សេនេទិច** កែប្រែ ADN៖ គេ​កាត់​សែន​ដែល​ចង់​បាន (ដោយ​អង់ស៊ីម​កាត់) រួច​បញ្ចូល​ទៅ​ក្នុង​ភាវៈ​រស់​ផ្សេង (ADN ផ្សំ — recombinant)។
+
+![ដំណាក់កាលបង្កើត ADN ផ្សំដោយប្រើប្លាស្មីត](/content/biology-grade-12/bio-biotechnology-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ យកប្លាស្មីតពីបាក់តេរី · ២ អង់ស៊ីមរេស្ត្រិកស្យុងកាត់ប្លាស្មីតនិង ADN គោលដៅ · ៣ បញ្ចូលសែនដែលចង់បាន · ៤ អង់ស៊ីមលីហ្គាសបិទភ្ជាប់ជា ADN ផ្សំ · ៥ បញ្ចូលប្លាស្មីតទៅបាក់តេរី · ៦ បាក់តេរីក្លូននិងផលិតប្រូតេអ៊ីនគោលដៅ។
 
 ## អនុវត្តន៍​សំខាន់ៗ
 
@@ -1209,6 +1040,10 @@ ARNm ចេញ​ទៅ **រីបូសូម** ។ ជា​រៀង​រ�
 - **ច្បាប់ Chargaff៖** %A = %T និង %G = %C ; ដូច្នេះ %A + %T + %G + %C = 100%។ ក៏​អាច​សរសេរ​ថា ពួរីន (A+G) = ពីរីមីឌីន (T+C)។
 - **ចំនួន​នុយក្លេអូទីត​សរុប** = ២ × ចំនួន​គូ​បាស (base pairs)។
 - **ចំនួន​ចំណង​អ៊ីដ្រូសែន** = (ចំនួន​គូ A–T × ២) + (ចំនួន​គូ G–C × ៣)។
+
+![គូបាស និងគ្រោង ADN សម្រាប់លំហាត់គណនា](/content/biology-grade-12/bio-dna-exercises-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ទិសរបស់ខ្សែ ADN ទីមួយ · ២ ខ្សែបំពេញគ្នាមានទិសផ្ទុយ · ៣ ស្ពៀរទ្វេមួយមានគូបាសស្មើចំនួននុយក្លេអូទីតសរុប ÷ ២ · ៤ A–T មានចំណងអ៊ីដ្រូសែន ២ និង C–G មានចំណងអ៊ីដ្រូសែន ៣។
 
 ---
 
@@ -1288,17 +1123,9 @@ ARNm ចេញ​ទៅ **រីបូសូម** ។ ជា​រៀង​រ�
 - **កូដុង (codon)៖** បាស ៣ ក្នុង ARNm = **អាស៊ីត​អាមីណេ ១**។
 - **ចំនួន​កូដុង** = ប្រវែង ARNm ÷ 3។ **ចំនួន​អាស៊ីត​អាមីណេ** ≈ ចំនួន​កូដុង (ដក​កូដុង​បញ្ឈប់ ​stop)។
 
-\`\`\`diagram
-<svg viewBox="0 0 440 150" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, monospace">
-  <text x="20" y="35" font-size="12" fill="#4a90d9">ADN ពុម្ព៖</text>
-  <g font-size="16" fill="#4a90d9" font-family="monospace"><text x="120" y="38">T A C  G G A  T T A</text></g>
-  <g stroke="#c99a00" stroke-width="1" ><line x1="130" y1="48" x2="130" y2="70"/><line x1="250" y1="48" x2="250" y2="70"/><line x1="370" y1="48" x2="370" y2="70"/></g>
-  <text x="20" y="95" font-size="12" fill="#e37fb0">ARNm៖</text>
-  <g font-size="16" fill="#e37fb0" font-family="monospace"><text x="120" y="98">A U G  C C U  A A U</text></g>
-  <text x="20" y="130" font-size="12" fill="#2f8f4e">អាស៊ីតអាមីណេ៖</text>
-  <g font-size="13" fill="#2f8f4e"><text x="128" y="132">Met</text><text x="248" y="132">Pro</text><text x="368" y="132">Asn</text></g>
-</svg>
-\`\`\`
+![វិធីដោះស្រាយលំហាត់ ADN → ARNm → ប្រូតេអ៊ីន](/content/biology-grade-12/bio-transcription-exercises-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ កំណត់ខ្សែគំរូនិងទិស · ២ ចម្លងបំពេញគ្នាទៅ ARNm (A-U, T-A, C-G, G-C) · ៣ ចែក ARNm ជាកូដុង ៣ បាស ហើយប្រើតារាងកូដសេនេទិចបកប្រែ។
 
 ---
 
@@ -1378,6 +1205,10 @@ ARNm ចេញ​ទៅ **រីបូសូម** ។ ជា​រៀង​រ�
 - **ការ​ចម្លង** (réplication)៖ ដើម្បី​ចម្លង ADN ដែល​មាន N នុយក្លេអូទីត ត្រូវ​ការ N នុយក្លេអូទីត​សេរី​បន្ថែម ⟹ បង្កើត **ADN ២ ម៉ូលេគុល** ដូច​គ្នា។
 - **មុយតាស្យុង** (mutation)៖ ការ​ប្ដូរ​បាស​មួយ អាច​៖ (ក) មិន​ប្ដូរ​អាមីណេ (silencieuse), (ខ) ប្ដូរ​អាមីណេ (faux-sens / missense), (គ) បង្កើត​កូដុង​បញ្ឈប់ (non-sens / nonsense)។
 
+![ពី ADN ទៅ ARNm និងប្រូតេអ៊ីនសម្រាប់លំហាត់កម្រិតប្រឡង](/content/biology-grade-12/bio-dna-exercises-exam-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ កំណត់ខ្សែគំរូ ADN និងទិស 3′→5′ · ២ បង្កើត ARNm ក្នុងទិស 5′→3′ · ៣ រីបូសូមអានកូដុង និង ARNt នាំអាស៊ីតអាមីណេមកបង្កើតប៉ូលីប៉ិបទីត។ **ចំណាំ៖** កុំរាប់កូដុងបញ្ឈប់ជាអាស៊ីតអាមីណេ។
+
 ---
 
 ## កម្រិត​មូលដ្ឋាន
@@ -1449,6 +1280,10 @@ ARNm ចេញ​ទៅ **រីបូសូម** ។ ជា​រៀង​រ�
 - **អង់ទីកូដុង​របស់ ARNt** (anticodon)៖ ARNt នាំ​អាមីណេ​មាន​អង់ទីកូដុង **បំពេញ​នឹង​កូដុង​របស់ ARNm** (A–U, G–C ; ប្រឆាំង​ស្រប)។ ឧ. កូដុង ARNm **A-U-G** ⟶ អង់ទីកូដុង ARNt **U-A-C**។
 - **ការ​ចម្លង​ច្រើន​ជំនាន់៖** ក្រោយ​ចម្លង **n ដង** ADN ១ ម៉ូលេគុល​ក្លាយ​ជា **2ⁿ ម៉ូលេគុល**។
 - **មុយតាស្យុង​ផ្លាស់​ស៊ុម** (décalage / frameshift)៖ ការ **បន្ថែម** ឬ **លុប** បាស​មួយ ធ្វើ​ឲ្យ **ស៊ុម​អាន​ប្ដូរ** ⟹ គ្រប់​កូដុង​ខាង​ក្រោយ​ប្ដូរ​ទាំង​អស់ (ធ្ងន់​ធ្ងរ​ជាង​ការ​ជំនួស)។
+
+![ការចម្លង បកប្រែ និងតួនាទី ARNt ក្នុងលំហាត់កម្រិតខ្ពស់](/content/biology-grade-12/bio-dna-exercises-advanced-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ADN ស្ថិតក្នុងណ្វៃយ៉ូ · ២ ADN ត្រូវចម្លងទៅ ARNm ហើយ ARNm ចេញពីណ្វៃយ៉ូ · ៣ រីបូសូមភ្ជាប់នឹង ARNm · ៤ ARNt ផ្គូផ្គងអង់ទីកូដុងជាមួយកូដុង និងនាំអាស៊ីតអាមីណេ · ៥ ប៉ូលីប៉ិបទីតបត់ជាប្រូតេអ៊ីន។
 
 ---
 
@@ -1551,6 +1386,10 @@ const MODULE_6 = {
 4. **ការ​រស់​រាន​របស់​អ្នក​សម​ស្រប​បំផុត** — សមាជិក​ដែល​មាន​លក្ខណៈ​សម​ស្រប​នឹង​បរិស្ថាន​រស់​រាន​និង​បន្ត​ពូជ​បាន​ច្រើន​ជាង។
 5. លក្ខណៈ​មាន​ប្រយោជន៍​ត្រូវ​បន្ត​ទៅ​ជំនាន់​ក្រោយ ⟹ **ការ​សម្រប** (adaptation) កើន​ឡើង។
 
+![ការជ្រើសរើសធម្មជាតិផ្លាស់ប្តូរប្រេកង់លក្ខណៈក្នុងពពួក](/content/biology-grade-12/bio-darwin-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ពពួកដើមមានអថេរភាពពណ៌ · ២ លើស្លឹកបៃតង បក្សីចាប់សត្វពណ៌ត្នោតដែលងាយឃើញច្រើនជាង · ៣ សត្វពណ៌បៃតងរស់និងបន្តពូជច្រើន · ៤ បន្ទាប់ពីច្រើនជំនាន់ ប្រេកង់ពណ៌បៃតងកើនឡើង។ បុគ្គលមិនប្តូរពណ៌ក្នុងជីវិតទេ។
+
 **ឧទាហរណ៍៖** សត្វ​ចាប Galapagos ដែល​មាន​ចំពុះ​ខុស​គ្នា​តាម​ប្រភេទ​អាហារ; មេអំបៅ​ក្រពះ​សេ​ក្នុង​សម័យ​បដិវត្តន៍​ឧស្សាហកម្ម (ពណ៌​ខ្មៅ​រស់​រាន​ច្រើន​ជាង​ពេល​ដើម​ឈើ​ខ្មៅ​ដោយ​សារ​ផ្សែង)។
 
 ## លំហាត់​អនុវត្ត
@@ -1606,25 +1445,9 @@ const MODULE_6 = {
 
 **៤. ម៉ូលេគុល** — ភាព​ស្រដៀង​គ្នា​នៃ ADN និង​ប្រូតេអ៊ីន៖ ភាវៈ​ដែល​ទាក់​ទង​ជិត​មាន ADN ស្រដៀង​គ្នា​ច្រើន​ជាង។
 
-\`\`\`diagram
-<svg viewBox="0 0 440 180" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <g stroke="#2f8f4e" stroke-width="2" fill="#cdeccf">
-    <!-- human arm -->
-    <rect x="40" y="30" width="14" height="40" rx="5"/><rect x="34" y="70" width="12" height="34" rx="5"/><rect x="50" y="70" width="12" height="34" rx="5"/>
-    <g><rect x="34" y="106" width="5" height="24" rx="2"/><rect x="42" y="106" width="5" height="26" rx="2"/><rect x="50" y="106" width="5" height="22" rx="2"/></g>
-    <!-- whale flipper -->
-    <rect x="200" y="30" width="20" height="40" rx="7"/><rect x="196" y="70" width="14" height="30" rx="5"/><rect x="212" y="70" width="14" height="30" rx="5"/>
-    <g><rect x="196" y="102" width="6" height="34" rx="2"/><rect x="205" y="102" width="6" height="36" rx="2"/><rect x="214" y="102" width="6" height="32" rx="2"/></g>
-    <!-- bat wing -->
-    <rect x="360" y="30" width="10" height="40" rx="4"/><rect x="356" y="70" width="8" height="26" rx="3"/><rect x="368" y="70" width="8" height="26" rx="3"/>
-    <g><rect x="352" y="98" width="4" height="60" rx="2"/><rect x="362" y="98" width="4" height="66" rx="2"/><rect x="372" y="98" width="4" height="58" rx="2"/></g>
-  </g>
-  <text x="20" y="170" font-size="12" fill="#2f8f4e">ដៃ​មនុស្ស</text>
-  <text x="180" y="170" font-size="12" fill="#2f8f4e">ព្រុយ​បាឡែន</text>
-  <text x="340" y="170" font-size="12" fill="#2f8f4e">ស្លាប​ប្រជៀវ</text>
-  <text x="90" y="20" font-size="12" fill="#555">សរីរាង្គ​ដូច​ដើម​កំណើត (ឆ្អឹង​ដូច​គ្នា)</text>
-</svg>
-\`\`\`
+![ភ័ស្តុតាងគាំទ្រការវិវត្ត](/content/biology-grade-12/bio-evolution-evidence-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ផូស៊ីលតាមស្រទាប់ថ្ម · ២ សរីរាង្គអូម៉ូឡូកមានគ្រោងមូលដ្ឋានដូចគ្នា · ៣ អំប្រ៊ីយ៉ុងដំណាក់កាលដំបូងស្រដៀងគ្នា · ៤ លំដាប់ម៉ូលេគុលកាន់តែស្រដៀង បង្ហាញញាតិវង្សកាន់តែជិត។
 
 ## លំហាត់​អនុវត្ត
 
@@ -1668,6 +1491,10 @@ const MODULE_6 = {
 ## ការ​បង្កើត​ផូស៊ីល
 
 **ផូស៊ីល** (fossile) ជា​សំណល់ ឬ​ដាន​នៃ​ភាវៈ​រស់​បុរាណ​ដែល​រក្សា​ក្នុង​ថ្ម។ ភាគ​ច្រើន​កើត​ក្នុង **ថ្ម​រុក្ខ** (roches sédimentaires)៖ សាក​សព​ត្រូវ​បាន​គ្រប​ដោយ​រំកិល ⟶ ស្រទាប់​ជាន់​គ្នា ⟶ រឹង​ជា​ថ្ម​ក្នុង​រយៈ​ពេល​យូរ។
+
+![ការបង្កើតផូស៊ីល និងការកំណត់អាយុវិទ្យុសកម្ម](/content/biology-grade-12/bio-fossil-record-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ សារពាង្គកាយស្លាប់ · ២ ត្រូវរំកិលគ្របលឿន · ៣ ផ្នែកទន់រលួយ · ៤ រ៉ែជំនួសសំណល់រឹង · ៥ ស្រទាប់ថ្មលើកនិងរលុះ · ៦ ផូស៊ីលលេចចេញ។ រូបតូចខាងក្រោមបង្ហាញអ៊ីសូតូបមេថយចុះ និងអ៊ីសូតូបកូនកើនឡើងរាល់អាយុកាលពាក់កណ្ដាល។
 
 ## ការ​កំណត់​អាយុ
 
@@ -1732,23 +1559,9 @@ const MODULE_7 = {
 - **កំណើន​អ៊ិចស្ប៉ូណង់ស្យែល (J)** — កើន​យ៉ាង​លឿន​ពេល​ធនធាន​គ្មាន​ព្រំដែន (ខ្សែ​រាង J)។
 - **កំណើន​ឡូស៊ីស្ទិច (S)** — កើន​រួច​ថេរ​នៅ​ជិត **សមត្ថភាព​ទ្រទ្រង់** (K) នៃ​បរិស្ថាន (ខ្សែ​រាង S)។
 
-\`\`\`diagram
-<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <line x1="50" y1="190" x2="400" y2="190" stroke="#333" stroke-width="1.5"/>
-  <line x1="50" y1="190" x2="50" y2="20" stroke="#333" stroke-width="1.5"/>
-  <!-- carrying capacity K -->
-  <line x1="50" y1="60" x2="400" y2="60" stroke="#c99a00" stroke-dasharray="5 4"/>
-  <text x="360" y="54" font-size="12" fill="#c99a00">K</text>
-  <!-- J curve -->
-  <path d="M60 188 C160 185 230 120 250 30" fill="none" stroke="#e37fb0" stroke-width="3"/>
-  <text x="255" y="40" font-size="12" fill="#e37fb0">J (អ៊ិចស្ប៉ូ)</text>
-  <!-- S curve -->
-  <path d="M60 188 C150 185 180 90 250 66 C320 55 360 62 395 61" fill="none" stroke="#2f8f4e" stroke-width="3"/>
-  <text x="300" y="80" font-size="12" fill="#2f8f4e">S (ឡូស៊ីស្ទិច)</text>
-  <text x="200" y="212" font-size="12" fill="#555">ពេលវេលា →</text>
-  <text x="8" y="110" font-size="12" fill="#555" transform="rotate(-90 20 110)">ចំនួន​បុគ្គល</text>
-</svg>
-\`\`\`
+![ខ្សែកោងកំណើនពពួក](/content/biology-grade-12/bio-population-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ កំណើនអិចស្ប៉ូណង់ស្យែលរាង J នៅពេលធនធានមិនកំណត់ · ២ កំណើនឡូជីស្ទិករាង S ដែលថយល្បឿនហើយស្ថិតជុំវិញសមត្ថភាពទ្រទ្រង់ K។
 
 ## កត្តា​កំណត់
 
@@ -1807,6 +1620,10 @@ const MODULE_7 = {
 | ស៊ីមប៊ីអូស​ឯកភាគី (commensalisme) | បាន​ប្រយោជន៍ | គ្មាន​ផល | ចាប​ធ្វើ​សំបុក​លើ​ដើម​ឈើ |
 | ប៉ារ៉ាស៊ីត (parasitisme) | បាន​ប្រយោជន៍ | ខូច​ខាត | ថ្នាំង ↔ សត្វ |
 
+![ប្រៀបធៀបអន្តរអំពើអេកូឡូស៊ីប្រាំមួយប្រភេទ](/content/biology-grade-12/bio-interactions-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ មំសាសី (+/−) · ២ ប៉ារ៉ាស៊ីត (+/−) · ៣ ប្រកួត (−/−) · ៤ ផលប្រយោជន៍រួម (+/+) · ៥ ឯកភាគី (+/0) · ៦ ស៊ីរុក្ខជាតិ (+/−)។ សញ្ញាបង្ហាញផលលើភាគីទី១ និងទី២។
+
 ## លំហាត់​អនុវត្ត
 
 **លំហាត់ ១៖** តោ​ស៊ី​ក្ដាន់​ជា​អន្តរអំពើ​ប្រភេទ​ណា? **ដំណោះស្រាយ៖** មំសាសី-ជនរង។
@@ -1864,30 +1681,9 @@ const MODULE_8 = {
 
 **ខ្សែ​សង្វាក់​អាហារ** បង្ហាញ​ការ​ហូរ​ថាមពល; **បណ្ដាញ​អាហារ** ជា​ខ្សែ​សង្វាក់​ច្រើន​ភ្ជាប់​គ្នា។
 
-\`\`\`diagram
-<svg viewBox="0 0 460 210" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <!-- food chain -->
-  <g text-anchor="middle" font-size="12">
-    <rect x="20" y="20" width="80" height="34" rx="7" fill="#e3f6e6" stroke="#2f8f4e"/><text x="60" y="42">ស្មៅ</text>
-    <rect x="140" y="20" width="80" height="34" rx="7" fill="#fef3d9" stroke="#c99a00"/><text x="180" y="42">កណ្ដុរ</text>
-    <rect x="260" y="20" width="80" height="34" rx="7" fill="#fbe4ef" stroke="#e37fb0"/><text x="300" y="42">ពស់</text>
-    <rect x="380" y="20" width="70" height="34" rx="7" fill="#e9e0f6" stroke="#7a4fae"/><text x="415" y="42">ក្ងាន</text>
-  </g>
-  <g stroke="#555" stroke-width="1.5" marker-end="url(#f)"><line x1="100" y1="37" x2="138" y2="37"/><line x1="220" y1="37" x2="258" y2="37"/><line x1="340" y1="37" x2="378" y2="37"/></g>
-  <defs><marker id="f" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#555"/></marker></defs>
-  <!-- energy pyramid -->
-  <g stroke="#2f8f4e" stroke-width="1">
-    <polygon points="90,190 250,190 232,160 108,160" fill="#7cc785"/>
-    <polygon points="108,160 232,160 216,130 124,130" fill="#a7d9ab"/>
-    <polygon points="124,130 216,130 200,100 140,100" fill="#cdeccf"/>
-    <polygon points="140,100 200,100 185,74 155,74" fill="#e3f6e6"/>
-  </g>
-  <text x="270" y="185" font-size="11" fill="#555">អ្នក​ផលិត</text>
-  <text x="270" y="128" font-size="11" fill="#555">អ្នក​ប្រើ​បឋម</text>
-  <text x="205" y="70" font-size="11" fill="#555">អ្នក​ប្រើ​តតិយ</text>
-  <text x="95" y="70" font-size="11" fill="#c99a00">ថាមពល ↓ 10%</text>
-</svg>
-\`\`\`
+![កម្រិតត្រូហ្វិច និងការផ្ទេរថាមពល](/content/biology-grade-12/bio-energy-flow-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ អ្នកផលិត (ស្រូវ) · ២ អ្នកប្រើប្រាស់ទី១ · ៣ អ្នកប្រើប្រាស់ទី២ · ៤ អ្នកប្រើប្រាស់កំពូល។ ថាមពលថយចុះខ្លាំងនៅកម្រិតខ្ពស់ៗ ខណៈអ្នកបំបែកសារធាតុបញ្ជូនធាតុត្រឡប់ទៅដី។
 
 ## ពីរ៉ាមីត​ថាមពល (ច្បាប់ ១០%)
 
@@ -1944,23 +1740,9 @@ CO₂ ក្នុង​ខ្យល់ ⟶ រុក្ខជាតិ​យក
 
 អាសូត (N₂) ក្នុង​ខ្យល់​ច្រើន តែ​រុក្ខជាតិ​ប្រើ​ផ្ទាល់​មិន​បាន៖
 
-\`\`\`diagram
-<svg viewBox="0 0 440 210" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans Khmer, sans-serif">
-  <ellipse cx="220" cy="30" rx="150" ry="22" fill="#dbe9fb" stroke="#4a90d9"/>
-  <text x="220" y="35" font-size="12" fill="#4a90d9" text-anchor="middle">អាសូត N₂ ក្នុងខ្យល់</text>
-  <rect x="150" y="150" width="140" height="34" rx="7" fill="#e3f6e6" stroke="#2f8f4e"/>
-  <text x="220" y="171" font-size="12" fill="#2f8f4e" text-anchor="middle">រុក្ខជាតិ (ប្រូតេអ៊ីន)</text>
-  <rect x="20" y="95" width="130" height="30" rx="7" fill="#fef3d9" stroke="#c99a00"/>
-  <text x="85" y="115" font-size="11" fill="#c99a00" text-anchor="middle">បាក់តេរីចាប់អាសូត</text>
-  <rect x="300" y="95" width="120" height="30" rx="7" fill="#fbe4ef" stroke="#e37fb0"/>
-  <text x="360" y="115" font-size="11" fill="#e37fb0" text-anchor="middle">នីត្រាត (ដី)</text>
-  <g stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#n)">
-    <path d="M150 40 Q90 70 85 93"/><path d="M150 110 L298 110"/><path d="M360 125 L250 150"/><path d="M220 150 Q300 90 300 40"/>
-  </g>
-  <defs><marker id="n" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#555"/></marker></defs>
-  <text x="200" y="205" font-size="11" fill="#888" text-anchor="middle">វដ្តអាសូត (សាមញ្ញ)</text>
-</svg>
-\`\`\`
+![វដ្តអាសូតក្នុងស្ថានប្រព័ន្ធស្រែ](/content/biology-grade-12/bio-matter-cycles-khmer-labeled.webp)
+
+> **សម្គាល់រូប៖** ១ ចាប់អាសូត · ២ អាម៉ូញ៉ូម · ៣ នីទ្រីត · ៤ នីត្រាត · ៥ រុក្ខជាតិស្រូបយក · ៦ ផ្ទេរតាមខ្សែអាហារ · ៧ អាម៉ូនីភិកាស្យុងពីសំណល់ · ៨ ដេនីទ្រីភិកាស្យុងបញ្ជូន N₂ ទៅបរិយាកាស។
 
 **បាក់តេរី​ចាប់​អាសូត** (fixation) បម្លែង N₂ ⟶ អាម៉ូញាក់/នីត្រាត​ដែល​រុក្ខជាតិ​ស្រូប​បាន ⟶ បង្កើត​ប្រូតេអ៊ីន ⟶ សត្វ​ស៊ី ⟶ រលួយ​និង​បាក់តេរី​ដេនីត្រីហ្វី​បញ្ជូន N₂ ត្រឡប់​ខ្យល់។
 
@@ -2001,6 +1783,190 @@ CO₂ ក្នុង​ខ្យល់ ⟶ រុក្ខជាតិ​យក
     },
   ],
 };
+
+// Additional MoEYS-aligned practice. Every lesson receives four extra checks;
+// the four ADN/ARNm exercise lessons receive a second, exam-style set.
+const EXTRA_QUESTIONS = {
+  'bio-gymnosperms': [
+    mc('តើលក្ខណៈណាមួយបំបែកស៊ុមណូស្ពែមពីអង់ស្ព៉ែមច្បាស់បំផុត?', [['អូវុលនិងគ្រាប់ស្ថិតចំហលើស្រកាកោណ', true], ['មានផ្លែគ្របគ្រាប់', false], ['គ្មានជាលិកានាំ', false], ['បន្តពូជដោយស្ប៉រតែប៉ុណ្ណោះ', false]], 'ស៊ុមណូស្ពែមមានគ្រាប់នៅនល មិនស្ថិតក្នុងផ្លែ។'),
+    mc('កោណឈ្មោលរបស់ស្រល់មាននាទីអ្វី?', [['ផលិតគ្រាប់លម្អង', true], ['បង្កើតផ្លែ', false], ['ផ្ទុកអំប្រ៊ីយ៉ុង', false], ['ស្រូបទឹក', false]], 'កោណឈ្មោលបង្កើតមីក្រូស្ប៉រ ដែលអភិវឌ្ឍជាគ្រាប់លម្អង។'),
+    trueFalse('ស៊ុមណូស្ពែមភាគច្រើនពឹងខ្យល់សម្រាប់នាំលម្អង។', true, 'គ្រាប់លម្អងស្រាលអាចត្រូវខ្យល់នាំពីកោណឈ្មោលទៅកោណញី។'),
+    fillBlank('ក្រុមស៊ុមណូស្ពែមដែលមានស្រល់ និងស៊ុប ហៅថា ______។', ['កូនីហ្វែរ', 'conifers', 'conifer'], 'កូនីហ្វែរជាក្រុមស៊ុមណូស្ពែមធំបំផុត។'),
+  ],
+  'bio-angiosperms': [
+    mc('បន្ទាប់ពីបង្កកំណើត អូវែររបស់ផ្កាអភិវឌ្ឍទៅជាអ្វី?', [['ផ្លែ', true], ['គ្រាប់លម្អង', false], ['អង់ទែរ', false], ['ត្របកផ្កា', false]], 'អូវែរក្លាយជាផ្លែ ខណៈអូវុលក្លាយជាគ្រាប់។'),
+    mc('តើជាលិកាណាមួយក្នុងគ្រាប់អង់ស្ព៉ែមផ្តល់អាហារដល់អំប្រ៊ីយ៉ុង?', [['អង់ដូស្ពែម', true], ['ស្ទិចម៉ាត', false], ['ស៊ីឡែម', false], ['អេពីឌែម', false]], 'បង្កកំណើតទ្វេបង្កើតអង់ដូស្ពែមដែលជាជាលិកាអាហារ។'),
+    trueFalse('ម៉ូណូកូទីលេដុនជាទូទៅមានសរសៃស្លឹកស្របគ្នា និងឫសស្ញែ។', true, 'នេះជាលក្ខណៈសម្គាល់សំខាន់ពីររបស់ម៉ូណូកូ។'),
+    fillBlank('ផ្នែកទទួលគ្រាប់លម្អងនៅចុងកេសរញី ហៅថា ______។', ['ស្ទិចម៉ាត', 'stigma'], 'ស្ទិចម៉ាតមានផ្ទៃសមស្របឱ្យលម្អងជាប់និងដុះបំពង់លម្អង។'),
+  ],
+  'bio-plant-transport-growth': [
+    mc('កម្លាំងសំខាន់ដែលទាញទឹកឡើងក្នុងស៊ីឡែមរុក្ខជាតិខ្ពស់គឺអ្វី?', [['កម្លាំងទាញពីរំហួត', true], ['ការបំបែកស្ករ', false], ['សម្ពាធផ្លូអែម', false], ['ការបង្កកំណើត', false]], 'រំហួតទឹកពីស្លឹកបង្កើតកម្លាំងទាញក្នុងជួរទឹកស៊ីឡែម។'),
+    mc('ផ្លូអែមដឹកជញ្ជូនសារធាតុភាគច្រើនក្នុងទម្រង់អ្វី?', [['ស៊ុយក្រូស', true], ['អុកស៊ីសែន', false], ['សែលុយឡូស', false], ['ADN', false]], 'ស៊ុយក្រូសជាស្ករដឹកនាំសំខាន់ពីប្រភពទៅកន្លែងប្រើឬស្តុក។'),
+    trueFalse('ស៊ីឡែមពេញវ័យភាគច្រើនបង្កឡើងពីកោសិកាងាប់មានជញ្ជាំងលីញីន។', true, 'ទ្រគីតនិងវ៉ែសែលស៊ីឡែមជាបំពង់រឹងមាំសម្រាប់ទឹក។'),
+    fillBlank('ការលូតឆ្លើយតបទៅនឹងពន្លឺ ហៅថា ______។', ['ផូតូត្រូពីស', 'phototropism', 'ផូតូត្រូពិស'], 'ពន្លកភាគច្រើនបង្ហាញផូតូត្រូពីសវិជ្ជមាន។'),
+  ],
+  'bio-plant-reproduction': [
+    mc('ក្នុងការបង្កកំណើតទ្វេ ស្ពែម៉ាតូសូអ៊ីតទីពីររួមជាមួយអ្វី?', [['ណ្វៃយ៉ូប៉ូលែរទាំងពីរ', true], ['អូអូស្វែរ', false], ['ស្ទិចម៉ាត', false], ['អង់ទែរ', false]], 'ការរួមនេះបង្កើតណ្វៃយ៉ូអង់ដូស្ពែម 3n។'),
+    mc('តើមួយណាជាការបន្តពូជអភេទសិប្បនិម្មិត?', [['ការផ្សាំមែក', true], ['ការលម្អង', false], ['ការបង្កកំណើតទ្វេ', false], ['ការបង្កើតគ្រាប់', false]], 'ការផ្សាំមែករក្សាលក្ខណៈសេនេទិចរបស់រុក្ខជាតិមេ។'),
+    trueFalse('កូនដែលកើតពីបន្តពូជអភេទជាទូទៅមានសេនេទិចដូចរុក្ខជាតិមេ។', true, 'វាកើតពីមីតូសដោយគ្មានការរួមកាម៉ែត។'),
+    fillBlank('ការផ្ទេរគ្រាប់លម្អងពីអង់ទែរទៅស្ទិចម៉ាត ហៅថា ______។', ['លម្អង', 'ការលម្អង', 'pollination'], 'ការលម្អងកើតមុនការបង្កកំណើត។'),
+  ],
+  'bio-nervous-system': [
+    mc('តើផ្នែកណឺរ៉ូនណាដឹកអាំងភ្លុចចេញពីតួកោសិកា?', [['អាក់សូន', true], ['ដង់ឌ្រីត', false], ['ណ្វៃយ៉ូ', false], ['ស៊ីណាប់', false]], 'អាក់សូននាំសញ្ញាចេញទៅកោសិកាគោលដៅ។'),
+    mc('តើរចនាសម្ព័ន្ធណាជាមជ្ឈមណ្ឌលអំពើឆ្លុះសាមញ្ញជាច្រើន?', [['ខួរឆ្អឹងខ្នង', true], ['ខួរតូច', false], ['អ៊ីប៉ូតាឡាមុស', false], ['ក្រពេញពីទុយអ៊ីត', false]], 'អាក់ឆ្លុះអាចឆ្លើយតបលឿនតាមខួរឆ្អឹងខ្នង។'),
+    trueFalse('មីអេលីនជួយបង្កើនល្បឿនបញ្ជូនអាំងភ្លុចតាមអាក់សូន។', true, 'អាំងភ្លុចលោតពីចន្លោះរ៉ង់វីយេមួយទៅមួយ។'),
+    fillBlank('ចន្លោះទំនាក់ទំនងរវាងណឺរ៉ូនពីរ ហៅថា ______។', ['ស៊ីណាប់', 'synapse'], 'នៅស៊ីណាប់គីមី សារធាតុបញ្ជូនប្រសាទឆ្លងចន្លោះស៊ីណាប់។'),
+  ],
+  'bio-sense-organs': [
+    mc('កោសិការ៉េទីនណាឆ្លើយតបល្អក្នុងពន្លឺខ្សោយ?', [['កោសិកាដំបង', true], ['កោសិកាកោណ', false], ['កោសិកាស៊ីលីយែរ', false], ['កោសិកាសក់', false]], 'កោសិកាដំបងមានរសើបខ្ពស់ ប៉ុន្តែមិនសម្គាល់ពណ៌។'),
+    mc('សរីរាង្គណាក្នុងត្រចៀកក្នុងជួយរក្សាលំនឹង?', [['បំពង់ពាក់កណ្ដាលរង្វង់', true], ['ក្រដាសត្រចៀក', false], ['កូគ្លេអា', false], ['ឆ្អឹងញញួរ', false]], 'បំពង់ពាក់កណ្ដាលរង្វង់រកឃើញចលនាបង្វិលក្បាល។'),
+    trueFalse('រូបភាពកើតលើរ៉េទីនមានទំហំតូច និងក្រឡាប់។', true, 'កែវភ្នែកផ្តុំកាំពន្លឺបង្កើតរូបពិតក្រឡាប់លើរ៉េទីន។'),
+    fillBlank('រចនាសម្ព័ន្ធរាងខ្យងក្នុងត្រចៀកដែលទទួលសំឡេង ហៅថា ______។', ['កូគ្លេអា', 'cochlea'], 'កូគ្លេអាមានកោសិកាសក់បម្លែងរំញ័រជាអាំងភ្លុចប្រសាទ។'),
+  ],
+  'bio-endocrine-system': [
+    mc('អ័រម៉ូនណាបន្ថយកម្រិតគ្លុយកូសក្នុងឈាម?', [['អាំងស៊ុយលីន', true], ['គ្លុយកាហ្គុង', false], ['អាដ្រេណាលីន', false], ['ទីរ៉ុកស៊ីន', false]], 'អាំងស៊ុយលីនជំរុញកោសិកាស្រូបគ្លុយកូស និងស្តុកជាគ្លីកូសែន។'),
+    mc('ក្រពេញណាត្រូវគេច្រើនហៅថា ក្រពេញមេ?', [['ពីទុយអ៊ីត', true], ['លំពែង', false], ['ទីរ៉ូអ៊ីត', false], ['អាដ្រេណាល់', false]], 'ពីទុយអ៊ីតបញ្ចេញអ័រម៉ូនគ្រប់គ្រងក្រពេញអង់ដូគ្រីនជាច្រើន។'),
+    trueFalse('អ័រម៉ូនត្រូវបានដឹកតាមឈាមទៅកោសិកាគោលដៅដែលមានរ៉េសិបទ័រសមស្រប។', true, 'មានតែកោសិកាដែលមានរ៉េសិបទ័រត្រូវគ្នាទើបឆ្លើយតប។'),
+    fillBlank('អ័រម៉ូនពីទីរ៉ូអ៊ីតដែលជួយគ្រប់គ្រងមេតាបូលីស គឺ ______។', ['ទីរ៉ុកស៊ីន', 'thyroxine'], 'ទីរ៉ុកស៊ីនមានឥទ្ធិពលលើអត្រាមេតាបូលីស។'),
+  ],
+  'bio-amino-acids': [
+    mc('ផ្នែកណានៃអាស៊ីតអាមីណេកំណត់លក្ខណៈខុសគ្នារបស់វា?', [['រ៉ាឌីកាល់ R', true], ['ក្រុមអាមីន', false], ['ក្រុមកាបុកស៊ីល', false], ['អាតូម H', false]], 'ក្រុម R ខុសគ្នារវាងអាស៊ីតអាមីណេមួយៗ។'),
+    mc('ចំណងប៉ិបទីតកើតរវាងក្រុមណាខ្លះ?', [['កាបុកស៊ីល និងអាមីន', true], ['R និង R', false], ['ផូស្វាត និងស្ករ', false], ['បាស និងស្ករ', false]], 'ប្រតិកម្មកុងដង់សាស្យុងភ្ជាប់ -COOH ជាមួយ -NH₂។'),
+    trueFalse('ការបង្កើតចំណងប៉ិបទីតបញ្ចេញម៉ូលេគុលទឹកមួយ។', true, 'វាជាប្រតិកម្មកុងដង់សាស្យុង។'),
+    numeric('ប៉ិបទីតដែលមានអាស៊ីតអាមីណេ 8 ម៉ូលេគុល មានចំណងប៉ិបទីតប៉ុន្មាន?', 7, 'ខ្សែលីនេអ៊ែរមានចំណងប៉ិបទីត n − 1។'),
+  ],
+  'bio-proteins': [
+    mc('រចនាសម្ព័ន្ធថ្នាក់ទីមួយរបស់ប្រូតេអ៊ីនសំដៅលើអ្វី?', [['លំដាប់អាស៊ីតអាមីណេ', true], ['ចំនួនខ្សែរង', false], ['រាងបាល់ទាំងមូល', false], ['ទីតាំងក្នុងកោសិកា', false]], 'លំដាប់អាស៊ីតអាមីណេជាមូលដ្ឋានកំណត់ការបត់ខ្សែ។'),
+    mc('តើមួយណាជាប្រូតេអ៊ីនរចនាសម្ព័ន្ធ?', [['កូឡាជែន', true], ['គ្លុយកូស', false], ['ADN', false], ['កូឡេស្តេរ៉ុល', false]], 'កូឡាជែនផ្តល់កម្លាំងដល់ជាលិកាភ្ជាប់។'),
+    trueFalse('កំដៅខ្លាំងអាចបំប្លែងរាងបីមิติរបស់ប្រូតេអ៊ីនដោយមិនចាំបាច់កាត់ចំណងប៉ិបទីត។', true, 'ដេណាទុរាស្យុងបំផ្លាញអន្តរអំពើដែលរក្សារចនាសម្ព័ន្ធខ្ពស់។'),
+    fillBlank('ការបាត់បង់រាងធម្មជាតិ និងមុខងាររបស់ប្រូតេអ៊ីន ហៅថា ______។', ['ដេណាទុរាស្យុង', 'denaturation'], 'សីតុណ្ហភាព ឬ pH ខ្លាំងអាចបង្កដេណាទុរាស្យុង។'),
+  ],
+  'bio-enzymes': [
+    mc('អង់ស៊ីមបង្កើនល្បឿនប្រតិកម្មដោយធ្វើអ្វី?', [['បន្ថយថាមពលសកម្ម', true], ['បង្កើនសីតុណ្ហភាព', false], ['ផ្លាស់ប្តូរផលិតផលចុងក្រោយ', false], ['ត្រូវបានប្រើអស់', false]], 'អង់ស៊ីមផ្តល់ផ្លូវប្រតិកម្មដែលមានថាមពលសកម្មទាប។'),
+    mc('ហេតុអ្វីអង់ស៊ីមមានភាពជាក់លាក់?', [['ទីតាំងសកម្មមានរាងនិងគីមីសមនឹងស៊ុបស្ត្រាត', true], ['អង់ស៊ីមគ្រប់ប្រភេទដូចគ្នា', false], ['វាមានតែផូស្វាត', false], ['វាធ្វើការតែក្នុងទឹកកក', false]], 'ភាពសមគ្នានៅទីតាំងសកម្មកំណត់ស៊ុបស្ត្រាត។'),
+    trueFalse('អង់ស៊ីមមួយអាចប្រើម្តងហើយម្តងទៀត បន្ទាប់ពីផលិតផលចាកចេញ។', true, 'អង់ស៊ីមមិនត្រូវបានប្រើអស់ក្នុងប្រតិកម្ម។'),
+    fillBlank('ម៉ូលេគុលដែលចងនៅទីតាំងសកម្មរបស់អង់ស៊ីម ហៅថា ______។', ['ស៊ុបស្ត្រាត', 'substrate'], 'ស៊ុបស្ត្រាតបម្លែងទៅជាផលិតផល។'),
+  ],
+  'bio-dna': [
+    mc('តើមួយណាជាសមាសធាតុនៃនុយក្លេអូទីត ADN?', [['ដេអុកស៊ីរីបូស ផូស្វាត និងបាសអាសូត', true], ['រីបូស ខ្លាញ់ និងអាមីន', false], ['គ្លុយកូស ផូស្វាត និងប្រូតេអ៊ីន', false], ['សែលុយឡូស និងបាស', false]], 'នុយក្លេអូទីត ADN មានស្ករដេអុកស៊ីរីបូស ក្រុមផូស្វាត និងបាសមួយ។'),
+    mc('បើ ADN ខ្សែពីរមាន A = 28% តើ G មានភាគរយប៉ុន្មាន?', [['22%', true], ['28%', false], ['44%', false], ['72%', false]], 'A=T=28% ដូច្នេះ C+G=44% ហើយ C=G=22%។'),
+    trueFalse('ខ្សែទាំងពីររបស់ ADN មានទិសផ្ទុយគ្នា។', true, 'ខ្សែមួយ 5′→3′ និងខ្សែបំពេញគ្នា 3′→5′។'),
+    numeric('ADN ខ្សែពីរមាន A ចំនួន 120 និង C ចំនួន 80។ តើមានចំណងអ៊ីដ្រូសែនសរុបប៉ុន្មាន?', 480, 'គូ A-T មាន 120 × 2 និងគូ C-G មាន 80 × 3; សរុប 480។'),
+  ],
+  'bio-gene-expression': [
+    mc('ក្នុងកោសិកាអឺការីយ៉ូត ការចម្លងព័ត៌មានពី ADN ទៅ ARNm កើតនៅទីណា?', [['ណ្វៃយ៉ូ', true], ['រីបូសូម', false], ['លីសូសូម', false], ['ភ្នាសកោសិកា', false]], 'ADN ស្ថិតក្នុងណ្វៃយ៉ូ ហើយ ARNm ត្រូវបានសំយោគនៅទីនោះ។'),
+    mc('រីបូសូមអាន ARNm ជាក្រុមបាសប៉ុន្មាន?', [['3 បាស', true], ['1 បាស', false], ['2 បាស', false], ['5 បាស', false]], 'បាសបីជាប់គ្នាបង្កើតកូដុងមួយ។'),
+    trueFalse('កូដុង AUG ជាទូទៅជាកូដុងផ្តើម និងកូដឱ្យមេទីយ៉ូនីន។', true, 'AUG កំណត់ចំណុចផ្តើមបកប្រែ។'),
+    fillBlank('ARN ដែលដឹកអាស៊ីតអាមីណេទៅរីបូសូម ហៅថា ______។', ['ARNt', 'tRNA', 'អាអ៊ែរអិនតេ'], 'ARNt មានអង់ទីកូដុងសម្រាប់ផ្គូផ្គងកូដុង ARNm។'),
+  ],
+  'bio-biotechnology': [
+    mc('អង់ស៊ីមរេស្ត្រិកស្យុងប្រើសម្រាប់អ្វី?', [['កាត់ ADN ត្រង់លំដាប់ជាក់លាក់', true], ['បកប្រែ ARNm', false], ['បង្កើត ATP', false], ['បំបែកប្រូតេអ៊ីន', false]], 'វាស្គាល់លំដាប់ ADN ជាក់លាក់ និងកាត់គ្រោងផូស្វូឌីអេស្ទែរ។'),
+    mc('តើប្លាស្មីតមាននាទីអ្វីក្នុងវិស្វកម្មសេនេទិច?', [['វ៉ិចទ័រដឹកសែនចូលបាក់តេរី', true], ['អង់ស៊ីមកាត់ ADN', false], ['អ័រម៉ូន', false], ['អង់ទីកូដុង', false]], 'ប្លាស្មីតអាចទទួលបំណែក ADN និងចម្លងក្នុងបាក់តេរី។'),
+    trueFalse('PCR អាចបង្កើនចំនួនបំណែក ADN គោលដៅយ៉ាងច្រើននៅក្រៅកោសិកា។', true, 'PCR ប្រើវដ្តសីតុណ្ហភាព និង ADN polymerase។'),
+    fillBlank('សារពាង្គកាយដែលទទួលសែនពីប្រភេទផ្សេង ហៅថាសារពាង្គកាយ ______។', ['បំប្លែងសែន', 'transgenic', 'ត្រានស្សេនិច'], 'សែនបរទេសអាចផ្តល់លក្ខណៈថ្មី។'),
+  ],
+  'bio-dna-exercises': [
+    numeric('ADN ខ្សែពីរមាននុយក្លេអូទីតសរុប 2 000 ហើយ A = 30%។ តើ C មានចំនួនប៉ុន្មាន?', 400, 'A=T=30% ដូច្នេះ C=G=20%; C = 0.20 × 2 000 = 400។'),
+    numeric('ADN លីនេអ៊ែរខ្សែពីរមាននុយក្លេអូទីតសរុប 1 200។ តើមានចំណងផូស្វូឌីអេស្ទែរប៉ុន្មាន?', 1198, 'ខ្សែនីមួយៗមាន 600 នុយក្លេអូទីត និង 599 ចំណង; សរុប 1 198។'),
+    mc('បើខ្សែមួយមានលំដាប់ 5′-ATGCC-3′ ខ្សែបំពេញគ្នាត្រឹមត្រូវគឺអ្វី?', [['3′-TACGG-5′', true], ['5′-TACGG-3′', false], ['3′-UACGG-5′', false], ['3′-ATGCC-5′', false]], 'ខ្សែ ADN បំពេញគ្នា និងមានទិសផ្ទុយគ្នា។'),
+    trueFalse('ក្នុង ADN ខ្សែពីរ ចំនួនព្យូរីនសរុបស្មើចំនួនពីរីមីឌីនសរុប។', true, 'គូនីមួយៗមានព្យូរីនមួយ និងពីរីមីឌីនមួយ។'),
+    numeric('ADN មួយមានគូ A-T ចំនួន 350 និងគូ C-G ចំនួន 150។ តើមាននុយក្លេអូទីតសរុបប៉ុន្មាន?', 1000, 'មាន 500 គូបាស ហើយគូនីមួយៗមាន 2 នុយក្លេអូទីត។'),
+    numeric('ADN មួយមានគូ A-T 240 និងគូ C-G 160។ តើមានចំណងអ៊ីដ្រូសែនសរុបប៉ុន្មាន?', 960, '240 × 2 + 160 × 3 = 960។'),
+    mc('បាសណាខ្លះជាព្យូរីន?', [['A និង G', true], ['T និង C', false], ['A និង T', false], ['C និង G', false]], 'អាដេនីន និងហ្គានីនមានរង្វង់ពីរ។'),
+    fillBlank('ចម្ងាយរវាងគូបាសជាប់គ្នាក្នុង ADN គឺ ______ nm។', ['0.34', '0,34', '០.៣៤'], 'ADN មួយជុំមាន 10 គូបាស និងប្រវែងប្រហែល 3.4 nm។'),
+  ],
+  'bio-transcription-exercises': [
+    mc('ខ្សែគំរូ ADN 3′-TAC GGA TTT ACT-5′ ផ្តល់ ARNm មួយណា?', [['5′-AUG CCU AAA UGA-3′', true], ['5′-TAC GGA TTT ACT-3′', false], ['3′-AUG CCU AAA UGA-5′', false], ['5′-UAC GGA UUU ACU-3′', false]], 'ARN polymerase អានខ្សែគំរូ 3′→5′ ហើយសំយោគ ARNm 5′→3′។'),
+    mc('អង់ទីកូដុងដែលផ្គូផ្គងកូដុង ARNm 5′-AUG-3′ គឺអ្វី?', [['3′-UAC-5′', true], ['5′-UAC-3′', false], ['3′-TAC-5′', false], ['3′-AUG-5′', false]], 'អង់ទីកូដុង ARNt បំពេញគ្នា និងមានទិសផ្ទុយកូដុង។'),
+    numeric('ARNm មួយមាន 303 នុយក្លេអូទីត រួមទាំងកូដុងបញ្ឈប់មួយ។ បើចាប់អានពីដើមដល់ចប់ តើខ្សែប៉ូលីប៉ិបទីតមានអាស៊ីតអាមីណេប៉ុន្មាន?', 100, '303 ÷ 3 = 101 កូដុង; កូដុងបញ្ឈប់មិនកូដអាស៊ីតអាមីណេ ដូច្នេះមាន 100។'),
+    trueFalse('ខ្សែកូដ ADN មានលំដាប់ដូច ARNm លើកលែងតែ T ក្នុង ADN ត្រូវជំនួសដោយ U ក្នុង ARNm។', true, 'ខ្សែកូដនិង ARNm មានទិស 5′→3′ ដូចគ្នា។'),
+    mc('កូដុងណាមួយជាកូដុងបញ្ឈប់?', [['UGA', true], ['AUG', false], ['UGG', false], ['GCU', false]], 'UAA, UAG និង UGA ជាកូដុងបញ្ឈប់។'),
+    numeric('ខ្សែប៉ូលីប៉ិបទីតមានអាស៊ីតអាមីណេ 75។ បើរាប់កូដុងបញ្ឈប់ផង តំបន់កូដរបស់ ARNm មានយ៉ាងតិចប៉ុន្មាននុយក្លេអូទីត?', 228, '(75 + 1 កូដុងបញ្ឈប់) × 3 = 228។'),
+    fillBlank('អង់ស៊ីមដែលសំយោគ ARNm ពីខ្សែគំរូ ADN ហៅថា ______។', ['ARN polymerase', 'អាអ៊ែរអិន ប៉ូលីមេរ៉ាស', 'RNA polymerase'], 'ARN polymerase ភ្ជាប់រីបូនុយក្លេអូទីតតាមច្បាប់បំពេញគ្នា។'),
+    trueFalse('ARNm ត្រូវបានអានដោយរីបូសូមតាមទិស 5′ ទៅ 3′។', true, 'ការបកប្រែចាប់ពីចុង 5′ ទៅចុង 3′ របស់ ARNm។'),
+  ],
+  'bio-dna-exercises-exam': [
+    numeric('ADN ខ្សែពីរមាននុយក្លេអូទីត 3 000 និងចំណងអ៊ីដ្រូសែន 3 900។ តើមានបាស C ចំនួនប៉ុន្មាន?', 900, 'មាន 1 500 គូបាស។ បើ x ជាគូ C-G: 2(1 500−x)+3x=3 900 ដូច្នេះ x=900 ហើយ C=900។'),
+    numeric('ADN មួយមាន A = 600 និង G = 400។ តើប្រវែងម៉ូលេគុលនេះប៉ុន្មាន nm?', 340, 'មានគូបាស = A + G = 1 000; ប្រវែង = 1 000 × 0.34 = 340 nm។', { tolerance: 0.01, points: 3 }),
+    mc('មុយតាស្យុងជំនួសបាសមួយដែលមិនផ្លាស់ប្តូរអាស៊ីតអាមីណេ ហៅថាអ្វី?', [['មុយតាស្យុងស្ងាត់', true], ['frameshift', false], ['nonsense ជានិច្ច', false], ['ការចម្លងពាក់កណ្ដាលរក្សា', false]], 'កូដសេនេទិចមានភាពស្ទួន ដូច្នេះកូដុងខុសអាចកូដអាស៊ីតអាមីណេដូចគ្នា។'),
+    trueFalse('ការបញ្ចូលនុយក្លេអូទីត 3 ជាប់គ្នាតែងបង្ក frameshift។', false, 'ការបញ្ចូលជាពហុគុណនៃ 3 បន្ថែមអាស៊ីតអាមីណេ ប៉ុន្តែមិនផ្លាស់ស៊ុមអានខាងក្រោយទេ។'),
+    numeric('ADN មួយចម្លង 4 ជំនាន់ជាប់គ្នា។ តើបានម៉ូលេគុល ADN សរុបប៉ុន្មាន?', 16, 'ចំនួនម៉ូលេគុលក្រោយ n ជំនាន់ = 2ⁿ; 2⁴ = 16។'),
+    numeric('ADN មួយចម្លង 4 ជំនាន់។ តើមានខ្សែ ADN ថ្មីសរុបប៉ុន្មាន បើមិនរាប់ខ្សែមេទាំងពីរ?', 30, 'ម៉ូលេគុល 16 មានខ្សែសរុប 32; ដកខ្សែមេ 2 នៅសល់ខ្សែថ្មី 30។'),
+    mc('ប្រសិនបើកូដុង ARNm UAU ប្រែទៅ UAA ផលប៉ះពាល់ទំនងជាអ្វី?', [['កើតកូដុងបញ្ឈប់មុនកំណត់', true], ['មិនផ្លាស់អាស៊ីតអាមីណេ', false], ['បន្ថែមអាស៊ីតអាមីណេពីរ', false], ['ចម្លង ADN លឿនឡើង', false]], 'UAA ជាកូដុងបញ្ឈប់ ដូច្នេះវាជា nonsense mutation។'),
+    fillBlank('មុយតាស្យុងដែលបង្កកូដុងបញ្ឈប់មុនកំណត់ ហៅថា ______ mutation។', ['nonsense', 'ណុនសិន'], 'វាធ្វើឱ្យប៉ូលីប៉ិបទីតខ្លីជាងធម្មតា។'),
+  ],
+  'bio-dna-exercises-advanced': [
+    mc('តើការលុបនុយក្លេអូទីតមួយនៅដើមតំបន់កូដមានផលធ្ងន់ជាងនៅជិតចុងដោយសារអ្វី?', [['វាផ្លាស់ស៊ុមអានរបស់កូដុងខាងក្រោយជាច្រើន', true], ['វាបង្កើន ATP', false], ['វាប្តូរ ADN ទៅ ARN', false], ['វាមិនប៉ះពាល់កូដុង', false]], 'frameshift នៅដើមប្តូរលំដាប់អាស៊ីតអាមីណេភាគច្រើនខាងក្រោយ។'),
+    mc('អង់ទីកូដុង 3′-CAA-5′ ផ្គូផ្គងនឹងកូដុង ARNm ណា?', [['5′-GUU-3′', true], ['5′-CAA-3′', false], ['3′-GUU-5′', false], ['5′-GTT-3′', false]], 'ARN ប្រើ U ហើយខ្សែទាំងពីរបំពេញគ្នានិងផ្ទុយទិស។'),
+    numeric('សែនមួយមានតំបន់កូដ 1 503 នុយក្លេអូទីត រួមកូដុងបញ្ឈប់។ តើប្រូតេអ៊ីនមានអាស៊ីតអាមីណេប៉ុន្មាន?', 500, '1 503 ÷ 3 = 501 កូដុង; ដកកូដុងបញ្ឈប់មួយ = 500។'),
+    trueFalse('ការជំនួសបាសតែមួយអាចជា silent, missense ឬ nonsense អាស្រ័យលើកូដុងថ្មី។', true, 'ផលប៉ះពាល់កំណត់ដោយអត្ថន័យរបស់កូដុងបន្ទាប់ពីប្តូរ។'),
+    numeric('ADN មួយមានគូបាស 2 500។ តើប្រវែងរបស់វាប៉ុន្មាន nm?', 850, '2 500 × 0.34 nm = 850 nm។', { tolerance: 0.01, points: 3 }),
+    numeric('ADN មួយចម្លង 5 ជំនាន់។ តើមានម៉ូលេគុលដែលទទួលបានសរុបប៉ុន្មាន?', 32, '2⁵ = 32 ម៉ូលេគុល។'),
+    mc('បើលុបបាស 6 ជាប់គ្នាក្នុងតំបន់កូដ តើអ្វីត្រឹមត្រូវបំផុត?', [['បាត់អាស៊ីតអាមីណេ 2 ប៉ុន្តែស៊ុមអានខាងក្រោយរក្សាដដែល', true], ['frameshift ជានិច្ច', false], ['បាត់អាស៊ីតអាមីណេ 6', false], ['គ្មានផលប៉ះពាល់', false]], '6 ជាពហុគុណនៃ 3 ដូច្នេះលុប 2 កូដុងពេញ។'),
+    fillBlank('មុយតាស្យុងដែលផ្លាស់ប្តូរកូដុងឱ្យកូដអាស៊ីតអាមីណេផ្សេង ហៅថា ______ mutation។', ['missense', 'មីសសិន'], 'missense mutation ផ្លាស់អាស៊ីតអាមីណេមួយក្នុងប្រូតេអ៊ីន។'),
+  ],
+  'bio-darwin': [
+    mc('ជម្រើសធម្មជាតិធ្វើសកម្មភាពដោយផ្ទាល់លើអ្វី?', [['ផេណូទីបបុគ្គល', true], ['តម្រូវការរបស់ប្រភេទ', false], ['បំណងប្រាថ្នារបស់សារពាង្គកាយ', false], ['អាយុផែនដី', false]], 'លក្ខណៈបង្ហាញដែលប៉ះពាល់ការរស់និងបន្តពូជត្រូវបានជ្រើស។'),
+    mc('តើអ្វីចាំបាច់សម្រាប់ជម្រើសធម្មជាតិកើតឡើង?', [['ភាពប្រែប្រួលអាចបន្តពូជបាន', true], ['បុគ្គលទាំងអស់ដូចគ្នា', false], ['គ្មានការប្រកួត', false], ['បន្តពូជអភេទតែប៉ុណ្ណោះ', false]], 'ភាពប្រែប្រួលត្រូវមានមូលដ្ឋានសេនេទិចដើម្បីបញ្ជូនទៅជំនាន់ក្រោយ។'),
+    trueFalse('បុគ្គលមិនវិវត្តក្នុងមួយជីវិតទេ; ប្រេកង់លក្ខណៈក្នុងពពួកផ្លាស់ប្តូរឆ្លងជំនាន់។', true, 'វិវត្តជាការផ្លាស់ប្តូរនៅកម្រិតពពួក។'),
+    fillBlank('ភាពជោគជ័យក្នុងការបញ្ជូនសែនទៅជំនាន់ក្រោយ ហៅថា reproductive ______។', ['fitness', 'ហ្វីតណេស'], 'fitness ទាក់ទងការរស់រាន និងចំនួនកូនអាចបន្តពូជ។'),
+  ],
+  'bio-evolution-evidence': [
+    mc('ស្លាបប្រចៀវ ដៃមនុស្ស និងព្រុយត្រីបាឡែនមានគ្រោងឆ្អឹងមូលដ្ឋានដូចគ្នា។ វាជាភ័ស្តុតាងអ្វី?', [['សរីរាង្គអូម៉ូឡូក', true], ['សរីរាង្គអាណាឡូក', false], ['ការជ្រើសសិប្បនិម្មិត', false], ['ត្រូពីស', false]], 'សរីរាង្គអូម៉ូឡូកបង្ហាញបុព្វបុរសរួម។'),
+    mc('ប្រភេទពីរមានលំដាប់ ADN ស្រដៀងគ្នាខ្លាំង បង្ហាញអ្វី?', [['មានញាតិវង្សវិវត្តជិត', true], ['រស់នៅទីតាំងដូចគ្នាជានិច្ច', false], ['មានចំនួនក្រូម៉ូសូមដូចគ្នាជានិច្ច', false], ['មិនមានមុយតាស្យុង', false]], 'ភាពស្រដៀងម៉ូលេគុលខ្ពស់ជាភ័ស្តុតាងបុព្វបុរសរួមថ្មីជាង។'),
+    trueFalse('សរីរាង្គអាណាឡូកមានមុខងារដូចគ្នា ប៉ុន្តែប្រភពវិវត្តនិងរចនាសម្ព័ន្ធមូលដ្ឋានខុសគ្នា។', true, 'វាកើតពីវិវត្តរួមទិសក្រោមសម្ពាធស្រដៀងគ្នា។'),
+    fillBlank('សរីរាង្គដែលបានថយតួនាទីពីបុព្វបុរស ហៅថាសរីរាង្គ ______។', ['សំណល់', 'vestigial'], 'ឧទាហរណ៍មានឆ្អឹងអាងត្រគាកសំណល់នៅត្រីបាឡែន។'),
+  ],
+  'bio-fossil-record': [
+    mc('ក្នុងស្រទាប់ថ្មមិនរំខាន ផូស៊ីលនៅស្រទាប់ក្រោមជាទូទៅមានអាយុដូចម្តេច?', [['ចាស់ជាង', true], ['ក្មេងជាង', false], ['អាយុដូចគ្នាជានិច្ច', false], ['មិនអាចប្រៀបធៀបបាន', false]], 'ច្បាប់ superposition ប្រើសម្រាប់អាយុធៀប។'),
+    mc('អាយុដាច់ខាតរបស់ផូស៊ីលអាចកំណត់ដោយវិធីណា?', [['កាលបរិច្ឆេទវិទ្យុសកម្ម', true], ['ពណ៌ថ្មតែប៉ុណ្ណោះ', false], ['ទំហំផូស៊ីល', false], ['ចំនួនធ្មេញ', false]], 'អ៊ីសូតូបវិទ្យុសកម្មមានអាយុកាលពាក់កណ្ដាលដែលអាចវាស់បាន។'),
+    trueFalse('កំណត់ត្រាផូស៊ីលមិនពេញលេញ ព្រោះការក្លាយជាផូស៊ីលត្រូវការលក្ខខណ្ឌពិសេស។', true, 'សារពាង្គកាយទន់ និងបរិស្ថានខ្លះកម្ររក្សាទុក។'),
+    fillBlank('ផូស៊ីលដែលមានលក្ខណៈរវាងក្រុមបុព្វបុរសនិងក្រុមកូនចៅ ហៅថាទម្រង់ ______។', ['អន្តរកាល', 'transitional'], 'ទម្រង់អន្តរកាលជួយភ្ជាប់ការផ្លាស់ប្តូរតាមពេលវេលា។'),
+  ],
+  'bio-population': [
+    mc('សមត្ថភាពទ្រទ្រង់ K តំណាងឱ្យអ្វី?', [['ចំនួនអតិបរមាដែលបរិស្ថានអាចទ្រទ្រង់យូរអង្វែង', true], ['អត្រាកំណើតអតិបរមា', false], ['ចំនួនប្រភេទទាំងអស់', false], ['អាយុអតិបរមា', false]], 'K អាស្រ័យលើអាហារ ទឹក កន្លែង និងកត្តាកំណត់ផ្សេងៗ។'),
+    mc('ខ្សែកោង J តំណាងឱ្យកំណើនបែបណា?', [['អិចស្ប៉ូណង់ស្យែល', true], ['ឡូជីស្ទិក', false], ['ថេរ', false], ['ថយចុះលីនេអ៊ែរ', false]], 'នៅធនធានសម្បូរ អត្រាកំណើនសមាមាត្រនឹងទំហំពពួក។'),
+    trueFalse('ដង់ស៊ីតេពពួកអាចគណនាដោយចំនួនបុគ្គលចែកនឹងផ្ទៃក្រឡា ឬមាឌ។', true, 'ដង់ស៊ីតេជាចំនួនក្នុងឯកតាលំហ។'),
+    numeric('ស្រះមួយមានត្រី 450 ក្បាលក្នុងផ្ទៃ 90 m²។ តើដង់ស៊ីតេត្រីប៉ុន្មានក្បាលក្នុង 1 m²?', 5, '450 ÷ 90 = 5 ក្បាល/m²។'),
+  ],
+  'bio-interactions': [
+    mc('ទំនាក់ទំនងដែលភាគីមួយចំណេញ និងភាគីមួយខាត ហៅថាអ្វី?', [['ប៉ារ៉ាស៊ីតកម្ម ឬមំសាសីកម្ម', true], ['សហជីវិតចំណេញទាំងពីរ', false], ['កុំមេនសាលីស', false], ['អព្យាក្រឹត', false]], 'សញ្ញាអេកូឡូស៊ីគឺ +/−។'),
+    mc('ឃ្មុំទទួលទឹកផ្អែម ហើយផ្កាទទួលការលម្អង។ នេះជាអន្តរអំពើអ្វី?', [['សហជីវិតចំណេញទាំងពីរ', true], ['ការប្រកួត', false], ['ប៉ារ៉ាស៊ីតកម្ម', false], ['មំសាសីកម្ម', false]], 'ភាគីទាំងពីរទទួលផលប្រយោជន៍ (+/+)។'),
+    trueFalse('ការប្រកួតកាន់តែខ្លាំង នៅពេលសារពាង្គកាយប្រើធនធានកំណត់ដូចគ្នា។', true, 'ធនធានកម្រធ្វើឱ្យ niche ត្រួតស៊ីគ្នាបង្កការប្រកួត។'),
+    fillBlank('អន្តរអំពើដែលមួយចំណេញ ហើយមួយទៀតមិនចំណេញមិនខាត ហៅថា ______។', ['កុំមេនសាលីស', 'commensalism'], 'សញ្ញារបស់វាគឺ +/0។'),
+  ],
+  'bio-energy-flow': [
+    mc('ហេតុអ្វីពីរ៉ាមីតថាមពលតែងតែបញ្ឈរ?', [['ថាមពលបាត់ជាកម្ដៅនៅគ្រប់កម្រិត', true], ['អ្នកមំសាសីផលិតថាមពល', false], ['ធាតុមិនវិលជុំ', false], ['អ្នកផលិតមិនដកដង្ហើម', false]], 'មានតែផ្នែកតូចនៃថាមពលត្រូវបានផ្ទេរទៅកម្រិតបន្ទាប់។'),
+    mc('ក្នុងខ្សែអាហារ ស្រូវ → កណ្ដូប → កង្កែប → ពស់ កង្កែបជាអ្វី?', [['អ្នកប្រើប្រាស់ទីពីរ', true], ['អ្នកផលិត', false], ['អ្នកប្រើប្រាស់ទីមួយ', false], ['អ្នកបំបែក', false]], 'កង្កែបស៊ីកណ្ដូបដែលជាអ្នកប្រើប្រាស់ទីមួយ។'),
+    trueFalse('ថាមពលហូរតែមួយទិស ប៉ុន្តែធាតុគីមីវិលជាវដ្តក្នុងស្ថានប្រព័ន្ធ។', true, 'ថាមពលចូលជាពន្លឺ ហើយចុងក្រោយបាត់ជាកម្ដៅ។'),
+    numeric('អ្នកផលិតស្តុកថាមពល 20 000 kJ។ តាមច្បាប់ 10% អ្នកប្រើប្រាស់ទីពីរទទួលប្រហែលប៉ុន្មាន kJ?', 200, 'អ្នកប្រើប្រាស់ទីមួយទទួល 2 000 kJ ហើយទីពីរទទួល 200 kJ។'),
+  ],
+  'bio-matter-cycles': [
+    mc('បាក់តេរីចាប់អាសូតបម្លែង N₂ ទៅជាទម្រង់ណាដែលចូលវដ្តដី?', [['អាម៉ូញ៉ាក់/អាម៉ូញ៉ូម', true], ['អុកស៊ីសែន', false], ['គ្លុយកូស', false], ['ប្រូតេអ៊ីនដោយផ្ទាល់', false]], 'nitrogen fixation ផ្តល់ NH₃/NH₄⁺។'),
+    mc('ដំណើរការណាបញ្ជូនកាបូនពីបរិយាកាសចូលសារធាតុសរីរាង្គ?', [['សំយោគពន្លឺ', true], ['ដង្ហើម', false], ['ដេនីទ្រីភិកាស្យុង', false], ['រំហួត', false]], 'រុក្ខជាតិស្រូប CO₂ ហើយបង្កើតម៉ូលេគុលសរីរាង្គ។'),
+    trueFalse('ដេនីទ្រីភិកាស្យុងបញ្ជូនអាសូតពីនីត្រាតត្រឡប់ទៅបរិយាកាសជា N₂។', true, 'បាក់តេរីដេនីទ្រីភីកង់ធ្វើការក្នុងលក្ខខណ្ឌអុកស៊ីសែនទាប។'),
+    fillBlank('ការបម្លែង NH₄⁺ ទៅ NO₂⁻ ហើយទៅ NO₃⁻ ហៅថា ______។', ['នីទ្រីភិកាស្យុង', 'nitrification'], 'បាក់តេរីនីទ្រីភីកង់អុកស៊ីតកម្មអាម៉ូញ៉ូមជាជំហាន។'),
+  ],
+};
+
+for (const module of [
+  MODULE_1,
+  MODULE_2,
+  MODULE_3,
+  MODULE_4,
+  MODULE_5,
+  MODULE_6,
+  MODULE_7,
+  MODULE_8,
+]) {
+  for (const lesson of module.lessons) {
+    const additions = EXTRA_QUESTIONS[lesson.slug];
+    if (!additions) {
+      throw new Error(`Missing expanded Biology questions for ${lesson.slug}`);
+    }
+    lesson.quiz.questions.push(...additions);
+  }
+}
 
 export const BIOLOGY_GRADE_12 = {
   slug: 'biology',

@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { IPasswordService } from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -14,12 +14,13 @@ import {
 } from '@app/contracts';
 import {
   EmailService,
+  hashToken,
   JwtService,
   RpcBadRequestException,
   RpcNotFoundException,
   RpcUnauthorizedException,
 } from '@app/common';
-import ms from 'ms';
+import ms, { StringValue } from 'ms';
 
 @Injectable()
 export class PasswordService implements IPasswordService {
@@ -43,7 +44,7 @@ export class PasswordService implements IPasswordService {
     const [foundUser] = await this.db
       .select()
       .from(user)
-      .where(eq(user.email, dto.email))
+      .where(eq(sql<string>`lower(${user.email})`, dto.email))
       .limit(1);
 
     if (!foundUser) {
@@ -57,18 +58,29 @@ export class PasswordService implements IPasswordService {
     const emailExpiresStr =
       this.configService.get<string>('jwt.emailExpires') ?? '1h';
     const resetPasswordTokenExpiresAt = new Date(
-      Date.now() + ms(emailExpiresStr as any),
+      Date.now() + ms(emailExpiresStr as StringValue),
     );
 
     await this.db
       .update(user)
-      .set({ resetPasswordToken, resetPasswordTokenExpiresAt })
+      .set({
+        resetPasswordToken: hashToken(resetPasswordToken),
+        resetPasswordTokenExpiresAt,
+      })
       .where(eq(user.id, foundUser.id));
 
-    await this.emailService.sendPasswordResetEmail(
-      dto.email,
-      resetPasswordToken,
-    );
+    try {
+      await this.emailService.sendPasswordResetEmail(
+        dto.email,
+        resetPasswordToken,
+      );
+    } catch (error) {
+      // Keep provider failures from becoming an account-existence oracle.
+      this.logger.error(
+        `Password reset email delivery failed for ${dto.email}`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
 
     this.logger.log(`Password reset requested: ${dto.email}`);
 
@@ -90,12 +102,12 @@ export class PasswordService implements IPasswordService {
     const [foundUser] = await this.db
       .select()
       .from(user)
-      .where(eq(user.email, decoded.email))
+      .where(eq(sql<string>`lower(${user.email})`, decoded.email))
       .limit(1);
 
     if (
       !foundUser ||
-      foundUser.resetPasswordToken !== dto.token ||
+      foundUser.resetPasswordToken !== hashToken(dto.token) ||
       !foundUser.resetPasswordTokenExpiresAt ||
       foundUser.resetPasswordTokenExpiresAt.getTime() < Date.now()
     ) {
@@ -148,7 +160,11 @@ export class PasswordService implements IPasswordService {
 
     await this.db
       .update(user)
-      .set({ password: hashedPassword })
+      .set({
+        password: hashedPassword,
+        refreshToken: null,
+        refreshTokenExpiresAt: null,
+      })
       .where(eq(user.id, foundUser.id));
 
     this.logger.log(`Password changed: ${foundUser.email}`);

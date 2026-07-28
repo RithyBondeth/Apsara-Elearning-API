@@ -22,11 +22,11 @@ export interface ILoginRpcController {
 }
 
 export interface IRefreshTokenRpcController {
-  refresh(payload: { refreshToken: string }): Promise<RegisterResponseDTO>;
+  refresh(payload: { refreshToken: string }): Promise<LoginResponseDTO>;
 }
 
 export interface ILogoutRpcController {
-  logout(payload: { userId: string }): Promise<MessageResponseDTO>;
+  logout(payload: { refreshToken: string }): Promise<MessageResponseDTO>;
 }
 
 export interface IVerifyEmailRpcController {

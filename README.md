@@ -189,9 +189,10 @@ auto-awards it.
 | Variable | Required | Notes |
 |----------|----------|-------|
 | `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | ✅ | token signing |
+| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` / `JWT_ACTION_SECRET` | ✅ | distinct token-signing secrets of at least 32 characters |
 | `JWT_ACCESS_EXPIRES` / `JWT_REFRESH_EXPIRES` | ✅ | e.g. `15m` / `7d` |
-| `BCRYPT_SALT` | — | default `10` |
+| `JWT_ISSUER` / `JWT_AUDIENCE` | — | token issuer/audience constraints |
+| `BCRYPT_SALT` | — | default `12` |
 | `RABBITMQ_URL` + `*_QUEUE` | ✅ | broker URL + one queue name per service |
 | `API_GATEWAY_PORT` / `ADMIN_GATEWAY_PORT` | — | default `1111` / `2222` |
 | `RESEND_API_KEY` / `EMAIL_FROM` | ✅ | transactional email (verification, reset) |
@@ -202,7 +203,7 @@ auto-awards it.
 | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | — | enables DeepSeek chat |
 | `GEMINI_API_KEY` / `GEMINI_MODEL` | — | enables Gemini chat |
 | `JUDGE0_URL` / `JUDGE0_TOKEN` | — | enables real code execution; **mock grading without it** |
-| `CORS_ORIGINS` | — | comma-separated allowed origins; **`*` (open) if unset** |
+| `CORS_ORIGINS` | production | comma-separated exact allowed origins; required in production |
 | `WEBHOOK_SECRET` | — | shared secret for the payment webhook (`x-webhook-secret`); check skipped if unset |
 | `REDIS_URL` | — | distributed rate limiting across replicas; in-memory if unset |
 

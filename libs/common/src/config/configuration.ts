@@ -17,13 +17,17 @@ export default () => ({
     accessSecret: process.env.JWT_ACCESS_SECRET,
     accessExpires: process.env.JWT_ACCESS_EXPIRES,
     refreshSecret: process.env.JWT_REFRESH_SECRET,
+    actionSecret:
+      process.env.JWT_ACTION_SECRET ?? process.env.JWT_ACCESS_SECRET,
     refreshExpires: process.env.JWT_REFRESH_EXPIRES,
     emailExpires: process.env.JWT_EMAIL_EXPIRES ?? '1h',
+    issuer: process.env.JWT_ISSUER ?? 'apsara-elearning',
+    audience: process.env.JWT_AUDIENCE ?? 'apsara-elearning-web',
   },
 
   // Bcrypt
   bcrypt: {
-    salt: parseInt(process.env.BCRYPT_SALT ?? '10', 10),
+    salt: parseInt(process.env.BCRYPT_SALT ?? '12', 10),
   },
 
   // RabbitMQ

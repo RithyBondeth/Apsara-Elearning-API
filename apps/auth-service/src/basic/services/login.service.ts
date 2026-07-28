@@ -6,21 +6,24 @@ import {
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { DRIZZLE } from '@app/contracts';
 import {
+  hashRefreshToken,
   IJWTPayload,
   JwtService,
   RpcForbiddenException,
   RpcUnauthorizedException,
 } from '@app/common';
 import { ConfigService } from '@nestjs/config';
-import ms from 'ms';
+import ms, { StringValue } from 'ms';
 
 @Injectable()
 export class LoginService implements ILoginService {
   private readonly logger = new Logger(LoginService.name);
+  private readonly dummyPasswordHash =
+    '$2b$12$8COZzWzwmv3IuQphiMbFZuaxNByAwC6hpsrwpjJGXIV/xFT9SLhg2';
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
@@ -35,10 +38,12 @@ export class LoginService implements ILoginService {
     const [foundUser] = await this.db
       .select()
       .from(user)
-      .where(eq(user.email, email))
+      .where(eq(sql<string>`lower(${user.email})`, email))
       .limit(1);
 
     if (!foundUser) {
+      // Keep unknown-account and wrong-password paths computationally similar.
+      await bcrypt.compare(password, this.dummyPasswordHash);
       throw new RpcUnauthorizedException('Invalid credentials');
     }
 
@@ -57,6 +62,7 @@ export class LoginService implements ILoginService {
     const jwtPayload: IJWTPayload = {
       id: foundUser.id,
       info: foundUser.email,
+      type: 'access',
       isAdmin: foundUser.isAdmin,
     };
 
@@ -69,13 +75,13 @@ export class LoginService implements ILoginService {
     const refreshExpiresStr =
       this.configService.get<string>('jwt.refreshExpires') ?? '7d';
     const refreshTokenExpiresAt = new Date(
-      Date.now() + ms(refreshExpiresStr as any),
+      Date.now() + ms(refreshExpiresStr as StringValue),
     );
 
     await this.db
       .update(user)
       .set({
-        refreshToken,
+        refreshToken: hashRefreshToken(refreshToken),
         refreshTokenExpiresAt,
         lastLoginAt: new Date(),
         lastLoginMethod: 'email_password',

@@ -1,19 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { StringValue } from 'ms';
-import { IJWTPayload } from './interfaces/jwt-payload.interface';
+import {
+  IActionTokenPayload,
+  IJWTPayload,
+  IRefreshTokenPayload,
+} from './interfaces/jwt-payload.interface';
 @Injectable()
 export class JwtService {
-  private readonly logger = new Logger(JwtService.name);
-
   constructor(
     private readonly jwtService: NestJwtService,
     private readonly configService: ConfigService,
   ) {}
 
   async generateToken(payload: IJWTPayload): Promise<string> {
-    const token = await this.jwtService.signAsync(payload);
+    const token = await this.jwtService.signAsync({
+      ...payload,
+      type: 'access',
+    });
     return token;
   }
 
@@ -23,6 +28,9 @@ export class JwtService {
       {
         secret: this.configService.get<string>('jwt.refreshSecret'),
         expiresIn: this.configService.get<StringValue>('jwt.refreshExpires'),
+        issuer: this.configService.get<string>('jwt.issuer'),
+        audience: this.configService.get<string>('jwt.audience'),
+        algorithm: 'HS256',
       },
     );
     return refreshToken;
@@ -32,8 +40,11 @@ export class JwtService {
     const token = await this.jwtService.signAsync(
       { email, type: 'email-verification' },
       {
-        secret: this.configService.get<string>('jwt.accessSecret'),
+        secret: this.configService.get<string>('jwt.actionSecret'),
         expiresIn: this.configService.get<StringValue>('jwt.emailExpires'),
+        issuer: this.configService.get<string>('jwt.issuer'),
+        audience: this.configService.get<string>('jwt.audience'),
+        algorithm: 'HS256',
       },
     );
     return token;
@@ -43,68 +54,91 @@ export class JwtService {
     const token = await this.jwtService.signAsync(
       { email, type: 'password-reset' },
       {
-        secret: this.configService.get<string>('jwt.accessSecret'),
+        secret: this.configService.get<string>('jwt.actionSecret'),
         expiresIn: this.configService.get<StringValue>('jwt.emailExpires'),
+        issuer: this.configService.get<string>('jwt.issuer'),
+        audience: this.configService.get<string>('jwt.audience'),
+        algorithm: 'HS256',
       },
     );
     return token;
   }
 
-  async verifyPasswordResetToken(token: string): Promise<any> {
+  async verifyPasswordResetToken(token: string): Promise<IActionTokenPayload> {
     try {
-      const decoded = await this.jwtService.verifyAsync(token);
+      const decoded = await this.verifyActionToken(token);
       if (decoded.type !== 'password-reset')
         throw new Error('Invalid token type');
       return decoded;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(errorMessage);
-      throw new Error(errorMessage);
+    } catch {
+      throw new Error('Invalid or expired password reset token');
     }
   }
 
-  async verifyToken(token: string): Promise<any> {
+  async verifyToken(token: string): Promise<IJWTPayload> {
     try {
-      return this.jwtService.verifyAsync(token);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }
-
-  async verifyRefreshToken(token: string): Promise<any> {
-    try {
-      const decoded = await this.jwtService.verifyAsync(token);
-      if (decoded.type !== 'refresh') throw new Error('Invalid token type');
+      const decoded = await this.jwtService.verifyAsync<IJWTPayload>(token, {
+        secret: this.configService.get<string>('jwt.accessSecret'),
+        algorithms: ['HS256'],
+        issuer: this.configService.get<string>('jwt.issuer'),
+        audience: this.configService.get<string>('jwt.audience'),
+      });
+      if (
+        decoded.type !== 'access' ||
+        typeof decoded.id !== 'string' ||
+        typeof decoded.info !== 'string'
+      ) {
+        throw new Error('Invalid access token');
+      }
       return decoded;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(errorMessage);
-      throw new Error(errorMessage);
+    } catch {
+      throw new Error('Invalid or expired access token');
     }
   }
 
-  async verifyEmailToken(token: string): Promise<any> {
+  async verifyRefreshToken(token: string): Promise<IRefreshTokenPayload> {
     try {
-      const decoded = await this.jwtService.verifyAsync(token);
+      const decoded = await this.jwtService.verifyAsync<IRefreshTokenPayload>(
+        token,
+        {
+          secret: this.configService.get<string>('jwt.refreshSecret'),
+          algorithms: ['HS256'],
+          issuer: this.configService.get<string>('jwt.issuer'),
+          audience: this.configService.get<string>('jwt.audience'),
+        },
+      );
+      if (decoded.type !== 'refresh') throw new Error('Invalid token type');
+      if (typeof decoded.id !== 'string')
+        throw new Error('Invalid token subject');
+      return decoded;
+    } catch {
+      throw new Error('Invalid or expired refresh token');
+    }
+  }
+
+  async verifyEmailToken(token: string): Promise<IActionTokenPayload> {
+    try {
+      const decoded = await this.verifyActionToken(token);
       if (decoded.type !== 'email-verification')
         throw new Error('Invalid token type');
       return decoded;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(errorMessage);
-      throw new Error(errorMessage);
+    } catch {
+      throw new Error('Invalid or expired email verification token');
     }
   }
 
-  decodeToken(token: string): IJWTPayload {
-    const decode = this.jwtService.decode(token);
-    if (!decode) throw new Error('Failed to decode token');
-    return decode as IJWTPayload;
+  private async verifyActionToken(token: string): Promise<IActionTokenPayload> {
+    const decoded = await this.jwtService.verifyAsync<IActionTokenPayload>(
+      token,
+      {
+        secret: this.configService.get<string>('jwt.actionSecret'),
+        algorithms: ['HS256'],
+        issuer: this.configService.get<string>('jwt.issuer'),
+        audience: this.configService.get<string>('jwt.audience'),
+      },
+    );
+    if (typeof decoded.email !== 'string')
+      throw new Error('Invalid token subject');
+    return decoded;
   }
 }

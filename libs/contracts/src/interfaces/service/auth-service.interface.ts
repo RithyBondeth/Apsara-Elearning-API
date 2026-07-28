@@ -28,8 +28,8 @@ export interface ILoginService {
 }
 
 export interface ITokenService {
-  refresh(refreshToken: string): Promise<RegisterResponseDTO>;
-  logout(userId: string): Promise<MessageResponseDTO>;
+  refresh(refreshToken: string): Promise<LoginResponseDTO>;
+  logout(refreshToken: string): Promise<MessageResponseDTO>;
 }
 
 export interface IEmailVerificationService {

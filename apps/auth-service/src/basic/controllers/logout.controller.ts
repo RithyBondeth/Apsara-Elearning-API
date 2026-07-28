@@ -14,7 +14,9 @@ export class LogoutController implements ILogoutRpcController {
   ) {}
 
   @MessagePattern(AUTH_SERVICE.ACTIONS.LOGOUT)
-  logout(@Payload() payload: { userId: string }): Promise<MessageResponseDTO> {
-    return this.tokenService.logout(payload.userId);
+  logout(
+    @Payload() payload: { refreshToken: string },
+  ): Promise<MessageResponseDTO> {
+    return this.tokenService.logout(payload.refreshToken);
   }
 }

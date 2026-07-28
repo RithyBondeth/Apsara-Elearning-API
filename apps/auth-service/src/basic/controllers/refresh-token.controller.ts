@@ -3,7 +3,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   AUTH_SERVICE,
   I_TOKEN_SERVICE,
-  RegisterResponseDTO,
+  LoginResponseDTO,
 } from '@app/contracts';
 import type { ITokenService, IRefreshTokenRpcController } from '@app/contracts';
 
@@ -16,7 +16,7 @@ export class RefreshTokenController implements IRefreshTokenRpcController {
   @MessagePattern(AUTH_SERVICE.ACTIONS.REFRESH_TOKEN)
   refresh(
     @Payload() payload: { refreshToken: string },
-  ): Promise<RegisterResponseDTO> {
+  ): Promise<LoginResponseDTO> {
     return this.tokenService.refresh(payload.refreshToken);
   }
 }

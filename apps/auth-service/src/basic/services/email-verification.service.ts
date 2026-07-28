@@ -2,11 +2,16 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { IEmailVerificationService } from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { user } from '@app/database/schemas/user/user.schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE, MessageResponseDTO } from '@app/contracts';
-import { EmailService, JwtService, RpcBadRequestException } from '@app/common';
-import ms from 'ms';
+import {
+  EmailService,
+  hashToken,
+  JwtService,
+  RpcBadRequestException,
+} from '@app/common';
+import ms, { StringValue } from 'ms';
 
 @Injectable()
 export class EmailVerificationService implements IEmailVerificationService {
@@ -32,7 +37,7 @@ export class EmailVerificationService implements IEmailVerificationService {
     const [foundUser] = await this.db
       .select()
       .from(user)
-      .where(eq(user.email, decoded.email))
+      .where(eq(sql<string>`lower(${user.email})`, decoded.email))
       .limit(1);
 
     if (!foundUser) {
@@ -44,7 +49,7 @@ export class EmailVerificationService implements IEmailVerificationService {
     }
 
     if (
-      foundUser.emailVerificationToken !== token ||
+      foundUser.emailVerificationToken !== hashToken(token) ||
       !foundUser.emailVerificationTokenExpiresAt ||
       foundUser.emailVerificationTokenExpiresAt.getTime() < Date.now()
     ) {
@@ -75,7 +80,7 @@ export class EmailVerificationService implements IEmailVerificationService {
     const [foundUser] = await this.db
       .select()
       .from(user)
-      .where(eq(user.email, email))
+      .where(eq(sql<string>`lower(${user.email})`, email))
       .limit(1);
 
     if (!foundUser || foundUser.isEmailVerified) {
@@ -88,18 +93,29 @@ export class EmailVerificationService implements IEmailVerificationService {
     const emailExpiresStr =
       this.configService.get<string>('jwt.emailExpires') ?? '1h';
     const emailVerificationTokenExpiresAt = new Date(
-      Date.now() + ms(emailExpiresStr as any),
+      Date.now() + ms(emailExpiresStr as StringValue),
     );
 
     await this.db
       .update(user)
-      .set({ emailVerificationToken, emailVerificationTokenExpiresAt })
+      .set({
+        emailVerificationToken: hashToken(emailVerificationToken),
+        emailVerificationTokenExpiresAt,
+      })
       .where(eq(user.id, foundUser.id));
 
-    await this.emailService.sendVerificationEmail(
-      email,
-      emailVerificationToken,
-    );
+    try {
+      await this.emailService.sendVerificationEmail(
+        email,
+        emailVerificationToken,
+      );
+    } catch (error) {
+      // Keep provider failures from becoming an account-existence oracle.
+      this.logger.error(
+        `Verification email delivery failed for ${email}`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
 
     this.logger.log(`Verification email resent: ${email}`);
 

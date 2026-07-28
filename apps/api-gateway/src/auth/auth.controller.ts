@@ -88,16 +88,17 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @Throttle(STRICT)
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Tokens refreshed successfully',
-    type: RegisterResponseDTO,
+    type: LoginResponseDTO,
   })
   refresh(
     @Body() refreshTokenRequestDTO: RefreshTokenRequestDTO,
-  ): Promise<RegisterResponseDTO> {
-    return rpcCall<RegisterResponseDTO>(
+  ): Promise<LoginResponseDTO> {
+    return rpcCall<LoginResponseDTO>(
       this.authClient,
       AUTH_SERVICE.ACTIONS.REFRESH_TOKEN,
       refreshTokenRequestDTO,
@@ -106,19 +107,20 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @Throttle(STRICT)
   @ApiOperation({ summary: 'Logout user and invalidate refresh token' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Logged out successfully',
     type: MessageResponseDTO,
   })
-  logout(@CurrentUser('id') userId: string): Promise<MessageResponseDTO> {
+  logout(
+    @Body() refreshTokenRequestDTO: RefreshTokenRequestDTO,
+  ): Promise<MessageResponseDTO> {
     return rpcCall<MessageResponseDTO>(
       this.authClient,
       AUTH_SERVICE.ACTIONS.LOGOUT,
-      { userId },
+      refreshTokenRequestDTO,
     );
   }
 
