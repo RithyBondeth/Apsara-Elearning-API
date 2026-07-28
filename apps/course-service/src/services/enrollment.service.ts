@@ -10,13 +10,20 @@ import {
   UnenrollResponseDTO,
   IEnrollmentService,
 } from '@app/contracts';
-import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import {
+  CourseEntitlementService,
+  RpcBadRequestException,
+  RpcNotFoundException,
+} from '@app/common';
 
 @Injectable()
 export class EnrollmentService implements IEnrollmentService {
   private readonly logger = new Logger(EnrollmentService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: CourseEntitlementService,
+  ) {}
 
   async enroll(
     userId: string,
@@ -33,6 +40,7 @@ export class EnrollmentService implements IEnrollmentService {
         'Course is not available for enrollment',
       );
     }
+    await this.entitlements.assertCanEnroll(userId, courseId);
 
     const existing = await this.findEnrollment(userId, courseId);
     if (existing) {

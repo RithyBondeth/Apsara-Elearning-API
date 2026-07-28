@@ -70,6 +70,8 @@ export interface ICourseService {
   create(dto: CreateCourseRequestDTO): Promise<CourseResponseDTO>;
   findAll(): Promise<CourseResponseDTO[]>;
   findPublished(): Promise<CourseResponseDTO[]>;
+  findPublishedOne(id: string): Promise<CourseResponseDTO>;
+  findPublishedBySlug(slug: string): Promise<CourseResponseDTO>;
   search(dto: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]>;
   findOne(id: string): Promise<CourseResponseDTO>;
   findBySlug(slug: string): Promise<CourseResponseDTO>;
@@ -118,6 +120,12 @@ export interface ILessonService {
   findAllByModule(moduleId: string): Promise<LessonResponseDTO[]>;
   findOne(id: string): Promise<LessonResponseDTO>;
   findBySlug(slug: string): Promise<LessonResponseDTO>;
+  findPublicByModule(
+    moduleId: string,
+    userId?: string,
+  ): Promise<LessonResponseDTO[]>;
+  findPublicOne(id: string, userId?: string): Promise<LessonResponseDTO>;
+  findPublicBySlug(slug: string, userId?: string): Promise<LessonResponseDTO>;
   update(id: string, dto: UpdateLessonRequestDTO): Promise<LessonResponseDTO>;
   remove(id: string): Promise<DeleteResponseDTO>;
   reorder(moduleId: string, orderedIds: string[]): Promise<LessonResponseDTO[]>;
@@ -152,6 +160,8 @@ export interface IModuleService {
   ): Promise<ModuleResponseDTO>;
   findAllByCourse(courseId: string): Promise<ModuleResponseDTO[]>;
   findOne(id: string): Promise<ModuleResponseDTO>;
+  findPublicByCourse(courseId: string): Promise<ModuleResponseDTO[]>;
+  findPublicOne(id: string): Promise<ModuleResponseDTO>;
   update(id: string, dto: UpdateModuleRequestDTO): Promise<ModuleResponseDTO>;
   remove(id: string): Promise<DeleteResponseDTO>;
   reorder(courseId: string, orderedIds: string[]): Promise<ModuleResponseDTO[]>;

@@ -106,6 +106,14 @@ export class CreateCourseRequestDTO {
   @IsBoolean()
   @IsOptional()
   published?: boolean;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Whether lesson content requires an active subscription',
+  })
+  @IsBoolean()
+  @IsOptional()
+  requiresSubscription?: boolean;
 }
 
 export class UpdateCourseRequestDTO extends PartialType(

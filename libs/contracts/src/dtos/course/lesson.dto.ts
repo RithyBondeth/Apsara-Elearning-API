@@ -69,6 +69,11 @@ export class LessonResponseDTO extends CreateLessonRequestDTO {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   moduleId: string;
 
+  @ApiPropertyOptional({
+    description: 'True when premium lesson content is hidden from this caller',
+  })
+  locked?: boolean;
+
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt: Date;
 

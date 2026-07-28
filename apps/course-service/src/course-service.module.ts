@@ -40,6 +40,7 @@ import { ProgrammingCategoryService } from './services/programming-category.serv
 import { SubjectController } from './controllers/subject.controller';
 import { SubjectService } from './services/subject.service';
 import { CourseHealthController } from './health/health.controller';
+import { CourseEntitlementService } from '@app/common';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { CourseHealthController } from './health/health.controller';
     CourseHealthController,
   ],
   providers: [
+    CourseEntitlementService,
     { provide: I_COURSE_SERVICE, useClass: CourseService },
     { provide: I_ENROLLMENT_SERVICE, useClass: EnrollmentService },
     { provide: I_FACULTY_SERVICE, useClass: FacultyService },

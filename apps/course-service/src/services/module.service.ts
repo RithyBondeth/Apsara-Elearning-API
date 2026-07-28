@@ -11,13 +11,20 @@ import {
   ModuleResponseDTO,
   UpdateModuleRequestDTO,
 } from '@app/contracts';
-import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import {
+  CourseEntitlementService,
+  RpcBadRequestException,
+  RpcNotFoundException,
+} from '@app/common';
 
 @Injectable()
 export class ModuleService implements IModuleService {
   private readonly logger = new Logger(ModuleService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: CourseEntitlementService,
+  ) {}
 
   async create(
     courseId: string,
@@ -54,6 +61,16 @@ export class ModuleService implements IModuleService {
       .limit(1);
     if (!found) throw new RpcNotFoundException('Module not found');
     return new ModuleResponseDTO(found);
+  }
+
+  async findPublicByCourse(courseId: string): Promise<ModuleResponseDTO[]> {
+    await this.entitlements.assertPublishedCourse(courseId);
+    return this.findAllByCourse(courseId);
+  }
+
+  async findPublicOne(id: string): Promise<ModuleResponseDTO> {
+    await this.entitlements.assertPublishedModule(id);
+    return this.findOne(id);
   }
 
   async update(

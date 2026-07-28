@@ -35,6 +35,14 @@ export class AuthoringController implements IAuthoringRpcController {
     return this.authoring.findQuizzesByLesson(lessonId);
   }
 
+  @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.QUIZ_FIND_PUBLIC_ALL)
+  findPublicQuizzes(@Payload() payload: { lessonId: string; userId: string }) {
+    return this.authoring.findPublicQuizzesByLesson(
+      payload.lessonId,
+      payload.userId,
+    );
+  }
+
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.QUIZ_FIND_ONE)
   findQuiz(@Payload() payload: string | { id: string }) {
     return this.authoring.findQuiz(idOf(payload));

@@ -47,6 +47,7 @@ export class CourseService implements ICourseService {
         difficulty: dto.difficulty,
         estimatedHours: dto.estimatedHours,
         published: dto.published,
+        requiresSubscription: dto.requiresSubscription,
       })
       .returning();
     this.logger.log(`Course created: ${created.slug}`);
@@ -68,6 +69,26 @@ export class CourseService implements ICourseService {
       .where(eq(courses.published, true))
       .orderBy(courses.createdAt);
     return rows.map((row) => new CourseResponseDTO(row));
+  }
+
+  async findPublishedOne(id: string): Promise<CourseResponseDTO> {
+    const [found] = await this.db
+      .select()
+      .from(courses)
+      .where(and(eq(courses.id, id), eq(courses.published, true)))
+      .limit(1);
+    if (!found) throw new RpcNotFoundException('Course not found');
+    return new CourseResponseDTO(found);
+  }
+
+  async findPublishedBySlug(slug: string): Promise<CourseResponseDTO> {
+    const [found] = await this.db
+      .select()
+      .from(courses)
+      .where(and(eq(courses.slug, slug), eq(courses.published, true)))
+      .limit(1);
+    if (!found) throw new RpcNotFoundException('Course not found');
+    return new CourseResponseDTO(found);
   }
 
   /**
@@ -135,7 +156,7 @@ export class CourseService implements ICourseService {
     const rows = await this.db
       .select()
       .from(courses)
-      .where(eq(courses.subjectId, subjectId))
+      .where(and(eq(courses.subjectId, subjectId), eq(courses.published, true)))
       .orderBy(courses.createdAt);
     return rows.map((row) => new CourseResponseDTO(row));
   }
@@ -144,7 +165,12 @@ export class CourseService implements ICourseService {
     const rows = await this.db
       .select()
       .from(courses)
-      .where(eq(courses.gradeLevelId, gradeLevelId))
+      .where(
+        and(
+          eq(courses.gradeLevelId, gradeLevelId),
+          eq(courses.published, true),
+        ),
+      )
       .orderBy(courses.createdAt);
     return rows.map((row) => new CourseResponseDTO(row));
   }
@@ -153,7 +179,7 @@ export class CourseService implements ICourseService {
     const rows = await this.db
       .select()
       .from(courses)
-      .where(eq(courses.majorId, majorId))
+      .where(and(eq(courses.majorId, majorId), eq(courses.published, true)))
       .orderBy(courses.createdAt);
     return rows.map((row) => new CourseResponseDTO(row));
   }
@@ -162,7 +188,9 @@ export class CourseService implements ICourseService {
     const rows = await this.db
       .select()
       .from(courses)
-      .where(eq(courses.categoryId, categoryId))
+      .where(
+        and(eq(courses.categoryId, categoryId), eq(courses.published, true)),
+      )
       .orderBy(courses.createdAt);
     return rows.map((row) => new CourseResponseDTO(row));
   }

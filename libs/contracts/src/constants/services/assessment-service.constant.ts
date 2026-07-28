@@ -4,6 +4,7 @@ export const ASSESSMENT_SERVICE = {
     // Quizzes
     QUIZ_CREATE: 'assessment.quiz.create',
     QUIZ_FIND_ALL: 'assessment.quiz.find_all', // by lessonId
+    QUIZ_FIND_PUBLIC_ALL: 'assessment.quiz.find_public_all',
     QUIZ_FIND_ONE: 'assessment.quiz.find_one',
     QUIZ_UPDATE: 'assessment.quiz.update',
     QUIZ_DELETE: 'assessment.quiz.delete',
@@ -34,13 +35,16 @@ export const ASSESSMENT_SERVICE = {
     // Coding Challenges
     CHALLENGE_CREATE: 'assessment.challenge.create',
     CHALLENGE_FIND_ALL: 'assessment.challenge.find_all', // by lessonId
+    CHALLENGE_FIND_PUBLIC_ALL: 'assessment.challenge.find_public_all',
     CHALLENGE_FIND_ONE: 'assessment.challenge.find_one',
+    CHALLENGE_FIND_PUBLIC_ONE: 'assessment.challenge.find_public_one',
     CHALLENGE_UPDATE: 'assessment.challenge.update',
     CHALLENGE_DELETE: 'assessment.challenge.delete',
 
     // Test Cases
     TEST_CASE_CREATE: 'assessment.test_case.create',
     TEST_CASE_FIND_ALL: 'assessment.test_case.find_all', // by challengeId (visible only)
+    TEST_CASE_FIND_PUBLIC_ALL: 'assessment.test_case.find_public_all',
     TEST_CASE_UPDATE: 'assessment.test_case.update',
     TEST_CASE_DELETE: 'assessment.test_case.delete',
 

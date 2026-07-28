@@ -15,13 +15,20 @@ import {
   UpdateChallengeRequestDTO,
   UpdateTestCaseRequestDTO,
 } from '@app/contracts';
-import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import {
+  CourseEntitlementService,
+  RpcBadRequestException,
+  RpcNotFoundException,
+} from '@app/common';
 
 @Injectable()
 export class ChallengeService implements IChallengeService {
   private readonly logger = new Logger(ChallengeService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: CourseEntitlementService,
+  ) {}
 
   // ---- Challenge ----
   async createChallenge(
@@ -60,6 +67,18 @@ export class ChallengeService implements IChallengeService {
     return rows.map((row) => new ChallengeResponseDTO(row));
   }
 
+  async findPublicChallengesByLesson(
+    lessonId: string,
+    userId: string,
+  ): Promise<ChallengeResponseDTO[]> {
+    await this.entitlements.assertCanReadLesson({ id: lessonId }, userId);
+    const challenges = await this.findChallengesByLesson(lessonId);
+    return challenges.map(
+      (challenge) =>
+        new ChallengeResponseDTO({ ...challenge, solutionCode: undefined }),
+    );
+  }
+
   async findChallenge(id: string): Promise<ChallengeResponseDTO> {
     const [found] = await this.db
       .select()
@@ -68,6 +87,21 @@ export class ChallengeService implements IChallengeService {
       .limit(1);
     if (!found) throw new RpcNotFoundException('Challenge not found');
     return new ChallengeResponseDTO(found);
+  }
+
+  async findPublicChallenge(
+    id: string,
+    userId: string,
+  ): Promise<ChallengeResponseDTO> {
+    const challenge = await this.findChallenge(id);
+    await this.entitlements.assertCanReadLesson(
+      { id: challenge.lessonId },
+      userId,
+    );
+    return new ChallengeResponseDTO({
+      ...challenge,
+      solutionCode: undefined,
+    });
   }
 
   async updateChallenge(
@@ -131,6 +165,14 @@ export class ChallengeService implements IChallengeService {
       .where(where)
       .orderBy(challengeTestCases.order);
     return rows.map((row) => new TestCaseResponseDTO(row));
+  }
+
+  async findPublicTestCases(
+    challengeId: string,
+    userId: string,
+  ): Promise<TestCaseResponseDTO[]> {
+    await this.findPublicChallenge(challengeId, userId);
+    return this.findTestCases(challengeId, false);
   }
 
   async updateTestCase(

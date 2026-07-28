@@ -37,6 +37,24 @@ export class LessonController implements ILessonRpcController {
     return this.lessonService.findBySlug(slugOf(payload));
   }
 
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_ALL)
+  findPublicAll(@Payload() payload: { moduleId: string; userId?: string }) {
+    return this.lessonService.findPublicByModule(
+      payload.moduleId,
+      payload.userId,
+    );
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_ONE)
+  findPublicOne(@Payload() payload: { id: string; userId?: string }) {
+    return this.lessonService.findPublicOne(payload.id, payload.userId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_BY_SLUG)
+  findPublicBySlug(@Payload() payload: { slug: string; userId?: string }) {
+    return this.lessonService.findPublicBySlug(payload.slug, payload.userId);
+  }
+
   @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_UPDATE)
   update(@Payload() payload: UpdateLessonRequestDTO & { id: string }) {
     const { id, data } = splitUpdate(payload);

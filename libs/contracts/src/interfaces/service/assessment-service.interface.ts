@@ -55,9 +55,12 @@ export interface IAttemptService {
     answers: AttemptAnswerDTO[],
   ): Promise<SubmitAttemptResponseDTO>;
   findAllByUser(userId: string): Promise<AttemptResponseDTO[]>;
-  findOne(id: string): Promise<AttemptResponseDTO>;
+  findOne(userId: string, id: string): Promise<AttemptResponseDTO>;
   findByQuiz(userId: string, quizId: string): Promise<AttemptResponseDTO[]>;
-  findAnswers(attemptId: string): Promise<AttemptAnswerResponseDTO[]>;
+  findAnswers(
+    userId: string,
+    attemptId: string,
+  ): Promise<AttemptAnswerResponseDTO[]>;
 }
 
 export interface IAuthoringService {
@@ -66,6 +69,10 @@ export interface IAuthoringService {
     dto: CreateQuizRequestDTO,
   ): Promise<QuizResponseDTO>;
   findQuizzesByLesson(lessonId: string): Promise<QuizResponseDTO[]>;
+  findPublicQuizzesByLesson(
+    lessonId: string,
+    userId: string,
+  ): Promise<QuizResponseDTO[]>;
   findQuiz(id: string): Promise<QuizResponseDTO>;
   updateQuiz(id: string, dto: UpdateQuizRequestDTO): Promise<QuizResponseDTO>;
   removeQuiz(id: string): Promise<DeleteResponseDTO>;
@@ -98,7 +105,15 @@ export interface IChallengeService {
     dto: CreateChallengeRequestDTO,
   ): Promise<ChallengeResponseDTO>;
   findChallengesByLesson(lessonId: string): Promise<ChallengeResponseDTO[]>;
+  findPublicChallengesByLesson(
+    lessonId: string,
+    userId: string,
+  ): Promise<ChallengeResponseDTO[]>;
   findChallenge(id: string): Promise<ChallengeResponseDTO>;
+  findPublicChallenge(
+    id: string,
+    userId: string,
+  ): Promise<ChallengeResponseDTO>;
   updateChallenge(
     id: string,
     dto: UpdateChallengeRequestDTO,
@@ -111,6 +126,10 @@ export interface IChallengeService {
   findTestCases(
     challengeId: string,
     includeHidden?: boolean,
+  ): Promise<TestCaseResponseDTO[]>;
+  findPublicTestCases(
+    challengeId: string,
+    userId: string,
   ): Promise<TestCaseResponseDTO[]>;
   updateTestCase(
     id: string,
@@ -130,5 +149,5 @@ export interface ISubmissionService {
     userId: string,
     challengeId: string,
   ): Promise<SubmissionResponseDTO[]>;
-  findOne(id: string): Promise<SubmissionResponseDTO>;
+  findOne(userId: string, id: string): Promise<SubmissionResponseDTO>;
 }

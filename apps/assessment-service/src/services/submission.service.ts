@@ -12,7 +12,7 @@ import {
   SubmissionResultResponseDTO,
   USER_SERVICE,
 } from '@app/contracts';
-import { RpcNotFoundException } from '@app/common';
+import { CourseEntitlementService, RpcNotFoundException } from '@app/common';
 import { ChallengeService } from './challenge.service';
 import { CodeExecutionService } from '../execution/code-execution.service';
 
@@ -25,6 +25,7 @@ export class SubmissionService implements ISubmissionService {
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
     private readonly challenges: ChallengeService,
     private readonly executor: CodeExecutionService,
+    private readonly entitlements: CourseEntitlementService,
   ) {}
 
   async create(
@@ -33,6 +34,10 @@ export class SubmissionService implements ISubmissionService {
     dto: CreateSubmissionRequestDTO,
   ): Promise<SubmissionResultResponseDTO> {
     const challenge = await this.challenges.findChallenge(challengeId);
+    await this.entitlements.assertCanReadLesson(
+      { id: challenge.lessonId },
+      userId,
+    );
 
     // Grade against ALL test cases (hidden included).
     const testCases = await this.challenges.findTestCases(challengeId, true);
@@ -113,11 +118,16 @@ export class SubmissionService implements ISubmissionService {
     return rows.map((row) => new SubmissionResponseDTO(row));
   }
 
-  async findOne(id: string): Promise<SubmissionResponseDTO> {
+  async findOne(userId: string, id: string): Promise<SubmissionResponseDTO> {
     const [found] = await this.db
       .select()
       .from(challengeSubmissions)
-      .where(eq(challengeSubmissions.id, id))
+      .where(
+        and(
+          eq(challengeSubmissions.id, id),
+          eq(challengeSubmissions.userId, userId),
+        ),
+      )
       .limit(1);
     if (!found) throw new RpcNotFoundException('Submission not found');
     return new SubmissionResponseDTO(found);

@@ -20,7 +20,7 @@ import {
   CourseResponseDTO,
   SearchCoursesRequestDTO,
 } from '@app/contracts';
-import { AdminGuard } from '@app/common';
+import { JwtAuthGuard, Roles, RolesGuard } from '@app/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -38,7 +38,8 @@ export class CourseController {
   ) {}
 
   @Post()
-  @UseGuards(AdminGuard)
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new course (Admin only)' })
   @ApiResponse({
@@ -64,7 +65,7 @@ export class CourseController {
   findAllCourses() {
     return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.COURSE_FIND_ALL,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED,
       {},
     );
   }
@@ -111,7 +112,7 @@ export class CourseController {
   findOneCourse(@Param('id') id: string): Promise<CourseResponseDTO> {
     return rpcCall<CourseResponseDTO>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED_ONE,
       id,
     );
   }
@@ -126,7 +127,7 @@ export class CourseController {
   findBySlug(@Param('slug') slug: string) {
     return rpcCall<CourseResponseDTO>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.COURSE_FIND_BY_SLUG,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED_BY_SLUG,
       slug,
     );
   }
@@ -177,7 +178,8 @@ export class CourseController {
   }
 
   @Put(':id')
-  @UseGuards(AdminGuard)
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a course (Admin only)' })
   @ApiResponse({
@@ -200,7 +202,8 @@ export class CourseController {
   }
 
   @Delete(':id')
-  @UseGuards(AdminGuard)
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a course (Admin only)' })
   @ApiResponse({
@@ -217,7 +220,8 @@ export class CourseController {
   }
 
   @Patch(':id/publish')
-  @UseGuards(AdminGuard)
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Publish a course (Admin only)' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Course published' })
@@ -230,7 +234,8 @@ export class CourseController {
   }
 
   @Patch(':id/unpublish')
-  @UseGuards(AdminGuard)
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Unpublish a course (Admin only)' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Course unpublished' })

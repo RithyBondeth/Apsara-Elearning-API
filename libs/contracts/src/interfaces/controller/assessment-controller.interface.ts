@@ -52,6 +52,14 @@ export interface IChallengeRpcController {
   findChallenge(
     payload: string | { id: string },
   ): Promise<ChallengeResponseDTO>;
+  findPublicChallenges(payload: {
+    userId: string;
+    lessonId: string;
+  }): Promise<ChallengeResponseDTO[]>;
+  findPublicChallenge(payload: {
+    userId: string;
+    id: string;
+  }): Promise<ChallengeResponseDTO>;
   updateChallenge(
     payload: UpdateChallengeRequestDTO & { id: string },
   ): Promise<ChallengeResponseDTO>;
@@ -62,6 +70,10 @@ export interface IChallengeRpcController {
   findTestCases(
     payload: string | { challengeId: string; includeHidden?: boolean },
   ): Promise<TestCaseResponseDTO[]>;
+  findPublicTestCases(payload: {
+    userId: string;
+    challengeId: string;
+  }): Promise<TestCaseResponseDTO[]>;
   updateTestCase(
     payload: UpdateTestCaseRequestDTO & { id: string },
   ): Promise<TestCaseResponseDTO>;
@@ -79,9 +91,10 @@ export interface IChallengeRpcController {
     userId: string;
     challengeId: string;
   }): Promise<SubmissionResponseDTO[]>;
-  findSubmission(
-    payload: string | { id: string },
-  ): Promise<SubmissionResponseDTO>;
+  findSubmission(payload: {
+    userId: string;
+    id: string;
+  }): Promise<SubmissionResponseDTO>;
 }
 
 export interface IAuthoringRpcController {
@@ -132,12 +145,13 @@ export interface IAttemptRpcController {
     answers: AttemptAnswerDTO[];
   }): Promise<SubmitAttemptResponseDTO>;
   findAllByUser(payload: { userId: string }): Promise<AttemptResponseDTO[]>;
-  findOne(payload: string | { id: string }): Promise<AttemptResponseDTO>;
+  findOne(payload: { userId: string; id: string }): Promise<AttemptResponseDTO>;
   findByQuiz(payload: {
     userId: string;
     quizId: string;
   }): Promise<AttemptResponseDTO[]>;
-  findAnswers(
-    payload: string | { attemptId: string },
-  ): Promise<AttemptAnswerResponseDTO[]>;
+  findAnswers(payload: {
+    userId: string;
+    attemptId: string;
+  }): Promise<AttemptAnswerResponseDTO[]>;
 }

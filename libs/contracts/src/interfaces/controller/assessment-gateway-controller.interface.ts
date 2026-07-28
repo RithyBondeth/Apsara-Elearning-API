@@ -46,10 +46,13 @@ import {
 // ---- Public (api-gateway) ----
 
 export interface IQuizHttpController {
-  findByLesson(lessonId: string): Promise<QuizResponseDTO[]>;
+  findByLesson(userId: string, lessonId: string): Promise<QuizResponseDTO[]>;
   myAttempts(userId: string): Promise<AttemptResponseDTO[]>;
-  attempt(id: string): Promise<AttemptResponseDTO>;
-  attemptAnswers(id: string): Promise<AttemptAnswerResponseDTO[]>;
+  attempt(userId: string, id: string): Promise<AttemptResponseDTO>;
+  attemptAnswers(
+    userId: string,
+    id: string,
+  ): Promise<AttemptAnswerResponseDTO[]>;
   submit(
     userId: string,
     attemptId: string,
@@ -59,11 +62,14 @@ export interface IQuizHttpController {
 }
 
 export interface IChallengeHttpController {
-  findByLesson(lessonId: string): Promise<ChallengeResponseDTO[]>;
+  findByLesson(
+    userId: string,
+    lessonId: string,
+  ): Promise<ChallengeResponseDTO[]>;
   mySubmissions(userId: string): Promise<SubmissionResponseDTO[]>;
-  submission(id: string): Promise<SubmissionResponseDTO>;
-  findOne(id: string): Promise<ChallengeResponseDTO>;
-  testCases(id: string): Promise<TestCaseResponseDTO[]>;
+  submission(userId: string, id: string): Promise<SubmissionResponseDTO>;
+  findOne(userId: string, id: string): Promise<ChallengeResponseDTO>;
+  testCases(userId: string, id: string): Promise<TestCaseResponseDTO[]>;
   submit(
     userId: string,
     challengeId: string,

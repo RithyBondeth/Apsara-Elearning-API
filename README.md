@@ -211,6 +211,17 @@ auto-awards it.
 > and without `JUDGE0_URL` code grading uses a placeholder (a test passes when its
 > expected output appears in the source). Both become real once the key/URL is set.
 
+## Course authorization
+
+Published courses are public by default. Set `requiresSubscription` on a course
+to require an active, unexpired subscription for its lesson content, quizzes,
+challenges, enrollment, and progress updates. Public course/module endpoints
+never expose unpublished content, and premium lesson lists return metadata with
+`locked: true` while omitting lesson content and video URLs.
+
+Apply `migrations/20260728_add_course_entitlements.sql` before deploying this
+feature. Existing courses remain free because the new column defaults to false.
+
 ## Database
 
 Schema lives in `libs/database/src/schemas/**`. The dev workflow is **`db:push`**

@@ -63,6 +63,7 @@ export class LoginService implements ILoginService {
       id: foundUser.id,
       info: foundUser.email,
       type: 'access',
+      role: foundUser.isAdmin ? 'admin' : 'student',
       isAdmin: foundUser.isAdmin,
     };
 

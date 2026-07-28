@@ -86,7 +86,8 @@ export class JwtService {
       if (
         decoded.type !== 'access' ||
         typeof decoded.id !== 'string' ||
-        typeof decoded.info !== 'string'
+        typeof decoded.info !== 'string' ||
+        !['student', 'admin'].includes(decoded.role)
       ) {
         throw new Error('Invalid access token');
       }

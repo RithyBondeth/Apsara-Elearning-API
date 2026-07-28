@@ -36,7 +36,7 @@ export class ModuleController implements IModuleHttpController {
   ): Promise<ModuleResponseDTO[]> {
     return rpcCall<ModuleResponseDTO[]>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.MODULE_FIND_ALL,
+      COURSE_SERVICE.ACTIONS.MODULE_FIND_PUBLIC_ALL,
       { courseId },
     );
   }
@@ -55,7 +55,7 @@ export class ModuleController implements IModuleHttpController {
   findOne(@Param('id') id: string): Promise<ModuleResponseDTO> {
     return rpcCall<ModuleResponseDTO>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.MODULE_FIND_ONE,
+      COURSE_SERVICE.ACTIONS.MODULE_FIND_PUBLIC_ONE,
       id,
     );
   }

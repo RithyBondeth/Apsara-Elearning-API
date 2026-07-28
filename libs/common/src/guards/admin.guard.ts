@@ -33,7 +33,7 @@ export class AdminGuard implements CanActivate {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    if (!payload.isAdmin) {
+    if (payload.role !== 'admin' && !payload.isAdmin) {
       throw new ForbiddenException('Administrator access required');
     }
 

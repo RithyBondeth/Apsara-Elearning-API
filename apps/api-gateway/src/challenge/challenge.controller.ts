@@ -47,12 +47,13 @@ export class ChallengeController implements IChallengeHttpController {
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   findByLesson(
+    @CurrentUser('id') userId: string,
     @Param('lessonId') lessonId: string,
   ): Promise<ChallengeResponseDTO[]> {
     return rpcCall<ChallengeResponseDTO[]>(
       this.challengeClient,
-      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ALL,
-      { lessonId },
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_PUBLIC_ALL,
+      { lessonId, userId },
     );
   }
 
@@ -86,11 +87,14 @@ export class ChallengeController implements IChallengeHttpController {
     description: 'Submission not found',
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  submission(@Param('id') id: string): Promise<SubmissionResponseDTO> {
+  submission(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<SubmissionResponseDTO> {
     return rpcCall<SubmissionResponseDTO>(
       this.challengeClient,
       ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_FIND_ONE,
-      { id },
+      { id, userId },
     );
   }
 
@@ -106,14 +110,15 @@ export class ChallengeController implements IChallengeHttpController {
     description: 'Challenge not found',
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  async findOne(@Param('id') id: string): Promise<ChallengeResponseDTO> {
-    const challenge = await rpcCall<ChallengeResponseDTO>(
+  findOne(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<ChallengeResponseDTO> {
+    return rpcCall<ChallengeResponseDTO>(
       this.challengeClient,
-      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ONE,
-      { id },
+      ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_PUBLIC_ONE,
+      { id, userId },
     );
-    if (challenge) delete challenge.solutionCode;
-    return challenge;
   }
 
   @Get(':id/test-cases')
@@ -124,11 +129,14 @@ export class ChallengeController implements IChallengeHttpController {
     type: [TestCaseResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  testCases(@Param('id') id: string): Promise<TestCaseResponseDTO[]> {
+  testCases(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<TestCaseResponseDTO[]> {
     return rpcCall<TestCaseResponseDTO[]>(
       this.challengeClient,
-      ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_ALL,
-      { challengeId: id },
+      ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_PUBLIC_ALL,
+      { challengeId: id, userId },
     );
   }
 

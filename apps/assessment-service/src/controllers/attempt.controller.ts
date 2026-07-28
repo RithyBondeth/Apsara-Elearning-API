@@ -3,7 +3,6 @@ import { I_ATTEMPT_SERVICE } from '@app/contracts';
 import type { IAttemptRpcController, IAttemptService } from '@app/contracts';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ASSESSMENT_SERVICE, AttemptAnswerDTO } from '@app/contracts';
-import { idOf } from '@app/utils';
 
 @Controller()
 export class AttemptController implements IAttemptRpcController {
@@ -38,8 +37,8 @@ export class AttemptController implements IAttemptRpcController {
   }
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_FIND_ONE)
-  findOne(@Payload() payload: string | { id: string }) {
-    return this.attempts.findOne(idOf(payload));
+  findOne(@Payload() payload: { userId: string; id: string }) {
+    return this.attempts.findOne(payload.userId, payload.id);
   }
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_FIND_BY_QUIZ)
@@ -48,8 +47,7 @@ export class AttemptController implements IAttemptRpcController {
   }
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_ANSWER_FIND_ALL)
-  findAnswers(@Payload() payload: string | { attemptId: string }) {
-    const attemptId = typeof payload === 'string' ? payload : payload.attemptId;
-    return this.attempts.findAnswers(attemptId);
+  findAnswers(@Payload() payload: { userId: string; attemptId: string }) {
+    return this.attempts.findAnswers(payload.userId, payload.attemptId);
   }
 }

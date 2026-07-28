@@ -52,5 +52,8 @@ export const courses = pgTable('courses', {
   difficulty: difficultyEnum('difficulty').notNull().default('beginner'),
   estimatedHours: integer('estimated_hours'),
   published: boolean('published').default(false),
+  requiresSubscription: boolean('requires_subscription')
+    .notNull()
+    .default(false),
   ...timestamps,
 });

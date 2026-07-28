@@ -15,7 +15,11 @@ import {
   LessonProgressResponseDTO,
   USER_SERVICE,
 } from '@app/contracts';
-import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import {
+  CourseEntitlementService,
+  RpcBadRequestException,
+  RpcNotFoundException,
+} from '@app/common';
 
 /** XP granted the first time a lesson is completed. */
 const XP_PER_LESSON = 10;
@@ -27,6 +31,7 @@ export class LessonProgressService implements ILessonProgressService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
+    private readonly entitlements: CourseEntitlementService,
   ) {}
 
   async markComplete(
@@ -34,6 +39,7 @@ export class LessonProgressService implements ILessonProgressService {
     lessonId: string,
   ): Promise<LessonCompletionResponseDTO> {
     const courseId = await this.courseIdForLesson(lessonId);
+    await this.entitlements.assertCanEnroll(userId, courseId);
     await this.ensureEnrolled(userId, courseId);
 
     const alreadyCompleted = await this.isCompleted(userId, lessonId);

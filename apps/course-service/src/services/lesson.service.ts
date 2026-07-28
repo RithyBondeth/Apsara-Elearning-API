@@ -15,13 +15,17 @@ import {
   RpcBadRequestException,
   RpcConflictException,
   RpcNotFoundException,
+  CourseEntitlementService,
 } from '@app/common';
 
 @Injectable()
 export class LessonService implements ILessonService {
   private readonly logger = new Logger(LessonService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: CourseEntitlementService,
+  ) {}
 
   async create(
     moduleId: string,
@@ -73,6 +77,47 @@ export class LessonService implements ILessonService {
       .limit(1);
     if (!found) throw new RpcNotFoundException('Lesson not found');
     return new LessonResponseDTO(found);
+  }
+
+  async findPublicByModule(
+    moduleId: string,
+    userId?: string,
+  ): Promise<LessonResponseDTO[]> {
+    const canReadContent = await this.entitlements.canReadModuleContent(
+      moduleId,
+      userId,
+    );
+    const rows = await this.db
+      .select()
+      .from(lessons)
+      .where(eq(lessons.moduleId, moduleId))
+      .orderBy(lessons.order);
+
+    return rows.map((row) => {
+      if (canReadContent)
+        return new LessonResponseDTO({ ...row, locked: false });
+      return new LessonResponseDTO({
+        ...row,
+        content: undefined,
+        videoUrl: undefined,
+        locked: true,
+      });
+    });
+  }
+
+  async findPublicOne(id: string, userId?: string): Promise<LessonResponseDTO> {
+    await this.entitlements.assertCanReadLesson({ id }, userId);
+    const lesson = await this.findOne(id);
+    return new LessonResponseDTO({ ...lesson, locked: false });
+  }
+
+  async findPublicBySlug(
+    slug: string,
+    userId?: string,
+  ): Promise<LessonResponseDTO> {
+    await this.entitlements.assertCanReadLesson({ slug }, userId);
+    const lesson = await this.findBySlug(slug);
+    return new LessonResponseDTO({ ...lesson, locked: false });
   }
 
   async update(

@@ -34,6 +34,7 @@ describe('JwtService security boundaries', () => {
       id: 'user-1',
       info: 'user@example.com',
       type: 'access',
+      role: 'student',
       isAdmin: false,
     });
 
@@ -41,6 +42,7 @@ describe('JwtService security boundaries', () => {
       id: 'user-1',
       info: 'user@example.com',
       type: 'access',
+      role: 'student',
     });
   });
 

@@ -45,6 +45,8 @@ export const COURSE_SERVICE = {
     COURSE_CREATE: 'course.course.create',
     COURSE_FIND_ALL: 'course.course.find_all', // all (admin)
     COURSE_FIND_PUBLISHED: 'course.course.find_published', // published only (public)
+    COURSE_FIND_PUBLISHED_ONE: 'course.course.find_published_one',
+    COURSE_FIND_PUBLISHED_BY_SLUG: 'course.course.find_published_by_slug',
     COURSE_SEARCH: 'course.course.search', // keyword search over published courses
     COURSE_FIND_ONE: 'course.course.find_one',
     COURSE_FIND_BY_SLUG: 'course.course.find_by_slug',
@@ -61,6 +63,8 @@ export const COURSE_SERVICE = {
     MODULE_CREATE: 'course.module.create',
     MODULE_FIND_ALL: 'course.module.find_all', // by courseId
     MODULE_FIND_ONE: 'course.module.find_one',
+    MODULE_FIND_PUBLIC_ALL: 'course.module.find_public_all',
+    MODULE_FIND_PUBLIC_ONE: 'course.module.find_public_one',
     MODULE_UPDATE: 'course.module.update',
     MODULE_DELETE: 'course.module.delete',
     MODULE_REORDER: 'course.module.reorder',
@@ -70,6 +74,9 @@ export const COURSE_SERVICE = {
     LESSON_FIND_ALL: 'course.lesson.find_all', // by moduleId
     LESSON_FIND_ONE: 'course.lesson.find_one',
     LESSON_FIND_BY_SLUG: 'course.lesson.find_by_slug',
+    LESSON_FIND_PUBLIC_ALL: 'course.lesson.find_public_all',
+    LESSON_FIND_PUBLIC_ONE: 'course.lesson.find_public_one',
+    LESSON_FIND_PUBLIC_BY_SLUG: 'course.lesson.find_public_by_slug',
     LESSON_UPDATE: 'course.lesson.update',
     LESSON_DELETE: 'course.lesson.delete',
     LESSON_REORDER: 'course.lesson.reorder',

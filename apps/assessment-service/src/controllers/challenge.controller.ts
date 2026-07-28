@@ -39,9 +39,24 @@ export class ChallengeController implements IChallengeRpcController {
     return this.challenges.findChallengesByLesson(lessonId);
   }
 
+  @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_PUBLIC_ALL)
+  findPublicChallenges(
+    @Payload() payload: { userId: string; lessonId: string },
+  ) {
+    return this.challenges.findPublicChallengesByLesson(
+      payload.lessonId,
+      payload.userId,
+    );
+  }
+
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_ONE)
   findChallenge(@Payload() payload: string | { id: string }) {
     return this.challenges.findChallenge(idOf(payload));
+  }
+
+  @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_FIND_PUBLIC_ONE)
+  findPublicChallenge(@Payload() payload: { userId: string; id: string }) {
+    return this.challenges.findPublicChallenge(payload.id, payload.userId);
   }
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.CHALLENGE_UPDATE)
@@ -77,6 +92,16 @@ export class ChallengeController implements IChallengeRpcController {
     return this.challenges.findTestCases(
       payload.challengeId,
       payload.includeHidden ?? false,
+    );
+  }
+
+  @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.TEST_CASE_FIND_PUBLIC_ALL)
+  findPublicTestCases(
+    @Payload() payload: { userId: string; challengeId: string },
+  ) {
+    return this.challenges.findPublicTestCases(
+      payload.challengeId,
+      payload.userId,
     );
   }
 
@@ -122,7 +147,7 @@ export class ChallengeController implements IChallengeRpcController {
   }
 
   @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.SUBMISSION_FIND_ONE)
-  findSubmission(@Payload() payload: string | { id: string }) {
-    return this.submissions.findOne(idOf(payload));
+  findSubmission(@Payload() payload: { userId: string; id: string }) {
+    return this.submissions.findOne(payload.userId, payload.id);
   }
 }

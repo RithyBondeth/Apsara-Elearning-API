@@ -4,6 +4,7 @@ import {
   LoggerModule,
   RabbitmqModule,
   HealthModule,
+  CourseEntitlementService,
 } from '@app/common';
 import { DatabaseModule } from '@app/database';
 import {
@@ -41,6 +42,7 @@ import { CodeExecutionService } from './execution/code-execution.service';
     AssessmentHealthController,
   ],
   providers: [
+    CourseEntitlementService,
     AuthoringService,
     { provide: I_AUTHORING_SERVICE, useExisting: AuthoringService },
     AttemptService,

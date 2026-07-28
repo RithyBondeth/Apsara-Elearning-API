@@ -19,7 +19,11 @@ import {
   SubmitAttemptResponseDTO,
   USER_SERVICE,
 } from '@app/contracts';
-import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import {
+  CourseEntitlementService,
+  RpcBadRequestException,
+  RpcNotFoundException,
+} from '@app/common';
 import { gradeAnswer, GradableQuestion } from './graders';
 
 const PASS_THRESHOLD = 70;
@@ -31,6 +35,7 @@ export class AttemptService implements IAttemptService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
+    private readonly entitlements: CourseEntitlementService,
   ) {}
 
   /** Creates an attempt and returns the quiz with all answer keys stripped. */
@@ -44,6 +49,7 @@ export class AttemptService implements IAttemptService {
       .where(eq(quizzes.id, quizId))
       .limit(1);
     if (!quiz) throw new RpcNotFoundException('Quiz not found');
+    await this.entitlements.assertCanReadLesson({ id: quiz.lessonId }, userId);
 
     const questions = await this.db
       .select()
@@ -113,6 +119,7 @@ export class AttemptService implements IAttemptService {
       .where(eq(quizzes.id, attempt.quizId))
       .limit(1);
     if (!quiz) throw new RpcNotFoundException('Quiz not found');
+    await this.entitlements.assertCanReadLesson({ id: quiz.lessonId }, userId);
 
     // Full question rows — `question`/`explanation`/`order` feed the post-
     // submit review; `correctAnswer`/`type`/`points` drive grading.
@@ -292,11 +299,11 @@ export class AttemptService implements IAttemptService {
     return rows.map((row) => new AttemptResponseDTO(row));
   }
 
-  async findOne(id: string): Promise<AttemptResponseDTO> {
+  async findOne(userId: string, id: string): Promise<AttemptResponseDTO> {
     const [found] = await this.db
       .select()
       .from(quizAttempts)
-      .where(eq(quizAttempts.id, id))
+      .where(and(eq(quizAttempts.id, id), eq(quizAttempts.userId, userId)))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Attempt not found');
     return new AttemptResponseDTO(found);
@@ -316,7 +323,11 @@ export class AttemptService implements IAttemptService {
     return rows.map((row) => new AttemptResponseDTO(row));
   }
 
-  async findAnswers(attemptId: string): Promise<AttemptAnswerResponseDTO[]> {
+  async findAnswers(
+    userId: string,
+    attemptId: string,
+  ): Promise<AttemptAnswerResponseDTO[]> {
+    await this.findOne(userId, attemptId);
     const rows = await this.db
       .select()
       .from(quizAttemptAnswers)

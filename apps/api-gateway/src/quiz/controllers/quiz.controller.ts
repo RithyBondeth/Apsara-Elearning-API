@@ -47,12 +47,13 @@ export class QuizController implements IQuizHttpController {
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   findByLesson(
+    @CurrentUser('id') userId: string,
     @Param('lessonId') lessonId: string,
   ): Promise<QuizResponseDTO[]> {
     return rpcCall<QuizResponseDTO[]>(
       this.client,
-      ASSESSMENT_SERVICE.ACTIONS.QUIZ_FIND_ALL,
-      { lessonId },
+      ASSESSMENT_SERVICE.ACTIONS.QUIZ_FIND_PUBLIC_ALL,
+      { lessonId, userId },
     );
   }
 
@@ -84,11 +85,14 @@ export class QuizController implements IQuizHttpController {
     description: 'Attempt not found',
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  attempt(@Param('id') id: string): Promise<AttemptResponseDTO> {
+  attempt(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<AttemptResponseDTO> {
     return rpcCall<AttemptResponseDTO>(
       this.client,
       ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_FIND_ONE,
-      { id },
+      { id, userId },
     );
   }
 
@@ -100,11 +104,14 @@ export class QuizController implements IQuizHttpController {
     type: [AttemptAnswerResponseDTO],
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  attemptAnswers(@Param('id') id: string): Promise<AttemptAnswerResponseDTO[]> {
+  attemptAnswers(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<AttemptAnswerResponseDTO[]> {
     return rpcCall<AttemptAnswerResponseDTO[]>(
       this.client,
       ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_ANSWER_FIND_ALL,
-      { attemptId: id },
+      { attemptId: id, userId },
     );
   }
 

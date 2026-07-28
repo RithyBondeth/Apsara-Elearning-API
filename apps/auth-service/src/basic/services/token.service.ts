@@ -55,6 +55,7 @@ export class TokenService implements ITokenService {
       id: foundUser.id,
       info: foundUser.email,
       type: 'access',
+      role: foundUser.isAdmin ? 'admin' : 'student',
       isAdmin: foundUser.isAdmin,
     };
 

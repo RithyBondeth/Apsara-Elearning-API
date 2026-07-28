@@ -32,6 +32,17 @@ export class ModuleController implements IModuleRpcController {
     return this.moduleService.findOne(idOf(payload));
   }
 
+  @MessagePattern(COURSE_SERVICE.ACTIONS.MODULE_FIND_PUBLIC_ALL)
+  findPublicAll(@Payload() payload: string | { courseId: string }) {
+    const courseId = typeof payload === 'string' ? payload : payload.courseId;
+    return this.moduleService.findPublicByCourse(courseId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.MODULE_FIND_PUBLIC_ONE)
+  findPublicOne(@Payload() payload: string | { id: string }) {
+    return this.moduleService.findPublicOne(idOf(payload));
+  }
+
   @MessagePattern(COURSE_SERVICE.ACTIONS.MODULE_UPDATE)
   update(@Payload() payload: UpdateModuleRequestDTO & { id: string }) {
     const { id, data } = splitUpdate(payload);

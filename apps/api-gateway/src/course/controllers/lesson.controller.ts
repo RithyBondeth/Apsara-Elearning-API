@@ -5,6 +5,7 @@ import {
   Inject,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -13,10 +14,11 @@ import {
   LessonResponseDTO,
 } from '@app/contracts';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { rpcCall } from '@app/common';
+import { CurrentUser, OptionalJwtAuthGuard, rpcCall } from '@app/common';
 
 // Public read-only access to lessons. Mutations go through the admin gateway.
 @ApiTags('Lessons')
+@UseGuards(OptionalJwtAuthGuard)
 @Controller('lesson')
 export class LessonController implements ILessonHttpController {
   constructor(
@@ -33,11 +35,12 @@ export class LessonController implements ILessonHttpController {
   })
   findAllByModule(
     @Query('moduleId') moduleId: string,
+    @CurrentUser('id') userId?: string,
   ): Promise<LessonResponseDTO[]> {
     return rpcCall<LessonResponseDTO[]>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.LESSON_FIND_ALL,
-      { moduleId },
+      COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_ALL,
+      { moduleId, userId },
     );
   }
 
@@ -52,11 +55,14 @@ export class LessonController implements ILessonHttpController {
     status: HttpStatus.NOT_FOUND,
     description: 'Lesson not found',
   })
-  findBySlug(@Param('slug') slug: string): Promise<LessonResponseDTO> {
+  findBySlug(
+    @Param('slug') slug: string,
+    @CurrentUser('id') userId?: string,
+  ): Promise<LessonResponseDTO> {
     return rpcCall<LessonResponseDTO>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.LESSON_FIND_BY_SLUG,
-      slug,
+      COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_BY_SLUG,
+      { slug, userId },
     );
   }
 
@@ -71,11 +77,14 @@ export class LessonController implements ILessonHttpController {
     status: HttpStatus.NOT_FOUND,
     description: 'Lesson not found',
   })
-  findOne(@Param('id') id: string): Promise<LessonResponseDTO> {
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId?: string,
+  ): Promise<LessonResponseDTO> {
     return rpcCall<LessonResponseDTO>(
       this.courseClient,
-      COURSE_SERVICE.ACTIONS.LESSON_FIND_ONE,
-      id,
+      COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_ONE,
+      { id, userId },
     );
   }
 }

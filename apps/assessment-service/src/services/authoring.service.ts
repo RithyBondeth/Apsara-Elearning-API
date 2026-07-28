@@ -20,13 +20,20 @@ import {
   UpdateQuestionRequestDTO,
   UpdateQuizRequestDTO,
 } from '@app/contracts';
-import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import {
+  CourseEntitlementService,
+  RpcBadRequestException,
+  RpcNotFoundException,
+} from '@app/common';
 
 @Injectable()
 export class AuthoringService implements IAuthoringService {
   private readonly logger = new Logger(AuthoringService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: CourseEntitlementService,
+  ) {}
 
   // ---- Quiz ----
   async createQuiz(
@@ -59,6 +66,14 @@ export class AuthoringService implements IAuthoringService {
       .from(quizzes)
       .where(eq(quizzes.lessonId, lessonId));
     return rows.map((row) => new QuizResponseDTO(row));
+  }
+
+  async findPublicQuizzesByLesson(
+    lessonId: string,
+    userId: string,
+  ): Promise<QuizResponseDTO[]> {
+    await this.entitlements.assertCanReadLesson({ id: lessonId }, userId);
+    return this.findQuizzesByLesson(lessonId);
   }
 
   async findQuiz(id: string): Promise<QuizResponseDTO> {

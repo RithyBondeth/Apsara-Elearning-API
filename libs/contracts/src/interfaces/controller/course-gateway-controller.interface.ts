@@ -84,9 +84,12 @@ export interface IModuleHttpController {
 }
 
 export interface ILessonHttpController {
-  findAllByModule(moduleId: string): Promise<LessonResponseDTO[]>;
-  findBySlug(slug: string): Promise<LessonResponseDTO>;
-  findOne(id: string): Promise<LessonResponseDTO>;
+  findAllByModule(
+    moduleId: string,
+    userId?: string,
+  ): Promise<LessonResponseDTO[]>;
+  findBySlug(slug: string, userId?: string): Promise<LessonResponseDTO>;
+  findOne(id: string, userId?: string): Promise<LessonResponseDTO>;
 }
 
 export interface ISubjectHttpController {
