@@ -7,6 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { PinoLogger } from 'nestjs-pino';
+import type { Request, Response } from 'express';
 
 /** Requests slower than this are logged at WARN so they stand out. */
 const SLOW_REQUEST_MS = 1000;
@@ -32,26 +33,23 @@ export class TimingInterceptor implements NestInterceptor {
     const start = Date.now();
 
     if (type === 'http') {
-      const req = context.switchToHttp().getRequest();
-      const url: string = req.originalUrl || req.url || '';
+      const req = context.switchToHttp().getRequest<Request>();
+      const url = req.originalUrl || req.url || '';
       if (SKIP_PATH_PREFIXES.some((p) => url.startsWith(p))) {
         return next.handle();
       }
-      const res = context.switchToHttp().getResponse();
-      const method: string = req.method;
-      const route: string =
-        `${req.baseUrl || ''}${req.route?.path || ''}` || 'unmatched';
+      const res = context.switchToHttp().getResponse<Response>();
+      const method = req.method;
+      const routePath = (req as unknown as { route?: { path?: unknown } }).route
+        ?.path;
+      const route =
+        `${req.baseUrl || ''}${typeof routePath === 'string' ? routePath : ''}` ||
+        'unmatched';
       return next.handle().pipe(
         tap({
           next: () => this.logHttp(method, url, route, res.statusCode, start),
-          error: (err) =>
-            this.logHttp(
-              method,
-              url,
-              route,
-              err?.status || err?.statusCode || 500,
-              start,
-            ),
+          error: (error: unknown) =>
+            this.logHttp(method, url, route, this.statusCodeOf(error), start),
         }),
       );
     }
@@ -69,6 +67,13 @@ export class TimingInterceptor implements NestInterceptor {
     }
 
     return next.handle();
+  }
+
+  private statusCodeOf(error: unknown): number {
+    if (!error || typeof error !== 'object') return 500;
+    const record = error as Record<string, unknown>;
+    const status = record.status ?? record.statusCode;
+    return typeof status === 'number' ? status : 500;
   }
 
   private logHttp(

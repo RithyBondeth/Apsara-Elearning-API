@@ -17,7 +17,10 @@ import { userEntitlementGrants } from '@app/database/schemas/subscription/user-e
 @Injectable()
 export class EntitlementAdminService implements IEntitlementAdminService {
   constructor(
-    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    @Inject(DRIZZLE)
+    private readonly db: PostgresJsDatabase<{
+      userEntitlementGrants: typeof userEntitlementGrants;
+    }>,
     private readonly entitlements: EntitlementService,
   ) {}
 
@@ -31,7 +34,7 @@ export class EntitlementAdminService implements IEntitlementAdminService {
       .from(userEntitlementGrants)
       .where(eq(userEntitlementGrants.userId, userId))
       .orderBy(userEntitlementGrants.createdAt);
-    return rows.map((row) => new EntitlementGrantResponseDTO(row as any));
+    return rows.map((row) => this.toDTO(row));
   }
 
   async grant(
@@ -58,7 +61,7 @@ export class EntitlementAdminService implements IEntitlementAdminService {
         reason: dto.reason,
       })
       .returning();
-    return new EntitlementGrantResponseDTO(created as any);
+    return this.toDTO(created);
   }
 
   async revoke(id: string) {
@@ -74,6 +77,16 @@ export class EntitlementAdminService implements IEntitlementAdminService {
       .returning();
     if (!revoked)
       throw new RpcNotFoundException('Active entitlement grant not found');
-    return new EntitlementGrantResponseDTO(revoked as any);
+    return this.toDTO(revoked);
+  }
+
+  private toDTO(
+    row: typeof userEntitlementGrants.$inferSelect,
+  ): EntitlementGrantResponseDTO {
+    return new EntitlementGrantResponseDTO({
+      ...row,
+      entitlement: row.entitlement,
+      effect: row.effect,
+    });
   }
 }

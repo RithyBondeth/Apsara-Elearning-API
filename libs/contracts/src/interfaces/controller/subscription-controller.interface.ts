@@ -51,14 +51,20 @@ export interface ISubscriptionRpcController {
     id: string;
   }): Promise<CancelSubscriptionResponseDTO>;
   check(payload: { userId: string }): Promise<SubscriptionCheckResponseDTO>;
-  resolveEntitlements(payload: { userId: string }): Promise<ResolvedEntitlementDTO[]>;
-  findEntitlementGrants(payload: { userId: string }): Promise<EntitlementGrantResponseDTO[]>;
+  resolveEntitlements(payload: {
+    userId: string;
+  }): Promise<ResolvedEntitlementDTO[]>;
+  findEntitlementGrants(payload: {
+    userId: string;
+  }): Promise<EntitlementGrantResponseDTO[]>;
   createEntitlementGrant(payload: {
     userId: string;
     grantedBy: string;
     grant: CreateEntitlementGrantRequestDTO;
   }): Promise<EntitlementGrantResponseDTO>;
-  revokeEntitlementGrant(payload: { id: string }): Promise<EntitlementGrantResponseDTO>;
+  revokeEntitlementGrant(payload: {
+    id: string;
+  }): Promise<EntitlementGrantResponseDTO>;
   createPayment(dto: CreatePaymentRequestDTO): Promise<PaymentResponseDTO>;
   findPayments(payload: { userId: string }): Promise<PaymentResponseDTO[]>;
   findPayment(payload: string | { id: string }): Promise<PaymentResponseDTO>;

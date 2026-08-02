@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { HealthCheckError, HealthIndicatorResult } from '@nestjs/terminus';
 import { firstValueFrom, timeout } from 'rxjs';

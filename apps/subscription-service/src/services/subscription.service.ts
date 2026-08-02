@@ -20,7 +20,6 @@ import {
   CheckoutSessionResponseDTO,
   DRIZZLE,
   ISubscriptionService,
-  PlanResponseDTO,
   SubscriptionCheckResponseDTO,
   SubscriptionResponseDTO,
 } from '@app/contracts';

@@ -38,4 +38,7 @@ async function bootstrap() {
     `Course service is listening on queue ${configService.get<string>('rabbitmq.courseQueue')}`,
   );
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error('Course service failed to start', error);
+  process.exitCode = 1;
+});

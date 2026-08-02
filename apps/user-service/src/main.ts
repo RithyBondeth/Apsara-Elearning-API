@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { UserServiceModule } from './user-service.module';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { MicroserviceOptions } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { RabbitmqService } from '@app/common';
@@ -39,4 +39,7 @@ async function bootstrap() {
     `User service is listening on queue ${configService.get<string>('rabbitmq.userQueue')}`,
   );
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error('User service failed to start', error);
+  process.exitCode = 1;
+});

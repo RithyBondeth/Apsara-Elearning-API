@@ -7,6 +7,8 @@ import bcrypt from 'bcrypt';
 import { MATH_GRADE_12_ADVANCED } from './content/math-grade-12-advanced.mjs';
 import { MATH_GRADE_12_BASIC } from './content/math-grade-12-basic.mjs';
 import { BIOLOGY_GRADE_12 } from './content/biology-grade-12.mjs';
+import { SUBSCRIPTION_PLANS } from './content/subscription-plans.mjs';
+import { seedSubscriptionPlans } from './lib/seed-subscription-plans.mjs';
 
 /** Key-points heading that closes each maths lesson — the detail supplement
  *  is inserted just before it so the summary stays last. */
@@ -300,9 +302,11 @@ async function seed() {
   const subjectIds = await seedSubjects();
   const categoryIds = await seedProgrammingCategories();
   const { majorId } = await seedUniversity();
+  await seedSubscriptionPlans(sql, SUBSCRIPTION_PLANS);
   console.log(
     `  ${Object.keys(gradeIds).length} grade levels, ${Object.keys(subjectIds).length} subjects, ` +
-      `${Object.keys(categoryIds).length} programming categories, 1 faculty + 1 major.`,
+      `${Object.keys(categoryIds).length} programming categories, 1 faculty + 1 major, ` +
+      `${SUBSCRIPTION_PLANS.length} subscription plans.`,
   );
 
   console.log('Clearing previous demo data…');
