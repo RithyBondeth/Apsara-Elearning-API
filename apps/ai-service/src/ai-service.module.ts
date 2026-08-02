@@ -18,6 +18,7 @@ import { DeepSeekProvider } from './providers/deepseek.provider';
 import { GeminiProvider } from './providers/gemini.provider';
 import { OpenAiProvider } from './providers/openai.provider';
 import { ConversationService } from './services/conversation.service';
+import { LessonContextService } from './services/lesson-context.service';
 import { MessageService } from './services/message.service';
 import { UsageService } from './services/usage.service';
 import { ConversationController } from './controllers/conversation.controller';
@@ -34,6 +35,7 @@ import { UsageController } from './controllers/usage.controller';
   ],
   providers: [
     EntitlementService,
+    LessonContextService,
     AiGatewayService,
     AnthropicProvider,
     OpenAiProvider,

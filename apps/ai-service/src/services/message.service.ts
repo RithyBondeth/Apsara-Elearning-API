@@ -16,7 +16,8 @@ import {
   AiGatewayChatOptions,
   AiGatewayService,
 } from '../providers/ai-gateway.service';
-import { APSARA_SYSTEM_PROMPT } from '../anthropic/system-prompt';
+import { buildSystemPrompt } from '../anthropic/system-prompt';
+import { LessonContextService } from './lesson-context.service';
 import { EntitlementService } from '@app/common';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class MessageService implements IMessageService {
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly ai: AiGatewayService,
     private readonly entitlements: EntitlementService,
+    private readonly lessonContext: LessonContextService,
     @Inject(I_CONVERSATION_SERVICE)
     private readonly conversations: IConversationService,
   ) {}
@@ -69,7 +71,13 @@ export class MessageService implements IMessageService {
       .insert(aiMessages)
       .values({ conversationId, role: 'user', content });
 
-    const result = await this.ai.chat(APSARA_SYSTEM_PROMPT, history, options);
+    // Ground the reply in whatever lesson the student is currently on.
+    const context = await this.lessonContext.findCurrent(userId);
+    const result = await this.ai.chat(
+      buildSystemPrompt(context),
+      history,
+      options,
+    );
 
     // Persist the assistant reply.
     const [assistant] = await this.db
