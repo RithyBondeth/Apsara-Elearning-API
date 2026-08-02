@@ -34,4 +34,7 @@ async function bootstrap() {
     `Assessment service is listening on queue ${configService.get<string>('rabbitmq.assessmentQueue')}`,
   );
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error('Assessment service failed to start', error);
+  process.exitCode = 1;
+});

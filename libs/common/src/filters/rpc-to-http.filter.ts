@@ -37,9 +37,15 @@ export class RpcToHttpExceptionFilter implements ExceptionFilter {
         message = res;
         error = HttpStatus[statusCode] ?? 'Error';
       } else {
-        const body = res as Record<string, any>;
-        message = body.message ?? exception.message;
-        error = body.error ?? HttpStatus[statusCode] ?? 'Error';
+        const body = res as Record<string, unknown>;
+        message =
+          typeof body.message === 'string' || Array.isArray(body.message)
+            ? (body.message as string | string[])
+            : exception.message;
+        error =
+          typeof body.error === 'string'
+            ? body.error
+            : (HttpStatus[statusCode] ?? 'Error');
       }
     } else if (isRpcErrorPayload(exception)) {
       statusCode = exception.statusCode;
