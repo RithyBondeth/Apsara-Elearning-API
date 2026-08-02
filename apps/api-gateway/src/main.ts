@@ -4,7 +4,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
-import { RpcToHttpExceptionFilter, setupSwagger } from '@app/common';
+import {
+  resolveCorsOrigin,
+  RpcToHttpExceptionFilter,
+  setupSwagger,
+} from '@app/common';
 
 async function bootstrap() {
   // Create application context to get configService
@@ -31,14 +35,9 @@ async function bootstrap() {
     path: 'api/v1/internal/docs',
   });
 
-  // Enable CORS — restrict via CORS_ORIGINS (comma-separated); '*' if unset.
-  const corsOrigins = configService.get<string>('cors.origins');
-  const origin = corsOrigins
-    ? corsOrigins
-        .split(',')
-        .map((o) => o.trim())
-        .filter(Boolean)
-    : '*';
+  // Enable CORS — restrict via CORS_ORIGINS (comma-separated). Required in
+  // production; falls back to '*' for local development only.
+  const origin = resolveCorsOrigin(configService);
   if (origin === '*') {
     logger.warn('CORS is open to all origins — set CORS_ORIGINS to restrict.');
   }

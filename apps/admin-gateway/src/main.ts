@@ -3,9 +3,12 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { AdminGatewayModule } from './admin-gateway.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { RpcToHttpExceptionFilter, setupSwagger } from '@app/common';
+import {
+  resolveCorsOrigin,
+  RpcToHttpExceptionFilter,
+  setupSwagger,
+} from '@app/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -26,14 +29,9 @@ async function bootstrap() {
     path: 'admin/docs',
   });
 
-  // CORS — restrict via CORS_ORIGINS (comma-separated); '*' if unset.
-  const corsOrigins = configService.get<string>('cors.origins');
-  const origin = corsOrigins
-    ? corsOrigins
-        .split(',')
-        .map((o) => o.trim())
-        .filter(Boolean)
-    : '*';
+  // CORS — restrict via CORS_ORIGINS (comma-separated). Required in
+  // production; falls back to '*' for local development only.
+  const origin = resolveCorsOrigin(configService);
   if (origin === '*') {
     logger.warn('CORS is open to all origins — set CORS_ORIGINS to restrict.');
   }
