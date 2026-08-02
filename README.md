@@ -43,7 +43,7 @@ client ──► admin-gateway (:2222) ──┤──► auth-service
 | `course-service` | RMQ consumer | Subjects, grade levels, faculties, majors, courses, modules, lessons, enrollment, progress |
 | `assessment-service` | RMQ consumer | Quizzes (auto-graded, multi-type) + coding challenges (Judge0) |
 | `ai-service` | RMQ consumer | "Apsara AI" tutor (Anthropic Claude) |
-| `subscription-service` | RMQ consumer | Plans, subscriptions, payments (mock gateway) |
+| `subscription-service` | RMQ consumer | Plans, subscriptions, Stripe checkout, webhooks, and payments |
 
 Shared libraries: `@app/common` (config, JWT, guards, email, logger, RabbitMQ,
 RPC exceptions), `@app/contracts` (message patterns + DTOs), `@app/database`
@@ -59,9 +59,13 @@ RPC exceptions), `@app/contracts` (message patterns + DTOs), `@app/database`
 ```bash
 npm install
 cp .env.example .env   # then fill in values (see "Environment" below)
-npm run db:push        # sync the Drizzle schema to your PostgreSQL database
+npm run db:migrate     # apply committed, checksum-verified SQL migrations
 npm run seed           # optional: load demo data
 ```
+
+To add or refresh only the non-destructive local pricing catalog, run
+`npm run seed:plans`. Stripe Price IDs are read from
+`STRIPE_MONTHLY_PRICE_ID` and `STRIPE_YEARLY_PRICE_ID` when provided.
 
 ## Running
 
@@ -70,6 +74,11 @@ npm run seed           # optional: load demo data
 ```bash
 npm run dev            # starts RabbitMQ + all services with hot reload
 ```
+
+The development and production launch scripts apply pending migrations before
+starting services. Applied files are recorded in
+`apsara_migrations.applied_migrations`; an edited historical migration is
+rejected so deployed schema history cannot silently drift.
 
 **Manually:**
 

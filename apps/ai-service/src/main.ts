@@ -33,4 +33,7 @@ async function bootstrap() {
     `AI service is listening on queue ${configService.get<string>('rabbitmq.aiQueue')}`,
   );
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error('AI service failed to start', error);
+  process.exitCode = 1;
+});
