@@ -41,11 +41,12 @@
     "dev": "bash scripts/dev.sh",
     "start:prod:all": "bash scripts/prod.sh",
     "seed": "node scripts/seed.mjs",
+    "seed:plans": "node scripts/seed-plans.mjs",
     "validate:katex": "node scripts/validate-katex.mjs",
     "db:baseline": "node scripts/baseline-migrations.mjs",
     "db:generate": "drizzle-kit generate --config=libs/database/src/config/drizzle.config.ts",
     "db:push": "drizzle-kit push --config=libs/database/src/config/drizzle.config.ts",
-    "db:migrate": "drizzle-kit migrate --config=libs/database/src/config/drizzle.config.ts",
+    "db:migrate": "node scripts/apply-migrations.mjs",
     "db:studio": "drizzle-kit studio --config=libs/database/src/config/drizzle.config.ts"
   },
   "dependencies": {
