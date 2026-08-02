@@ -16,5 +16,6 @@ import { validationSchema } from './validation.schema';
       },
     }),
   ],
+  exports: [NestConfigModule],
 })
-export class ConfigModule {}
+export class ConfigurationModule {}

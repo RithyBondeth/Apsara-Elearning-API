@@ -1,20 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import * as schema from './schemas/users.schema';
+import { databaseConfig } from './config/database.config';
+import { DRIZZLE } from '@app/contracts';
 
 @Module({
   providers: [
     {
-      provide: 'DRIZZLE',
-      useFactory: (configService: ConfigService) => {
-        const sql = neon(configService.get<string>('database.url')!);
-        return drizzle(sql, { schema });
-      },
+      provide: DRIZZLE,
       inject: [ConfigService],
+      useFactory: databaseConfig,
     },
   ],
-  exports: ['DRIZZLE'],
+  exports: [DRIZZLE],
 })
 export class DatabaseModule {}

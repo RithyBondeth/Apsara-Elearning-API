@@ -1,0 +1,73 @@
+import { Controller, Inject } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import {
+  COURSE_SERVICE,
+  CreateLessonRequestDTO,
+  UpdateLessonRequestDTO,
+  I_LESSON_SERVICE,
+} from '@app/contracts';
+import type { ILessonService, ILessonRpcController } from '@app/contracts';
+import { idOf, slugOf, splitUpdate } from '@app/utils';
+
+@Controller()
+export class LessonController implements ILessonRpcController {
+  constructor(
+    @Inject(I_LESSON_SERVICE) private readonly lessonService: ILessonService,
+  ) {}
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_CREATE)
+  create(@Payload() payload: CreateLessonRequestDTO & { moduleId: string }) {
+    const { moduleId, ...dto } = payload;
+    return this.lessonService.create(moduleId, dto);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_ALL)
+  findAll(@Payload() payload: string | { moduleId: string }) {
+    const moduleId = typeof payload === 'string' ? payload : payload.moduleId;
+    return this.lessonService.findAllByModule(moduleId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_ONE)
+  findOne(@Payload() payload: string | { id: string }) {
+    return this.lessonService.findOne(idOf(payload));
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_BY_SLUG)
+  findBySlug(@Payload() payload: string | { slug: string }) {
+    return this.lessonService.findBySlug(slugOf(payload));
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_ALL)
+  findPublicAll(@Payload() payload: { moduleId: string; userId?: string }) {
+    return this.lessonService.findPublicByModule(
+      payload.moduleId,
+      payload.userId,
+    );
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_ONE)
+  findPublicOne(@Payload() payload: { id: string; userId?: string }) {
+    return this.lessonService.findPublicOne(payload.id, payload.userId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_FIND_PUBLIC_BY_SLUG)
+  findPublicBySlug(@Payload() payload: { slug: string; userId?: string }) {
+    return this.lessonService.findPublicBySlug(payload.slug, payload.userId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_UPDATE)
+  update(@Payload() payload: UpdateLessonRequestDTO & { id: string }) {
+    const { id, data } = splitUpdate(payload);
+    return this.lessonService.update(id, data);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_DELETE)
+  remove(@Payload() payload: string | { id: string }) {
+    return this.lessonService.remove(idOf(payload));
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.LESSON_REORDER)
+  reorder(@Payload() payload: { moduleId: string; orderedIds: string[] }) {
+    return this.lessonService.reorder(payload.moduleId, payload.orderedIds);
+  }
+}

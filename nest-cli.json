@@ -5,11 +5,32 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
+    "plugins": [
+      {
+        "name": "@nestjs/swagger",
+        "options": {
+          "classValidatorShim": true,
+          "introspectComments": true,
+          "dtoFileNameSuffix": [
+            ".dto.ts",
+            ".entity.ts"
+          ]
+        }
+      }
+    ]
   },
   "monorepo": true,
   "root": "apps/api-gateway",
   "projects": {
+    "admin-gateway": {
+      "type": "application",
+      "root": "apps/admin-gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/admin-gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/admin-gateway/tsconfig.app.json"
+      }
+    },
     "api-gateway": {
       "type": "application",
       "root": "apps/api-gateway",
@@ -17,6 +38,33 @@
       "sourceRoot": "apps/api-gateway/src",
       "compilerOptions": {
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
+      }
+    },
+    "assessment-service": {
+      "type": "application",
+      "root": "apps/assessment-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/assessment-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/assessment-service/tsconfig.app.json"
+      }
+    },
+    "ai-service": {
+      "type": "application",
+      "root": "apps/ai-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/ai-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ai-service/tsconfig.app.json"
+      }
+    },
+    "subscription-service": {
+      "type": "application",
+      "root": "apps/subscription-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/subscription-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/subscription-service/tsconfig.app.json"
       }
     },
     "auth-service": {
@@ -46,6 +94,15 @@
         "tsConfigPath": "libs/contracts/tsconfig.lib.json"
       }
     },
+    "course-service": {
+      "type": "application",
+      "root": "apps/course-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/course-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/course-service/tsconfig.app.json"
+      }
+    },
     "database": {
       "type": "library",
       "root": "libs/database",
@@ -62,6 +119,15 @@
       "sourceRoot": "apps/user-service/src",
       "compilerOptions": {
         "tsConfigPath": "apps/user-service/tsconfig.app.json"
+      }
+    },
+    "utils": {
+      "type": "library",
+      "root": "libs/utils",
+      "entryFile": "index",
+      "sourceRoot": "libs/utils/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/utils/tsconfig.lib.json"
       }
     }
   }

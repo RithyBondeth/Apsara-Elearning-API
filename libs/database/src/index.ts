@@ -1,2 +1,2 @@
 export * from './database.module';
-export * from './schemas/users.schema';
+export * from './schemas/user/user.schema';
