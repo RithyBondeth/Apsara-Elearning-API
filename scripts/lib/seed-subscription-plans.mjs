@@ -18,7 +18,10 @@ export async function seedSubscriptionPlans(sql, plans) {
             ai_credits = EXCLUDED.ai_credits,
             trial_days = EXCLUDED.trial_days,
             grace_period_days = EXCLUDED.grace_period_days,
-            stripe_price_id = EXCLUDED.stripe_price_id,
+            stripe_price_id = COALESCE(
+              EXCLUDED.stripe_price_id,
+              plans.stripe_price_id
+            ),
             updated_at = now()
       RETURNING id`;
 
