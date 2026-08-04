@@ -43,7 +43,10 @@ export const validationSchema = Joi.object({
   // Email
   RESEND_API_KEY: Joi.string().required(),
   EMAIL_FROM: Joi.string().required(),
-  SUPPORT_TO_EMAIL: Joi.string().email().required(),
+  // Optional: configuration.ts falls back to EMAIL_FROM. Required() here made
+  // every gateway fail to boot from a fresh clone, since .env.example ships it
+  // blank and Joi rejects an empty string.
+  SUPPORT_TO_EMAIL: Joi.string().email().allow('').optional(),
 
   // AI — optional; providers run in mock mode without their keys
   AI_PROVIDER: Joi.string()
