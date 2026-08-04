@@ -39,4 +39,7 @@ async function bootstrap() {
     `Auth service is listening on queue ${configService.get<string>('rabbitmq.authQueue')}`,
   );
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error('Auth service failed to start', error);
+  process.exitCode = 1;
+});

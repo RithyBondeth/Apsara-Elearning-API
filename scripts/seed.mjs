@@ -8,6 +8,8 @@ import { MATH_GRADE_12_ADVANCED } from './content/math-grade-12-advanced.mjs';
 import { MATH_GRADE_12_BASIC } from './content/math-grade-12-basic.mjs';
 import { BIOLOGY_GRADE_12 } from './content/biology-grade-12.mjs';
 import { CHEMISTRY_GRADE_12 } from './content/chemistry-grade-12.mjs';
+import { SUBSCRIPTION_PLANS } from './content/subscription-plans.mjs';
+import { seedSubscriptionPlans } from './lib/seed-subscription-plans.mjs';
 
 /** Key-points heading that closes each maths lesson — the detail supplement
  *  is inserted just before it so the summary stays last. */
@@ -33,49 +35,6 @@ const BADGES = [
 ];
 const BADGE_NAMES = BADGES.map(([name]) => name);
 
-// Subscription plans. Without these, /subscription/plans returns [] and the
-// pricing page renders empty — the whole billing stack is unreachable.
-//
-// `stripe_price_id` is deliberately left NULL: it is account-specific, so it
-// has to be filled in per environment. The pricing page already disables the
-// checkout button while it is missing, so the plans render and nothing breaks.
-//
-// `certificates` is granted by the paid tiers now that it is implemented —
-// issued on course completion and publicly verifiable by code. Free learners
-// still finish courses and keep their progress; the certificate is the paid
-// artefact.
-const PLANS = [
-  {
-    name: 'Standard',
-    slug: 'standard',
-    description: 'Every premium course across K–12 and university.',
-    price: '2.99',
-    billingPeriod: 'monthly',
-    aiCredits: 0,
-    trialDays: 7,
-    entitlements: ['courses:premium'],
-  },
-  {
-    name: 'Plus',
-    slug: 'plus',
-    description: 'Premium courses plus the Apsara AI tutor.',
-    price: '5.99',
-    billingPeriod: 'monthly',
-    aiCredits: 1000000,
-    trialDays: 7,
-    entitlements: ['courses:premium', 'ai:tutor', 'certificates'],
-  },
-  {
-    name: 'Plus Annual',
-    slug: 'plus-annual',
-    description: 'Everything in Plus, billed yearly — two months free.',
-    price: '59.99',
-    billingPeriod: 'yearly',
-    aiCredits: 1000000,
-    trialDays: 7,
-    entitlements: ['courses:premium', 'ai:tutor', 'certificates'],
-  },
-];
 
 // Slugs of every course this script owns — cleared and re-created each run.
 // 'math' / 'english' / 'python' / 'react' / 'algorithms' are chosen to match
@@ -159,39 +118,6 @@ async function clearDemo() {
   await sql`DELETE FROM users WHERE email IN (${ADMIN.email}, ${STUDENT.email})`;
 }
 
-/**
- * Upserts the subscription plans and their entitlements.
- *
- * Deliberately an upsert rather than delete-and-recreate: a live subscription
- * references its plan, so wiping the table on every seed run would either fail
- * on the foreign key or orphan a paying customer's subscription.
- */
-async function seedPlans() {
-  for (const plan of PLANS) {
-    const [row] = await sql`
-      INSERT INTO plans (name, slug, description, price, billing_period,
-                         ai_credits, trial_days)
-      VALUES (${plan.name}, ${plan.slug}, ${plan.description}, ${plan.price},
-              ${plan.billingPeriod}, ${plan.aiCredits}, ${plan.trialDays})
-      ON CONFLICT (slug) DO UPDATE
-        SET name           = EXCLUDED.name,
-            description    = EXCLUDED.description,
-            price          = EXCLUDED.price,
-            billing_period = EXCLUDED.billing_period,
-            ai_credits     = EXCLUDED.ai_credits,
-            trial_days     = EXCLUDED.trial_days,
-            updated_at     = now()
-      RETURNING id`;
-
-    // Entitlements are a plain join table with no natural ordering, so replace
-    // the set wholesale — that way removing one from PLANS actually revokes it.
-    await sql`DELETE FROM plan_entitlements WHERE plan_id = ${row.id}`;
-    for (const entitlement of plan.entitlements) {
-      await sql`INSERT INTO plan_entitlements (plan_id, entitlement)
-                VALUES (${row.id}, ${entitlement})`;
-    }
-  }
-}
 
 async function seedGradeLevels() {
   const ids = {};
@@ -380,9 +306,11 @@ async function seed() {
   const subjectIds = await seedSubjects();
   const categoryIds = await seedProgrammingCategories();
   const { majorId } = await seedUniversity();
+  await seedSubscriptionPlans(sql, SUBSCRIPTION_PLANS);
   console.log(
     `  ${Object.keys(gradeIds).length} grade levels, ${Object.keys(subjectIds).length} subjects, ` +
-      `${Object.keys(categoryIds).length} programming categories, 1 faculty + 1 major.`,
+      `${Object.keys(categoryIds).length} programming categories, 1 faculty + 1 major, ` +
+      `${SUBSCRIPTION_PLANS.length} subscription plans.`,
   );
 
   console.log('Clearing previous demo data…');
@@ -640,17 +568,14 @@ async function seed() {
               VALUES (${name}, ${description}, ${icon}, ${xpRequired})`;
   }
 
-  console.log('Creating subscription plans…');
-  await seedPlans();
-
   console.log('\n✓ Seed complete.');
   console.log(`  Admin:   ${ADMIN.email} / ${ADMIN.password}`);
   console.log(`  Student: ${STUDENT.email} / ${STUDENT.password}`);
   console.log(
-    `  Plans (${PLANS.length}): ${PLANS.map((p) => `${p.slug} $${p.price}`).join(', ')}.`,
+    `  Plans (${SUBSCRIPTION_PLANS.length}): ${SUBSCRIPTION_PLANS.map((p) => `${p.slug} $${p.price}`).join(', ')}.`,
   );
   console.log(
-    `           Set plans.stripe_price_id per environment to enable checkout.`,
+    `           Set STRIPE_MONTHLY_PRICE_ID / STRIPE_YEARLY_PRICE_ID to enable checkout.`,
   );
   console.log(
     `  Reference: Grades 1–12, ${SUBJECTS.length} subjects, ${PROGRAMMING_CATEGORIES.length} programming categories, Engineering → Computer Science.`,
