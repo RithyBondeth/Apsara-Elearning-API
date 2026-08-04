@@ -21,6 +21,7 @@ import {
   RpcNotFoundException,
 } from '@app/common';
 import { LEARNER_TIMEZONE, learnerToday, streakFromDays } from '@app/utils';
+import { CertificateService } from './certificate.service';
 
 /** XP granted the first time a lesson is completed. */
 const XP_PER_LESSON = 10;
@@ -36,6 +37,7 @@ export class LessonProgressService implements ILessonProgressService {
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
     private readonly entitlements: CourseEntitlementService,
+    private readonly certificates: CertificateService,
   ) {}
 
   async markComplete(
@@ -69,6 +71,10 @@ export class LessonProgressService implements ILessonProgressService {
     // second lesson on the same day doesn't inflate the streak and a returning
     // learner's broken streak is corrected rather than resumed.
     await this.syncStreak(userId);
+
+    if (enrollment.completed) {
+      await this.issueCertificate(userId, courseId);
+    }
 
     this.logger.log(`User ${userId} completed lesson ${lessonId}`);
     return new LessonCompletionResponseDTO({
@@ -138,6 +144,26 @@ export class LessonProgressService implements ILessonProgressService {
       // A streak is cosmetic; never fail a completion over it.
       this.logger.error(
         `Failed to sync streak for ${userId}: ${error instanceof Error ? error.message : error}`,
+      );
+    }
+  }
+
+  /**
+   * Issues the course certificate once the last lesson lands.
+   *
+   * Best-effort: a learner without the certificates entitlement (or one whose
+   * issue simply fails) must still get their lesson marked complete. They can
+   * claim it later through the explicit endpoint — issuing is idempotent.
+   */
+  private async issueCertificate(
+    userId: string,
+    courseId: string,
+  ): Promise<void> {
+    try {
+      await this.certificates.issue(userId, courseId);
+    } catch (error) {
+      this.logger.debug(
+        `No certificate issued for ${userId} on ${courseId}: ${error instanceof Error ? error.message : error}`,
       );
     }
   }

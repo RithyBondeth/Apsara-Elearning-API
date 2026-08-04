@@ -30,7 +30,9 @@ import { GradeLevelService } from './services/grade-level.service';
 import { LessonController } from './controllers/lesson.controller';
 import { LessonService } from './services/lesson.service';
 import { LessonProgressController } from './controllers/lesson-progress.controller';
+import { CertificateController } from './controllers/certificate.controller';
 import { LessonProgressService } from './services/lesson-progress.service';
+import { CertificateService } from './services/certificate.service';
 import { MajorController } from './controllers/major.controller';
 import { MajorService } from './services/major.service';
 import { ModuleController } from './controllers/module.controller';
@@ -60,6 +62,7 @@ import { CourseEntitlementService, EntitlementService } from '@app/common';
     GradeLevelController,
     LessonController,
     LessonProgressController,
+    CertificateController,
     MajorController,
     ModuleController,
     ProgrammingCategoryController,
@@ -68,6 +71,7 @@ import { CourseEntitlementService, EntitlementService } from '@app/common';
   ],
   providers: [
     EntitlementService,
+    CertificateService,
     CourseEntitlementService,
     { provide: I_COURSE_SERVICE, useClass: CourseService },
     { provide: I_ENROLLMENT_SERVICE, useClass: EnrollmentService },
