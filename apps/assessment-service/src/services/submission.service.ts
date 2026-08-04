@@ -2,8 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { challengeSubmissions } from '@app/database/schemas/challenge/challenge-submission.schema';
+import { codingChallenges } from '@app/database/schemas/challenge/coding-challenge.schema';
 import {
   CreateSubmissionRequestDTO,
   DRIZZLE,
@@ -92,13 +93,35 @@ export class SubmissionService implements ISubmissionService {
     });
   }
 
+  /**
+   * The learner's submissions, newest first, labelled with the challenge.
+   *
+   * Joined for the same reason attempts are: a submission row carries only a
+   * challengeId, and naming it client-side would cost a request per row.
+   */
   async findAllByUser(userId: string): Promise<SubmissionResponseDTO[]> {
     const rows = await this.db
-      .select()
+      .select({
+        submission: challengeSubmissions,
+        challengeTitle: codingChallenges.title,
+        lessonId: codingChallenges.lessonId,
+      })
       .from(challengeSubmissions)
+      .leftJoin(
+        codingChallenges,
+        eq(challengeSubmissions.challengeId, codingChallenges.id),
+      )
       .where(eq(challengeSubmissions.userId, userId))
-      .orderBy(challengeSubmissions.createdAt);
-    return rows.map((row) => new SubmissionResponseDTO(row));
+      .orderBy(desc(challengeSubmissions.createdAt));
+
+    return rows.map(
+      (row) =>
+        new SubmissionResponseDTO({
+          ...row.submission,
+          challengeTitle: row.challengeTitle ?? undefined,
+          lessonId: row.lessonId ?? undefined,
+        }),
+    );
   }
 
   async findByChallenge(
