@@ -20,7 +20,6 @@ import {
   CheckoutSessionResponseDTO,
   DRIZZLE,
   ISubscriptionService,
-  PlanResponseDTO,
   SubscriptionCheckResponseDTO,
   SubscriptionResponseDTO,
 } from '@app/contracts';
@@ -29,7 +28,7 @@ import {
   RpcConflictException,
   RpcNotFoundException,
 } from '@app/common';
-import { PaymentGatewayService } from '../payment/payment-gateway.service';
+import { PaymentProviderRegistry } from '../payment/payment-provider.registry';
 import { PlanService } from './plan.service';
 
 @Injectable()
@@ -39,7 +38,7 @@ export class SubscriptionService implements ISubscriptionService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly planService: PlanService,
-    private readonly gateway: PaymentGatewayService,
+    private readonly providers: PaymentProviderRegistry,
   ) {}
 
   async createCheckout(
@@ -63,29 +62,35 @@ export class SubscriptionService implements ISubscriptionService {
       );
     }
 
+    const provider = this.providers.active();
     const customerId = await this.findStripeCustomerId(userId);
-    const session = await this.gateway.createCheckoutSession({
+    const session = await provider.createCheckout({
       userId,
       planId,
-      priceId: plan.stripePriceId,
-      customerId,
+      priceReference: plan.stripePriceId,
+      customerReference: customerId,
       trialDays: plan.trialDays,
     });
-    if (!session.url) {
-      throw new RpcBadRequestException('Stripe did not return a checkout URL');
-    }
     return new CheckoutSessionResponseDTO({
-      sessionId: session.id,
+      sessionId: session.reference,
       url: session.url,
     });
   }
 
   async createBillingPortal(userId: string): Promise<BillingPortalResponseDTO> {
+    const provider = this.providers.active();
+    if (!provider.supportsBillingPortal) {
+      // Local rails generally have no hosted portal; the caller should offer
+      // in-app cancellation rather than a dead link.
+      throw new RpcBadRequestException(
+        `Provider '${provider.id}' has no hosted billing portal`,
+      );
+    }
     const customerId = await this.findStripeCustomerId(userId);
     if (!customerId) {
-      throw new RpcNotFoundException('No Stripe billing account found');
+      throw new RpcNotFoundException('No billing account found');
     }
-    const session = await this.gateway.createBillingPortalSession(customerId);
+    const session = await provider.createBillingPortal(customerId);
     return new BillingPortalResponseDTO({ url: session.url });
   }
 
@@ -137,21 +142,20 @@ export class SubscriptionService implements ISubscriptionService {
     if (!owned) throw new RpcNotFoundException('Subscription not found');
     if (!owned.providerSubscriptionId) {
       throw new RpcBadRequestException(
-        'Subscription is not connected to Stripe',
+        'Subscription is not connected to a payment provider',
       );
     }
 
-    const stripeSubscription = await this.gateway.cancelAtPeriodEnd(
-      owned.providerSubscriptionId,
-    );
-    const periodEnd = this.periodEnd(stripeSubscription);
+    const snapshot = await this.providers
+      .active()
+      .cancelAtPeriodEnd(owned.providerSubscriptionId);
     const [cancelled] = await this.db
       .update(subscriptions)
       .set({
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-        status: stripeSubscription.status,
-        currentPeriodEnd: periodEnd,
-        expiresAt: periodEnd,
+        cancelAtPeriodEnd: snapshot.cancelAtPeriodEnd,
+        status: snapshot.status,
+        currentPeriodEnd: snapshot.currentPeriodEnd,
+        expiresAt: snapshot.currentPeriodEnd,
         updatedAt: new Date(),
       })
       .where(eq(subscriptions.id, owned.id))
@@ -215,14 +219,5 @@ export class SubscriptionService implements ISubscriptionService {
       )
       .limit(1);
     return !!row;
-  }
-
-  private periodEnd(subscription: {
-    items: { data: Array<{ current_period_end: number }> };
-  }): Date | null {
-    const timestamps = subscription.items.data.map(
-      (item) => item.current_period_end,
-    );
-    return timestamps.length ? new Date(Math.max(...timestamps) * 1000) : null;
   }
 }

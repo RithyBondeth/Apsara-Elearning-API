@@ -78,6 +78,8 @@ export const validationSchema = Joi.object({
   }),
   // subscription-service enforces these at startup in production. They stay
   // optional here so unrelated services do not need billing credentials.
+  // Which payment rail the subscription flow drives.
+  PAYMENT_PROVIDER: Joi.string().valid('stripe').default('stripe'),
   STRIPE_SECRET_KEY: Joi.string()
     .pattern(/^sk_(test|live)_/)
     .allow('')
