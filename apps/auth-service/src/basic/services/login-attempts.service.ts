@@ -4,7 +4,10 @@ import { RedisService, RpcTooManyRequestsException } from '@app/common';
 
 /** Failed attempts allowed per email before the account is locked out. */
 export const MAX_FAILED_ATTEMPTS = 10;
-/** How long the lockout — and the counter behind it — lasts. */
+/**
+ * How long the lockout — and the counter behind it — lasts, measured from the
+ * most recent failed attempt (see RedisService.incr).
+ */
 export const LOCKOUT_SECONDS = 15 * 60;
 
 /**

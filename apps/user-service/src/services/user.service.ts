@@ -143,6 +143,10 @@ export class UserService implements IUserService {
    * returning learner's broken streak is corrected rather than resumed.
    */
   async updateStreak(id: string, streak: number): Promise<UserResponseDTO> {
+    // RPC payloads are untyped on the wire; a NaN here would reach the column.
+    if (!Number.isFinite(streak)) {
+      throw new RpcBadRequestException('Streak must be a number');
+    }
     const [updated] = await this.db
       .update(user)
       .set({ streak: Math.max(0, Math.trunc(streak)), updatedAt: new Date() })

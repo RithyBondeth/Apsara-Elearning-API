@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { lessonProgress } from '@app/database/schemas/course/lessons/lesson-progress.schema';
 import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
 import { modules } from '@app/database/schemas/course/module.schema';
@@ -113,15 +113,21 @@ export class LessonProgressService implements ILessonProgressService {
             eq(lessonProgress.completed, true),
             isNotNull(lessonProgress.completedAt),
           ),
-        )
-        .orderBy(desc(day))
-        // A streak longer than this is not worth the extra rows to confirm.
-        .limit(MAX_STREAK_DAYS);
+        );
 
-      const streak = streakFromDays(
-        rows.map((row) => row.day),
-        learnerToday(),
-      );
+      // Sorted here rather than in SQL on purpose. Postgres requires a SELECT
+      // DISTINCT query's ORDER BY expression to appear in the select list, and
+      // drizzle renders the two sides with different table qualifiers — so an
+      // ORDER BY on this expression is a runtime risk for no benefit. These are
+      // ISO dates, where lexicographic order is chronological order, and the
+      // row count is bounded by the learner's number of active days.
+      const days = rows
+        .map((row) => row.day)
+        .sort()
+        .reverse()
+        .slice(0, MAX_STREAK_DAYS);
+
+      const streak = streakFromDays(days, learnerToday());
 
       await firstValueFrom(
         this.userClient
