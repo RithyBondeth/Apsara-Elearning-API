@@ -33,6 +33,50 @@ const BADGES = [
 ];
 const BADGE_NAMES = BADGES.map(([name]) => name);
 
+// Subscription plans. Without these, /subscription/plans returns [] and the
+// pricing page renders empty — the whole billing stack is unreachable.
+//
+// `stripe_price_id` is deliberately left NULL: it is account-specific, so it
+// has to be filled in per environment. The pricing page already disables the
+// checkout button while it is missing, so the plans render and nothing breaks.
+//
+// The `certificates` entitlement is deliberately NOT granted by any plan.
+// It exists in the ENTITLEMENTS union and is advertised in marketing copy, but
+// nothing implements it — there is no certificate table, endpoint, or UI. Do
+// not add it here until there is something to deliver.
+const PLANS = [
+  {
+    name: 'Standard',
+    slug: 'standard',
+    description: 'Every premium course across K–12 and university.',
+    price: '2.99',
+    billingPeriod: 'monthly',
+    aiCredits: 0,
+    trialDays: 7,
+    entitlements: ['courses:premium'],
+  },
+  {
+    name: 'Plus',
+    slug: 'plus',
+    description: 'Premium courses plus the Apsara AI tutor.',
+    price: '5.99',
+    billingPeriod: 'monthly',
+    aiCredits: 1000000,
+    trialDays: 7,
+    entitlements: ['courses:premium', 'ai:tutor'],
+  },
+  {
+    name: 'Plus Annual',
+    slug: 'plus-annual',
+    description: 'Everything in Plus, billed yearly — two months free.',
+    price: '59.99',
+    billingPeriod: 'yearly',
+    aiCredits: 1000000,
+    trialDays: 7,
+    entitlements: ['courses:premium', 'ai:tutor'],
+  },
+];
+
 // Slugs of every course this script owns — cleared and re-created each run.
 // 'math' / 'english' / 'python' / 'react' / 'algorithms' are chosen to match
 // the slugs the web frontend already references (catalog.constant.ts,
@@ -113,6 +157,40 @@ async function clearDemo() {
   await sql`DELETE FROM courses WHERE slug = ANY(${DEMO_COURSE_SLUGS})`;
   await sql`DELETE FROM badges WHERE name = ANY(${BADGE_NAMES})`;
   await sql`DELETE FROM users WHERE email IN (${ADMIN.email}, ${STUDENT.email})`;
+}
+
+/**
+ * Upserts the subscription plans and their entitlements.
+ *
+ * Deliberately an upsert rather than delete-and-recreate: a live subscription
+ * references its plan, so wiping the table on every seed run would either fail
+ * on the foreign key or orphan a paying customer's subscription.
+ */
+async function seedPlans() {
+  for (const plan of PLANS) {
+    const [row] = await sql`
+      INSERT INTO plans (name, slug, description, price, billing_period,
+                         ai_credits, trial_days)
+      VALUES (${plan.name}, ${plan.slug}, ${plan.description}, ${plan.price},
+              ${plan.billingPeriod}, ${plan.aiCredits}, ${plan.trialDays})
+      ON CONFLICT (slug) DO UPDATE
+        SET name           = EXCLUDED.name,
+            description    = EXCLUDED.description,
+            price          = EXCLUDED.price,
+            billing_period = EXCLUDED.billing_period,
+            ai_credits     = EXCLUDED.ai_credits,
+            trial_days     = EXCLUDED.trial_days,
+            updated_at     = now()
+      RETURNING id`;
+
+    // Entitlements are a plain join table with no natural ordering, so replace
+    // the set wholesale — that way removing one from PLANS actually revokes it.
+    await sql`DELETE FROM plan_entitlements WHERE plan_id = ${row.id}`;
+    for (const entitlement of plan.entitlements) {
+      await sql`INSERT INTO plan_entitlements (plan_id, entitlement)
+                VALUES (${row.id}, ${entitlement})`;
+    }
+  }
 }
 
 async function seedGradeLevels() {
@@ -562,9 +640,18 @@ async function seed() {
               VALUES (${name}, ${description}, ${icon}, ${xpRequired})`;
   }
 
+  console.log('Creating subscription plans…');
+  await seedPlans();
+
   console.log('\n✓ Seed complete.');
   console.log(`  Admin:   ${ADMIN.email} / ${ADMIN.password}`);
   console.log(`  Student: ${STUDENT.email} / ${STUDENT.password}`);
+  console.log(
+    `  Plans (${PLANS.length}): ${PLANS.map((p) => `${p.slug} $${p.price}`).join(', ')}.`,
+  );
+  console.log(
+    `           Set plans.stripe_price_id per environment to enable checkout.`,
+  );
   console.log(
     `  Reference: Grades 1–12, ${SUBJECTS.length} subjects, ${PROGRAMMING_CATEGORIES.length} programming categories, Engineering → Computer Science.`,
   );

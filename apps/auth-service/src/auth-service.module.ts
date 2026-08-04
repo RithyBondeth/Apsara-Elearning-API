@@ -5,6 +5,7 @@ import {
   HealthModule,
   JwtModule,
   LoggerModule,
+  RedisModule,
 } from '@app/common';
 import { DatabaseModule } from '@app/database';
 import {
@@ -25,6 +26,7 @@ import { ResetPasswordController } from './basic/controllers/reset-password.cont
 import { ChangePasswordController } from './basic/controllers/change-password.controller';
 import { RegisterService } from './basic/services/register.service';
 import { LoginService } from './basic/services/login.service';
+import { LoginAttemptsService } from './basic/services/login-attempts.service';
 import { TokenService } from './basic/services/token.service';
 import { EmailVerificationService } from './basic/services/email-verification.service';
 import { PasswordService } from './basic/services/password.service';
@@ -38,6 +40,7 @@ import { AuthHealthController } from './health/health.controller';
     JwtModule,
     EmailModule,
     HealthModule,
+    RedisModule,
   ],
   controllers: [
     RegisterController,
@@ -52,6 +55,7 @@ import { AuthHealthController } from './health/health.controller';
     AuthHealthController,
   ],
   providers: [
+    LoginAttemptsService,
     { provide: I_REGISTER_SERVICE, useClass: RegisterService },
     { provide: I_LOGIN_SERVICE, useClass: LoginService },
     { provide: I_TOKEN_SERVICE, useClass: TokenService },

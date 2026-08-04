@@ -47,7 +47,10 @@ export default () => ({
     from: process.env.EMAIL_FROM,
   },
   support: {
-    toEmail: process.env.SUPPORT_TO_EMAIL,
+    // Falls back to the sender address so a fresh clone boots without extra
+    // setup — same pattern as jwt.actionSecret above. `||` not `??`: the schema
+    // allows an empty string, which must fall back too.
+    toEmail: process.env.SUPPORT_TO_EMAIL || process.env.EMAIL_FROM,
   },
 
   // AI
