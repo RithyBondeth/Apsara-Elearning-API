@@ -22,6 +22,18 @@ import { TimingInterceptor } from '../interceptors/timing.interceptor';
                   },
                 },
             level: isProduction ? 'info' : 'debug',
+            // pino-http's default req serializer logs every header, which
+            // would put the session bearer token and the BFF's shared proxy
+            // secret into plaintext logs on every request.
+            redact: {
+              paths: [
+                'req.headers.authorization',
+                'req.headers.cookie',
+                'req.headers["x-apsara-proxy-secret"]',
+                'res.headers["set-cookie"]',
+              ],
+              remove: true,
+            },
           },
         };
       },
