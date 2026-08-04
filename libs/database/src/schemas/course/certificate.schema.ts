@@ -35,5 +35,11 @@ export const certificates = pgTable(
     revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
     ...timestamps,
   },
-  (t) => [unique().on(t.userId, t.courseId), index().on(t.userId)],
+  // Named explicitly so the hand-written migration and a later `db:push`
+  // agree — an anonymous index() leaves drizzle to invent a name at push time,
+  // which shows up as drift against the DDL shipped in migrations/.
+  (t) => [
+    unique().on(t.userId, t.courseId),
+    index('certificates_user_id_index').on(t.userId),
+  ],
 );

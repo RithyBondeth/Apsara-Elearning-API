@@ -45,7 +45,8 @@ export class SubscriptionService implements ISubscriptionService {
     userId: string,
     planId: string,
   ): Promise<CheckoutSessionResponseDTO> {
-    if (await this.hasOpenStripeSubscription(userId)) {
+    const provider = this.providers.active();
+    if (await this.hasOpenSubscription(userId, provider.id)) {
       throw new RpcConflictException(
         'An active subscription already exists; use the billing portal to manage it',
       );
@@ -62,8 +63,7 @@ export class SubscriptionService implements ISubscriptionService {
       );
     }
 
-    const provider = this.providers.active();
-    const customerId = await this.findStripeCustomerId(userId);
+    const customerId = await this.findCustomerId(userId, provider.id);
     const session = await provider.createCheckout({
       userId,
       planId,
@@ -86,7 +86,7 @@ export class SubscriptionService implements ISubscriptionService {
         `Provider '${provider.id}' has no hosted billing portal`,
       );
     }
-    const customerId = await this.findStripeCustomerId(userId);
+    const customerId = await this.findCustomerId(userId, provider.id);
     if (!customerId) {
       throw new RpcNotFoundException('No billing account found');
     }
@@ -183,8 +183,10 @@ export class SubscriptionService implements ISubscriptionService {
     );
   }
 
-  private async findStripeCustomerId(
+  /** The payer's customer record on a given rail, if we have opened one. */
+  private async findCustomerId(
     userId: string,
+    providerId: string,
   ): Promise<string | undefined> {
     const [row] = await this.db
       .select({ customerId: subscriptions.providerCustomerId })
@@ -192,7 +194,7 @@ export class SubscriptionService implements ISubscriptionService {
       .where(
         and(
           eq(subscriptions.userId, userId),
-          eq(subscriptions.provider, 'stripe'),
+          eq(subscriptions.provider, providerId),
           isNotNull(subscriptions.providerCustomerId),
         ),
       )
@@ -201,14 +203,22 @@ export class SubscriptionService implements ISubscriptionService {
     return row?.customerId ?? undefined;
   }
 
-  private async hasOpenStripeSubscription(userId: string): Promise<boolean> {
+  /**
+   * Scoped to the active rail, not hardcoded to Stripe: pinning this to one
+   * provider would silently switch the guard off the moment a local rail is
+   * selected, letting a learner open a second concurrent subscription.
+   */
+  private async hasOpenSubscription(
+    userId: string,
+    providerId: string,
+  ): Promise<boolean> {
     const [row] = await this.db
       .select({ id: subscriptions.id })
       .from(subscriptions)
       .where(
         and(
           eq(subscriptions.userId, userId),
-          eq(subscriptions.provider, 'stripe'),
+          eq(subscriptions.provider, providerId),
           isNotNull(subscriptions.providerSubscriptionId),
           notInArray(subscriptions.status, [
             'canceled',
