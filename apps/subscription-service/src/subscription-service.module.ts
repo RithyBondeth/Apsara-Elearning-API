@@ -18,6 +18,8 @@ import { PlanService } from './services/plan.service';
 import { SubscriptionService } from './services/subscription.service';
 import { PaymentService } from './services/payment.service';
 import { PaymentGatewayService } from './payment/payment-gateway.service';
+import { StripePaymentProvider } from './payment/stripe.provider';
+import { PaymentProviderRegistry } from './payment/payment-provider.registry';
 import { EntitlementAdminService } from './services/entitlement-admin.service';
 
 @Module({
@@ -40,6 +42,8 @@ import { EntitlementAdminService } from './services/entitlement-admin.service';
       useExisting: EntitlementAdminService,
     },
     PaymentGatewayService,
+    StripePaymentProvider,
+    PaymentProviderRegistry,
   ],
 })
 export class SubscriptionServiceModule {}

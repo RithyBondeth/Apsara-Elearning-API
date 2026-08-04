@@ -32,6 +32,21 @@ export class CourseEntitlementService {
     if (!row?.published) throw new RpcNotFoundException('Module not found');
   }
 
+  /**
+   * Whether this caller may see lesson bodies for a course. Throws if the
+   * course isn't published, so callers get a 404 rather than an empty outline.
+   *
+   * Resolving access once per course lets the outline endpoint gate every
+   * lesson from a single check instead of one per module.
+   */
+  async canReadCourseContent(
+    courseId: string,
+    userId?: string,
+  ): Promise<boolean> {
+    const course = await this.courseAccess(courseId);
+    return this.hasContentAccess(course, userId);
+  }
+
   async canReadModuleContent(
     moduleId: string,
     userId?: string,

@@ -48,6 +48,7 @@ export const COURSE_SERVICE = {
     COURSE_FIND_PUBLISHED_ONE: 'course.course.find_published_one',
     COURSE_FIND_PUBLISHED_BY_SLUG: 'course.course.find_published_by_slug',
     COURSE_SEARCH: 'course.course.search', // keyword search over published courses
+    COURSE_FIND_STRUCTURE: 'course.course.find_structure', // modules + lessons, one call
     COURSE_FIND_ONE: 'course.course.find_one',
     COURSE_FIND_BY_SLUG: 'course.course.find_by_slug',
     COURSE_FIND_BY_SUBJECT: 'course.course.find_by_subject',
@@ -87,6 +88,11 @@ export const COURSE_SERVICE = {
     ENROLLMENT_FIND_BY_USER: 'course.enrollment.find_by_user',
     ENROLLMENT_FIND_BY_COURSE: 'course.enrollment.find_by_course',
     ENROLLMENT_CHECK: 'course.enrollment.check', // is user enrolled?
+
+    // Certificates
+    CERTIFICATE_ISSUE: 'course.certificate.issue', // idempotent claim
+    CERTIFICATE_FIND_BY_USER: 'course.certificate.find_by_user',
+    CERTIFICATE_VERIFY: 'course.certificate.verify', // public, by code
 
     // Lesson Progress
     PROGRESS_MARK_COMPLETE: 'course.progress.mark_complete',

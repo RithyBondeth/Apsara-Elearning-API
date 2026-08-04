@@ -8,6 +8,7 @@ import { StructureController } from './controllers/structure.controller';
 import { LessonController } from './controllers/lesson.controller';
 import { EnrollmentController } from './controllers/enrollment.controller';
 import { LessonProgressController } from './controllers/lesson-progress.controller';
+import { CertificateController } from './controllers/certificate.controller';
 import { ModuleController } from './controllers/module.controller';
 
 @Module({
@@ -29,6 +30,7 @@ import { ModuleController } from './controllers/module.controller';
     ModuleController,
     EnrollmentController,
     LessonProgressController,
+    CertificateController,
   ],
 })
 export class CourseModule {}

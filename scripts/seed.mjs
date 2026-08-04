@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import { MATH_GRADE_12_ADVANCED } from './content/math-grade-12-advanced.mjs';
 import { MATH_GRADE_12_BASIC } from './content/math-grade-12-basic.mjs';
 import { BIOLOGY_GRADE_12 } from './content/biology-grade-12.mjs';
+import { CHEMISTRY_GRADE_12 } from './content/chemistry-grade-12.mjs';
 import { SUBSCRIPTION_PLANS } from './content/subscription-plans.mjs';
 import { seedSubscriptionPlans } from './lib/seed-subscription-plans.mjs';
 
@@ -34,6 +35,7 @@ const BADGES = [
 ];
 const BADGE_NAMES = BADGES.map(([name]) => name);
 
+
 // Slugs of every course this script owns — cleared and re-created each run.
 // 'math' / 'english' / 'python' / 'react' / 'algorithms' are chosen to match
 // the slugs the web frontend already references (catalog.constant.ts,
@@ -43,6 +45,7 @@ const DEMO_COURSE_SLUGS = [
   'math',
   'math-basic',
   'biology',
+  'chemistry',
   'english',
   'python',
   'react',
@@ -114,6 +117,7 @@ async function clearDemo() {
   await sql`DELETE FROM badges WHERE name = ANY(${BADGE_NAMES})`;
   await sql`DELETE FROM users WHERE email IN (${ADMIN.email}, ${STUDENT.email})`;
 }
+
 
 async function seedGradeLevels() {
   const ids = {};
@@ -380,7 +384,9 @@ async function seed() {
   // two-book structure: the "Basic" (មូលដ្ឋាន) track and the "Advanced"
   // (កម្រិតខ្ពស់) track. They share the Mathematics subject / Grade 12 but have
   // distinct slugs, so the web catalog lists them as two courses.
-  console.log('Creating Grade 12 Mathematics — Advanced track (full Khmer curriculum)…');
+  console.log(
+    'Creating Grade 12 Mathematics — Advanced track (full Khmer curriculum)…',
+  );
   const mathCounts = await createFullCourse(MATH_GRADE_12_ADVANCED, {
     subjectId: subjectIds[MATH_GRADE_12_ADVANCED.subjectSlug],
     gradeLevelId: gradeIds[MATH_GRADE_12_ADVANCED.grade],
@@ -408,6 +414,16 @@ async function seed() {
   console.log(
     `  ${bioCounts.modules} modules, ${bioCounts.lessons} lessons, ` +
       `${bioCounts.quizzes} quizzes, ${bioCounts.questions} questions.`,
+  );
+
+  console.log('Creating Grade 12 Chemistry (គីមីវិទ្យា)…');
+  const chemistryCounts = await createFullCourse(CHEMISTRY_GRADE_12, {
+    subjectId: subjectIds[CHEMISTRY_GRADE_12.subjectSlug],
+    gradeLevelId: gradeIds[CHEMISTRY_GRADE_12.grade],
+  });
+  console.log(
+    `  ${chemistryCounts.modules} modules, ${chemistryCounts.lessons} lessons, ` +
+      `${chemistryCounts.quizzes} quizzes, ${chemistryCounts.questions} questions.`,
   );
 
   console.log('Creating catalog demo courses (k12 + programming)…');
@@ -556,6 +572,12 @@ async function seed() {
   console.log(`  Admin:   ${ADMIN.email} / ${ADMIN.password}`);
   console.log(`  Student: ${STUDENT.email} / ${STUDENT.password}`);
   console.log(
+    `  Plans (${SUBSCRIPTION_PLANS.length}): ${SUBSCRIPTION_PLANS.map((p) => `${p.slug} $${p.price}`).join(', ')}.`,
+  );
+  console.log(
+    `           Set STRIPE_MONTHLY_PRICE_ID / STRIPE_YEARLY_PRICE_ID to enable checkout.`,
+  );
+  console.log(
     `  Reference: Grades 1–12, ${SUBJECTS.length} subjects, ${PROGRAMMING_CATEGORIES.length} programming categories, Engineering → Computer Science.`,
   );
   console.log(`  Courses (${DEMO_COURSE_SLUGS.length}):`);
@@ -578,6 +600,20 @@ async function seed() {
   console.log(
     `                            ${mathBasicCounts.modules} modules / ${mathBasicCounts.lessons} lessons / ` +
       `${mathBasicCounts.quizzes} quizzes / ${mathBasicCounts.questions} questions.`,
+  );
+  console.log(
+    `    "${BIOLOGY_GRADE_12.title}" — K–12, Grade 12, Biology (Khmer).`,
+  );
+  console.log(
+    `                            ${bioCounts.modules} modules / ${bioCounts.lessons} lessons / ` +
+      `${bioCounts.quizzes} quizzes / ${bioCounts.questions} questions.`,
+  );
+  console.log(
+    `    "${CHEMISTRY_GRADE_12.title}" — K–12, Grade 12, Chemistry (Khmer).`,
+  );
+  console.log(
+    `                            ${chemistryCounts.modules} modules / ${chemistryCounts.lessons} lessons / ` +
+      `${chemistryCounts.quizzes} quizzes / ${chemistryCounts.questions} questions.`,
   );
   console.log(`    "English"              — K–12, Grade 12, English.`);
   console.log(

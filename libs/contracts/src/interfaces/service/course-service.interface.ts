@@ -37,6 +37,7 @@ import {
 import {
   CreateModuleRequestDTO,
   ModuleResponseDTO,
+  ModuleWithLessonsResponseDTO,
   UpdateModuleRequestDTO,
 } from '../../dtos/course/module.dto';
 import {
@@ -73,6 +74,10 @@ export interface ICourseService {
   findPublishedOne(id: string): Promise<CourseResponseDTO>;
   findPublishedBySlug(slug: string): Promise<CourseResponseDTO>;
   search(dto: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]>;
+  findStructure(
+    courseId: string,
+    userId?: string,
+  ): Promise<ModuleWithLessonsResponseDTO[]>;
   findOne(id: string): Promise<CourseResponseDTO>;
   findBySlug(slug: string): Promise<CourseResponseDTO>;
   findBySubject(subjectId: string): Promise<CourseResponseDTO[]>;

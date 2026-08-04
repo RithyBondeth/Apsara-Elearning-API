@@ -28,7 +28,7 @@ export interface IUserService {
   updateAvatar(id: string, avatar: TAvatarPreset): Promise<UserResponseDTO>;
   remove(id: string): Promise<DeleteResponseDTO>;
   addXp(id: string, amount: number): Promise<AddXpResponseDTO>;
-  updateStreak(id: string, reset?: boolean): Promise<UserResponseDTO>;
+  updateStreak(id: string, streak: number): Promise<UserResponseDTO>;
 }
 
 export interface IBadgeService {

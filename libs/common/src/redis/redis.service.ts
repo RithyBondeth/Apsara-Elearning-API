@@ -45,6 +45,38 @@ export class RedisService {
     }
   }
 
+  /**
+   * Atomically increments a counter and returns its new value.
+   *
+   * The TTL is reapplied on every call, so the window slides from the most
+   * recent hit rather than the first. Deliberately a plain EXPIRE: the `NX`
+   * flag that would pin the window to the first hit needs Redis 7.0+, and on
+   * an older server it errors while the INCR still lands — leaving a counter
+   * that never expires. For a lockout, sliding is also the better behaviour:
+   * a caller who keeps hammering stays locked.
+   *
+   * Returns null when Redis is not configured — callers must treat that as
+   * "no opinion" rather than as a zero count.
+   */
+  async incr(key: string, ttlSeconds: number): Promise<number | null> {
+    if (!this.client) return null;
+    try {
+      const results = await this.client
+        .multi()
+        .incr(key)
+        .expire(key, ttlSeconds)
+        .exec();
+      const [incrError, count] = results?.[0] ?? [];
+      if (incrError) throw incrError;
+      return typeof count === 'number' ? count : null;
+    } catch (error) {
+      this.logger.error(
+        `Cache INCR failed for ${key}: ${(error as Error).message}`,
+      );
+      return null;
+    }
+  }
+
   async del(key: string): Promise<void> {
     if (!this.client) return;
     try {

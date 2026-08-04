@@ -53,6 +53,12 @@ export class RpcConflictException extends RpcAppException {
   }
 }
 
+export class RpcTooManyRequestsException extends RpcAppException {
+  constructor(message: string | string[] = 'Too many requests') {
+    super(HttpStatus.TOO_MANY_REQUESTS, message, 'Too Many Requests');
+  }
+}
+
 export class RpcInternalException extends RpcAppException {
   constructor(message: string | string[] = 'Internal server error') {
     super(HttpStatus.INTERNAL_SERVER_ERROR, message, 'Internal Server Error');

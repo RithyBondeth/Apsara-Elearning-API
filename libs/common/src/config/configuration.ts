@@ -46,6 +46,12 @@ export default () => ({
     apiKey: process.env.RESEND_API_KEY,
     from: process.env.EMAIL_FROM,
   },
+  support: {
+    // Falls back to the sender address so a fresh clone boots without extra
+    // setup — same pattern as jwt.actionSecret above. `||` not `??`: the schema
+    // allows an empty string, which must fall back too.
+    toEmail: process.env.SUPPORT_TO_EMAIL || process.env.EMAIL_FROM,
+  },
 
   // AI
   ai: {
@@ -76,6 +82,14 @@ export default () => ({
     origins: process.env.CORS_ORIGINS,
   },
 
+  // Billing. `provider` selects the rail the subscription flow drives — see
+  // apps/subscription-service/src/payment/payment-provider.interface.ts.
+  // Stripe does not operate in Cambodia, so this is expected to change once a
+  // local rail (ABA PayWay, Bakong/KHQR, Wing) is implemented.
+  payments: {
+    provider: process.env.PAYMENT_PROVIDER ?? 'stripe',
+  },
+
   // Stripe Billing
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
@@ -89,4 +103,9 @@ export default () => ({
   redis: {
     url: process.env.REDIS_URL,
   },
+
+  // Shared secret proving a request came from the web app's BFF proxy. Lets the
+  // rate limiter bucket by the real browser IP instead of the BFF's — see
+  // libs/common/src/throttler/client-ip.ts. Unset = fall back to socket IP.
+  internalProxySecret: process.env.INTERNAL_PROXY_SECRET,
 });

@@ -43,6 +43,10 @@ export const validationSchema = Joi.object({
   // Email
   RESEND_API_KEY: Joi.string().required(),
   EMAIL_FROM: Joi.string().required(),
+  // Optional: configuration.ts falls back to EMAIL_FROM. Required() here made
+  // every gateway fail to boot from a fresh clone, since .env.example ships it
+  // blank and Joi rejects an empty string.
+  SUPPORT_TO_EMAIL: Joi.string().email().allow('').optional(),
 
   // AI — optional; providers run in mock mode without their keys
   AI_PROVIDER: Joi.string()
@@ -74,6 +78,8 @@ export const validationSchema = Joi.object({
   }),
   // subscription-service enforces these at startup in production. They stay
   // optional here so unrelated services do not need billing credentials.
+  // Which payment rail the subscription flow drives.
+  PAYMENT_PROVIDER: Joi.string().valid('stripe').default('stripe'),
   STRIPE_SECRET_KEY: Joi.string()
     .pattern(/^sk_(test|live)_/)
     .allow('')
@@ -86,6 +92,10 @@ export const validationSchema = Joi.object({
 
   // Redis — optional (distributed rate limiting)
   REDIS_URL: Joi.string().allow('').optional(),
+
+  // Shared secret the web BFF presents so the rate limiter can trust the client
+  // IP it declares. Optional; without it every proxied call buckets together.
+  INTERNAL_PROXY_SECRET: Joi.string().min(32).allow('').optional(),
 }).custom((environment: Record<string, unknown>, helpers) => {
   if (environment.JWT_ACCESS_SECRET === environment.JWT_REFRESH_SECRET) {
     return helpers.error('any.invalid', {

@@ -2,6 +2,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CreateEmailResponse, Resend } from 'resend';
 import { RESEND_CLIENT } from '@app/contracts';
+
+export interface ISendEmailOptions {
+  text?: string;
+  replyTo?: string | string[];
+  idempotencyKey?: string;
+  tags?: { name: string; value: string }[];
+}
+
 @Injectable()
 export class EmailService {
   constructor(
@@ -14,13 +22,22 @@ export class EmailService {
     to: string,
     subject: string,
     html: string,
+    options: ISendEmailOptions = {},
   ): Promise<CreateEmailResponse> {
-    return this.resend.emails.send({
-      from: this.configService.get<string>('EMAIL_FROM')!,
-      to,
-      subject,
-      html,
-    });
+    return this.resend.emails.send(
+      {
+        from: this.configService.get<string>('EMAIL_FROM')!,
+        to,
+        subject,
+        html,
+        ...(options.text ? { text: options.text } : {}),
+        ...(options.replyTo ? { replyTo: options.replyTo } : {}),
+        ...(options.tags ? { tags: options.tags } : {}),
+      },
+      options.idempotencyKey
+        ? { idempotencyKey: options.idempotencyKey }
+        : undefined,
+    );
   }
 
   async sendVerificationEmail(

@@ -46,6 +46,11 @@ export class CourseController implements ICourseRpcController {
     return this.courseService.search(query);
   }
 
+  @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_STRUCTURE)
+  findStructure(@Payload() payload: { courseId: string; userId?: string }) {
+    return this.courseService.findStructure(payload.courseId, payload.userId);
+  }
+
   @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_ONE)
   findOne(@Payload() payload: string | { id: string }) {
     return this.courseService.findOne(idOf(payload));
