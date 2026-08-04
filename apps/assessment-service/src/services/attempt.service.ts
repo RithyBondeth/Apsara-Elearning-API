@@ -2,12 +2,15 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
 import { quizzes } from '@app/database/schemas/course/quizzes/quiz.schema';
 import { quizQuestions } from '@app/database/schemas/course/quizzes/quiz-question.schema';
 import { quizOptions } from '@app/database/schemas/course/quizzes/quiz-option.schema';
 import { quizAttempts } from '@app/database/schemas/course/quizzes/quiz-attempt.schema';
 import { quizAttemptAnswers } from '@app/database/schemas/course/quizzes/quiz-attempt-answer.schema';
+import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
+import { modules } from '@app/database/schemas/course/module.schema';
+import { courses } from '@app/database/schemas/course/course.schema';
 import {
   AttemptAnswerDTO,
   AttemptAnswerResponseDTO,
@@ -290,13 +293,41 @@ export class AttemptService implements IAttemptService {
     });
   }
 
+  /**
+   * The learner's attempts, newest first, labelled with what was attempted.
+   *
+   * The quiz/lesson/course titles are joined here rather than resolved by the
+   * caller: an attempt row carries only a quizId, and a history list showing
+   * "85% on <uuid>" is useless. Doing it client-side would be one request per
+   * attempt.
+   */
   async findAllByUser(userId: string): Promise<AttemptResponseDTO[]> {
     const rows = await this.db
-      .select()
+      .select({
+        attempt: quizAttempts,
+        quizTitle: quizzes.title,
+        lessonId: lessons.id,
+        lessonTitle: lessons.title,
+        courseSlug: courses.slug,
+      })
       .from(quizAttempts)
+      .leftJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
+      .leftJoin(lessons, eq(quizzes.lessonId, lessons.id))
+      .leftJoin(modules, eq(lessons.moduleId, modules.id))
+      .leftJoin(courses, eq(modules.courseId, courses.id))
       .where(eq(quizAttempts.userId, userId))
-      .orderBy(quizAttempts.createdAt);
-    return rows.map((row) => new AttemptResponseDTO(row));
+      .orderBy(desc(quizAttempts.createdAt));
+
+    return rows.map(
+      (row) =>
+        new AttemptResponseDTO({
+          ...row.attempt,
+          quizTitle: row.quizTitle ?? undefined,
+          lessonId: row.lessonId ?? undefined,
+          lessonTitle: row.lessonTitle ?? undefined,
+          courseSlug: row.courseSlug ?? undefined,
+        }),
+    );
   }
 
   async findOne(userId: string, id: string): Promise<AttemptResponseDTO> {
