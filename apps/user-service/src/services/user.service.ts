@@ -134,13 +134,18 @@ export class UserService implements IUserService {
     });
   }
 
-  async updateStreak(id: string, reset = false): Promise<UserResponseDTO> {
+  /**
+   * Stores an already-computed streak.
+   *
+   * Takes an absolute value rather than incrementing: course-service owns the
+   * completion history and recomputes the true streak from it, so this stays
+   * idempotent — two lessons finished on the same day can't inflate it, and a
+   * returning learner's broken streak is corrected rather than resumed.
+   */
+  async updateStreak(id: string, streak: number): Promise<UserResponseDTO> {
     const [updated] = await this.db
       .update(user)
-      .set({
-        streak: reset ? 1 : sql`${user.streak} + 1`,
-        updatedAt: new Date(),
-      })
+      .set({ streak: Math.max(0, Math.trunc(streak)), updatedAt: new Date() })
       .where(eq(user.id, id))
       .returning(publicColumns);
     if (!updated) throw new RpcNotFoundException('User not found');

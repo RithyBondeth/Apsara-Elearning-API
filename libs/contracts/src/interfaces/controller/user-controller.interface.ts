@@ -32,7 +32,7 @@ export interface IUserRpcController {
   addXp(payload: { userId: string; amount: number }): Promise<AddXpResponseDTO>;
   updateStreak(payload: {
     userId: string;
-    reset?: boolean;
+    streak: number;
   }): Promise<UserResponseDTO>;
 }
 

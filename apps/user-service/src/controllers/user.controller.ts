@@ -53,7 +53,7 @@ export class UserController implements IUserRpcController {
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.UPDATE_STREAK)
-  updateStreak(@Payload() payload: { userId: string; reset?: boolean }) {
-    return this.userService.updateStreak(payload.userId, payload.reset);
+  updateStreak(@Payload() payload: { userId: string; streak: number }) {
+    return this.userService.updateStreak(payload.userId, payload.streak);
   }
 }
