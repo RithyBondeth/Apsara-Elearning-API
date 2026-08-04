@@ -92,4 +92,9 @@ export default () => ({
   redis: {
     url: process.env.REDIS_URL,
   },
+
+  // Shared secret proving a request came from the web app's BFF proxy. Lets the
+  // rate limiter bucket by the real browser IP instead of the BFF's — see
+  // libs/common/src/throttler/client-ip.ts. Unset = fall back to socket IP.
+  internalProxySecret: process.env.INTERNAL_PROXY_SECRET,
 });

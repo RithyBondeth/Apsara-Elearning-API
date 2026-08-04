@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import {
   ConfigurationModule,
+  GatewayThrottlerGuard,
   LoggerModule,
   ThrottlerModule,
 } from '@app/common';
@@ -20,8 +20,9 @@ import { SupportModule } from './support/support.module';
   imports: [
     ConfigurationModule,
     LoggerModule,
-    // 120 requests / minute / IP by default (Redis-backed when configured).
-    // Sensitive routes tighten this with @Throttle (see auth + subscription).
+    // 120 requests / minute per user (or per client IP when anonymous),
+    // Redis-backed when configured. Sensitive routes tighten this with
+    // @Throttle (see auth + subscription).
     ThrottlerModule,
     AuthModule,
     UserModule,
@@ -33,6 +34,6 @@ import { SupportModule } from './support/support.module';
     SupportModule,
     HealthModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [{ provide: APP_GUARD, useExisting: GatewayThrottlerGuard }],
 })
 export class ApiGatewayModule {}
