@@ -88,6 +88,11 @@ export const COURSE_SERVICE = {
     ENROLLMENT_FIND_BY_COURSE: 'course.enrollment.find_by_course',
     ENROLLMENT_CHECK: 'course.enrollment.check', // is user enrolled?
 
+    // Certificates
+    CERTIFICATE_ISSUE: 'course.certificate.issue', // idempotent claim
+    CERTIFICATE_FIND_BY_USER: 'course.certificate.find_by_user',
+    CERTIFICATE_VERIFY: 'course.certificate.verify', // public, by code
+
     // Lesson Progress
     PROGRESS_MARK_COMPLETE: 'course.progress.mark_complete',
     PROGRESS_FIND_BY_USER: 'course.progress.find_by_user',

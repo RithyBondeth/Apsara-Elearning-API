@@ -40,10 +40,10 @@ const BADGE_NAMES = BADGES.map(([name]) => name);
 // has to be filled in per environment. The pricing page already disables the
 // checkout button while it is missing, so the plans render and nothing breaks.
 //
-// The `certificates` entitlement is deliberately NOT granted by any plan.
-// It exists in the ENTITLEMENTS union and is advertised in marketing copy, but
-// nothing implements it — there is no certificate table, endpoint, or UI. Do
-// not add it here until there is something to deliver.
+// `certificates` is granted by the paid tiers now that it is implemented —
+// issued on course completion and publicly verifiable by code. Free learners
+// still finish courses and keep their progress; the certificate is the paid
+// artefact.
 const PLANS = [
   {
     name: 'Standard',
@@ -63,7 +63,7 @@ const PLANS = [
     billingPeriod: 'monthly',
     aiCredits: 1000000,
     trialDays: 7,
-    entitlements: ['courses:premium', 'ai:tutor'],
+    entitlements: ['courses:premium', 'ai:tutor', 'certificates'],
   },
   {
     name: 'Plus Annual',
@@ -73,7 +73,7 @@ const PLANS = [
     billingPeriod: 'yearly',
     aiCredits: 1000000,
     trialDays: 7,
-    entitlements: ['courses:premium', 'ai:tutor'],
+    entitlements: ['courses:premium', 'ai:tutor', 'certificates'],
   },
 ];
 

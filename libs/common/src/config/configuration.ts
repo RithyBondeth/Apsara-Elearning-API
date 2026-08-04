@@ -82,6 +82,14 @@ export default () => ({
     origins: process.env.CORS_ORIGINS,
   },
 
+  // Billing. `provider` selects the rail the subscription flow drives — see
+  // apps/subscription-service/src/payment/payment-provider.interface.ts.
+  // Stripe does not operate in Cambodia, so this is expected to change once a
+  // local rail (ABA PayWay, Bakong/KHQR, Wing) is implemented.
+  payments: {
+    provider: process.env.PAYMENT_PROVIDER ?? 'stripe',
+  },
+
   // Stripe Billing
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
