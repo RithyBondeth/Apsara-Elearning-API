@@ -72,6 +72,29 @@ export class AttemptResponseDTO {
   @ApiProperty({ example: 85.5 })
   score: number;
 
+  @ApiPropertyOptional({ example: 6 })
+  totalQuestions?: number;
+
+  @ApiPropertyOptional({ example: 5 })
+  correctAnswers?: number;
+
+  @ApiPropertyOptional({ example: '2024-01-01T00:00:00.000Z' })
+  completedAt?: Date | null;
+
+  /* Joined labels. A history list showing "85% on <uuid>" is useless, and
+     resolving these client-side would be one request per attempt. */
+  @ApiPropertyOptional({ example: 'Derivatives — practice' })
+  quizTitle?: string;
+
+  @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174002' })
+  lessonId?: string;
+
+  @ApiPropertyOptional({ example: 'Rules of differentiation' })
+  lessonTitle?: string;
+
+  @ApiPropertyOptional({ example: 'grade-12-mathematics' })
+  courseSlug?: string;
+
   @ApiProperty({ type: () => [AttemptAnswerResponseDTO], required: false })
   answers?: AttemptAnswerResponseDTO[];
 
