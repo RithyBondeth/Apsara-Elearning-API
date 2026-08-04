@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import type { DtoInit } from '../../types/dto-init';
+import { LessonResponseDTO } from './lesson.dto';
 import {
   ArrayNotEmpty,
   IsArray,
@@ -59,4 +60,21 @@ export class ModuleResponseDTO extends CreateModuleRequestDTO {
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   updatedAt: Date;
+}
+
+/**
+ * A module with its lessons already attached, both in `order`.
+ *
+ * Exists so a client can render a whole course outline in one request instead
+ * of walking course → modules → lessons, which cost 1 + N round-trips per
+ * course and made the catalog and dashboard fan out into hundreds of calls.
+ */
+export class ModuleWithLessonsResponseDTO extends ModuleResponseDTO {
+  constructor(partial: DtoInit<ModuleWithLessonsResponseDTO> = {}) {
+    super();
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ type: [LessonResponseDTO] })
+  lessons: LessonResponseDTO[];
 }

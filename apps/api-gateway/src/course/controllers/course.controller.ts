@@ -18,9 +18,16 @@ import {
   CreateCourseRequestDTO,
   UpdateCourseRequestDTO,
   CourseResponseDTO,
+  ModuleWithLessonsResponseDTO,
   SearchCoursesRequestDTO,
 } from '@app/contracts';
-import { JwtAuthGuard, Roles, RolesGuard } from '@app/common';
+import {
+  CurrentUser,
+  JwtAuthGuard,
+  OptionalJwtAuthGuard,
+  Roles,
+  RolesGuard,
+} from '@app/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -99,6 +106,37 @@ export class CourseController {
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_SEARCH,
       query,
+    );
+  }
+
+  /**
+   * The whole outline in one call. Without it a client has to walk
+   * course → modules → lessons, which is 1 + N requests per course — the
+   * catalog and dashboard were each fanning out into hundreds.
+   *
+   * Optional auth: signed-in students with the right entitlement get lesson
+   * bodies, everyone else gets the same outline with `locked: true`.
+   */
+  @Get(':id/structure')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Get a course outline: modules with their lessons' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Course structure retrieved',
+    type: [ModuleWithLessonsResponseDTO],
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Course not found or not published',
+  })
+  findCourseStructure(
+    @Param('id') id: string,
+    @CurrentUser('id') userId?: string,
+  ): Promise<ModuleWithLessonsResponseDTO[]> {
+    return rpcCall<ModuleWithLessonsResponseDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_FIND_STRUCTURE,
+      { courseId: id, userId },
     );
   }
 

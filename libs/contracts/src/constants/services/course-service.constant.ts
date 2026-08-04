@@ -48,6 +48,7 @@ export const COURSE_SERVICE = {
     COURSE_FIND_PUBLISHED_ONE: 'course.course.find_published_one',
     COURSE_FIND_PUBLISHED_BY_SLUG: 'course.course.find_published_by_slug',
     COURSE_SEARCH: 'course.course.search', // keyword search over published courses
+    COURSE_FIND_STRUCTURE: 'course.course.find_structure', // modules + lessons, one call
     COURSE_FIND_ONE: 'course.course.find_one',
     COURSE_FIND_BY_SLUG: 'course.course.find_by_slug',
     COURSE_FIND_BY_SUBJECT: 'course.course.find_by_subject',
