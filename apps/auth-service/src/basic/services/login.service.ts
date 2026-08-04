@@ -18,6 +18,7 @@ import {
 } from '@app/common';
 import { ConfigService } from '@nestjs/config';
 import ms, { StringValue } from 'ms';
+import { LoginAttemptsService } from './login-attempts.service';
 
 @Injectable()
 export class LoginService implements ILoginService {
@@ -29,10 +30,16 @@ export class LoginService implements ILoginService {
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly loginAttempts: LoginAttemptsService,
   ) {}
 
   async login(loginRequestDTO: LoginRequestDTO): Promise<LoginResponseDTO> {
     const { email, password } = loginRequestDTO;
+
+    // 0. Stop credential stuffing against this account before doing any work.
+    //    IP-based limits alone don't help here — an attacker spreads the
+    //    attempts across addresses.
+    await this.loginAttempts.assertNotLockedOut(email);
 
     // 1. Find user by email
     const [foundUser] = await this.db
@@ -44,14 +51,19 @@ export class LoginService implements ILoginService {
     if (!foundUser) {
       // Keep unknown-account and wrong-password paths computationally similar.
       await bcrypt.compare(password, this.dummyPasswordHash);
+      await this.loginAttempts.recordFailure(email);
       throw new RpcUnauthorizedException('Invalid credentials');
     }
 
     // 2. Verify password
     const isPasswordValid = await bcrypt.compare(password, foundUser.password);
     if (!isPasswordValid) {
+      await this.loginAttempts.recordFailure(email);
       throw new RpcUnauthorizedException('Invalid credentials');
     }
+
+    // Correct credentials — a real learner is here, so stop counting.
+    await this.loginAttempts.clear(email);
 
     // 3. Check if email is verified
     if (!foundUser.isEmailVerified) {

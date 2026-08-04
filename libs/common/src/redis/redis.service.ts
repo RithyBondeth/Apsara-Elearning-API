@@ -45,6 +45,31 @@ export class RedisService {
     }
   }
 
+  /**
+   * Atomically increments a counter and returns its new value, setting the TTL
+   * on first write so the window slides forward from the first hit.
+   *
+   * Returns null when Redis is not configured — callers must treat that as
+   * "no opinion" rather than as a zero count.
+   */
+  async incr(key: string, ttlSeconds: number): Promise<number | null> {
+    if (!this.client) return null;
+    try {
+      const [count] = await this.client
+        .multi()
+        .incr(key)
+        .expire(key, ttlSeconds, 'NX')
+        .exec()
+        .then((results) => (results ?? []).map(([, value]) => value as number));
+      return typeof count === 'number' ? count : null;
+    } catch (error) {
+      this.logger.error(
+        `Cache INCR failed for ${key}: ${(error as Error).message}`,
+      );
+      return null;
+    }
+  }
+
   async del(key: string): Promise<void> {
     if (!this.client) return;
     try {
