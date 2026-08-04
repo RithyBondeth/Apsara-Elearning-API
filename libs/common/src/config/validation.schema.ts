@@ -92,6 +92,10 @@ export const validationSchema = Joi.object({
 
   // Redis — optional (distributed rate limiting)
   REDIS_URL: Joi.string().allow('').optional(),
+
+  // Shared secret the web BFF presents so the rate limiter can trust the client
+  // IP it declares. Optional; without it every proxied call buckets together.
+  INTERNAL_PROXY_SECRET: Joi.string().min(32).allow('').optional(),
 }).custom((environment: Record<string, unknown>, helpers) => {
   if (environment.JWT_ACCESS_SECRET === environment.JWT_REFRESH_SECRET) {
     return helpers.error('any.invalid', {

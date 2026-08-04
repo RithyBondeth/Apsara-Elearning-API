@@ -194,6 +194,19 @@ export class CourseResponseDTO extends CreateCourseRequestDTO {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   id: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Modules in this course. Present on catalog listings so clients need no follow-up calls.',
+    example: 6,
+  })
+  moduleCount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Lessons across all modules. Present on catalog listings.',
+    example: 42,
+  })
+  lessonCount?: number;
+
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt: Date;
 

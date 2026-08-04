@@ -37,6 +37,7 @@ import {
 import {
   CreateModuleRequestDTO,
   ModuleResponseDTO,
+  ModuleWithLessonsResponseDTO,
   ReorderRequestDTO,
   UpdateModuleRequestDTO,
 } from '../../dtos/course/module.dto';
@@ -64,6 +65,10 @@ export interface ICourseHttpController {
   findAllCourses(): Promise<CourseResponseDTO[]>;
   findAllPublished(): Promise<CourseResponseDTO[]>;
   searchCourses(query: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]>;
+  findCourseStructure(
+    id: string,
+    userId?: string,
+  ): Promise<ModuleWithLessonsResponseDTO[]>;
   findOneCourse(id: string): Promise<CourseResponseDTO>;
   findBySlug(slug: string): Promise<CourseResponseDTO>;
   findBySubject(subjectId: string): Promise<CourseResponseDTO[]>;

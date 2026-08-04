@@ -1,21 +1,26 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, eq, ilike, or, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { courses } from '@app/database/schemas/course/course.schema';
 import { subjects } from '@app/database/schemas/course/subject.schema';
 import { gradeLevels } from '@app/database/schemas/course/grade-level.schema';
 import { majors } from '@app/database/schemas/course/major.schema';
 import { programmingCategories } from '@app/database/schemas/course/programming-category.schema';
+import { modules } from '@app/database/schemas/course/module.schema';
+import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
 import {
   CourseResponseDTO,
   CreateCourseRequestDTO,
   DeleteResponseDTO,
   DRIZZLE,
   ICourseService,
+  LessonResponseDTO,
+  ModuleWithLessonsResponseDTO,
   SearchCoursesRequestDTO,
   UpdateCourseRequestDTO,
 } from '@app/contracts';
 import {
+  CourseEntitlementService,
   RpcBadRequestException,
   RpcConflictException,
   RpcNotFoundException,
@@ -25,7 +30,10 @@ import {
 export class CourseService implements ICourseService {
   private readonly logger = new Logger(CourseService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly entitlements: CourseEntitlementService,
+  ) {}
 
   async create(dto: CreateCourseRequestDTO): Promise<CourseResponseDTO> {
     await this.ensureSlugAvailable(dto.slug);
@@ -74,7 +82,7 @@ export class CourseService implements ICourseService {
       .from(courses)
       .where(eq(courses.published, true))
       .orderBy(courses.createdAt);
-    return rows.map((row) => new CourseResponseDTO(row));
+    return this.withCounts(rows);
   }
 
   async findPublishedOne(id: string): Promise<CourseResponseDTO> {
@@ -84,7 +92,8 @@ export class CourseService implements ICourseService {
       .where(and(eq(courses.id, id), eq(courses.published, true)))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Course not found');
-    return new CourseResponseDTO(found);
+    const [withCounts] = await this.withCounts([found]);
+    return withCounts;
   }
 
   async findPublishedBySlug(slug: string): Promise<CourseResponseDTO> {
@@ -94,7 +103,106 @@ export class CourseService implements ICourseService {
       .where(and(eq(courses.slug, slug), eq(courses.published, true)))
       .limit(1);
     if (!found) throw new RpcNotFoundException('Course not found');
-    return new CourseResponseDTO(found);
+    const [withCounts] = await this.withCounts([found]);
+    return withCounts;
+  }
+
+  /**
+   * The full outline of a published course — every module with its lessons —
+   * in one call.
+   *
+   * Clients used to walk course → modules → lessons, which cost 1 + N requests
+   * per course; the catalog did that for every course on the page. This resolves
+   * entitlement once and reads modules and lessons in a fixed three queries no
+   * matter how large the course is.
+   */
+  async findStructure(
+    courseId: string,
+    userId?: string,
+  ): Promise<ModuleWithLessonsResponseDTO[]> {
+    const canReadContent = await this.entitlements.canReadCourseContent(
+      courseId,
+      userId,
+    );
+
+    const moduleRows = await this.db
+      .select()
+      .from(modules)
+      .where(eq(modules.courseId, courseId))
+      .orderBy(modules.order);
+    if (!moduleRows.length) return [];
+
+    const lessonRows = await this.db
+      .select()
+      .from(lessons)
+      .where(
+        inArray(
+          lessons.moduleId,
+          moduleRows.map((row) => row.id),
+        ),
+      )
+      .orderBy(lessons.order);
+
+    const byModule = new Map<string, LessonResponseDTO[]>();
+    for (const row of lessonRows) {
+      // Premium bodies are stripped, not omitted — the outline still lists the
+      // lesson so the UI can show it locked.
+      const lesson = canReadContent
+        ? new LessonResponseDTO({ ...row, locked: false })
+        : new LessonResponseDTO({
+            ...row,
+            content: undefined,
+            videoUrl: undefined,
+            locked: true,
+          });
+      const list = byModule.get(row.moduleId);
+      if (list) list.push(lesson);
+      else byModule.set(row.moduleId, [lesson]);
+    }
+
+    return moduleRows.map(
+      (row) =>
+        new ModuleWithLessonsResponseDTO({
+          ...row,
+          lessons: byModule.get(row.id) ?? [],
+        }),
+    );
+  }
+
+  /**
+   * Attaches module/lesson totals to catalog rows in a single grouped query, so
+   * a listing of N courses costs one extra query rather than N × (1 + modules).
+   */
+  private async withCounts(
+    rows: (typeof courses.$inferSelect)[],
+  ): Promise<CourseResponseDTO[]> {
+    if (!rows.length) return [];
+
+    const totals = await this.db
+      .select({
+        courseId: modules.courseId,
+        moduleCount: sql<number>`count(distinct ${modules.id})::int`,
+        lessonCount: sql<number>`count(${lessons.id})::int`,
+      })
+      .from(modules)
+      .leftJoin(lessons, eq(lessons.moduleId, modules.id))
+      .where(
+        inArray(
+          modules.courseId,
+          rows.map((row) => row.id),
+        ),
+      )
+      .groupBy(modules.courseId);
+
+    const byCourse = new Map(totals.map((row) => [row.courseId, row]));
+    return rows.map(
+      (row) =>
+        new CourseResponseDTO({
+          ...row,
+          moduleCount: byCourse.get(row.id)?.moduleCount ?? 0,
+          lessonCount: byCourse.get(row.id)?.lessonCount ?? 0,
+        }),
+    );
   }
 
   /**
@@ -135,7 +243,7 @@ export class CourseService implements ICourseService {
       .orderBy(courses.createdAt)
       .limit(limit)
       .offset(offset);
-    return rows.map((row) => new CourseResponseDTO(row));
+    return this.withCounts(rows);
   }
 
   async findOne(id: string): Promise<CourseResponseDTO> {

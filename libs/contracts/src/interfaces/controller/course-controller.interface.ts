@@ -37,6 +37,7 @@ import {
 import {
   CreateModuleRequestDTO,
   ModuleResponseDTO,
+  ModuleWithLessonsResponseDTO,
   UpdateModuleRequestDTO,
 } from '../../dtos/course/module.dto';
 import {
@@ -61,6 +62,10 @@ export interface ICourseRpcController {
   findAll(): Promise<CourseResponseDTO[]>;
   findPublished(): Promise<CourseResponseDTO[]>;
   search(payload: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]>;
+  findStructure(payload: {
+    courseId: string;
+    userId?: string;
+  }): Promise<ModuleWithLessonsResponseDTO[]>;
   findOne(payload: string | { id: string }): Promise<CourseResponseDTO>;
   findBySlug(payload: string | { slug: string }): Promise<CourseResponseDTO>;
   findBySubject(
