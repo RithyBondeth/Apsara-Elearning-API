@@ -46,6 +46,9 @@ export default () => ({
     apiKey: process.env.RESEND_API_KEY,
     from: process.env.EMAIL_FROM,
   },
+  support: {
+    toEmail: process.env.SUPPORT_TO_EMAIL,
+  },
 
   // AI
   ai: {

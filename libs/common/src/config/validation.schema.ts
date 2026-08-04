@@ -43,6 +43,7 @@ export const validationSchema = Joi.object({
   // Email
   RESEND_API_KEY: Joi.string().required(),
   EMAIL_FROM: Joi.string().required(),
+  SUPPORT_TO_EMAIL: Joi.string().email().required(),
 
   // AI — optional; providers run in mock mode without their keys
   AI_PROVIDER: Joi.string()

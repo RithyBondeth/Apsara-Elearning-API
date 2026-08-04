@@ -14,6 +14,7 @@ import { AiModule } from './ai/ai.module';
 import { ChallengeModule } from './challenge/challenge.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { HealthModule } from './health/health.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { HealthModule } from './health/health.module';
     AiModule,
     ChallengeModule,
     SubscriptionModule,
+    SupportModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

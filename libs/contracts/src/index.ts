@@ -33,6 +33,7 @@ export * from './dtos/auth/resend-verification.dto';
 export * from './dtos/auth/forgot-password.dto';
 export * from './dtos/auth/reset-password.dto';
 export * from './dtos/auth/change-password.dto';
+export * from './dtos/support/contact-support.dto';
 export * from './dtos/course/subject.dto';
 export * from './dtos/course/grade-level.dto';
 export * from './dtos/course/faculty.dto';
