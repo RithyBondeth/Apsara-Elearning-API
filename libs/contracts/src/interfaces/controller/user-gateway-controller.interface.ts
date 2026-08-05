@@ -51,4 +51,5 @@ export interface IAdminBadgeController {
   update(id: string, dto: UpdateBadgeRequestDTO): Promise<BadgeResponseDTO>;
   remove(id: string): Promise<DeleteResponseDTO>;
   award(id: string, userId: string): Promise<AwardBadgeResponseDTO>;
+  revokeAward(id: string, userId: string): Promise<DeleteResponseDTO>;
 }

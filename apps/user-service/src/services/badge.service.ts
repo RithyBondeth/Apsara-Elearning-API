@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { badges } from '@app/database/schemas/user/badge.schema';
 import { userBadges } from '@app/database/schemas/user/user-badge.schema';
 import { user } from '@app/database/schemas/user/user.schema';
@@ -92,6 +92,23 @@ export class BadgeService implements IBadgeService {
     return new AwardBadgeResponseDTO(
       awarded ?? { userId, badgeId, alreadyOwned: true },
     );
+  }
+
+  /** Undoes an award. Hand-granted badges were previously one-way. */
+  async revoke(userId: string, badgeId: string): Promise<DeleteResponseDTO> {
+    const [deleted] = await this.db
+      .delete(userBadges)
+      .where(
+        and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)),
+      )
+      .returning({ badgeId: userBadges.badgeId });
+    if (!deleted) throw new RpcNotFoundException('Learner does not have badge');
+
+    this.logger.log(`Badge ${badgeId} revoked from ${userId}`);
+    return new DeleteResponseDTO({
+      message: 'Badge revoked successfully',
+      id: badgeId,
+    });
   }
 
   async findByUser(userId: string): Promise<UserBadgeResponseDTO[]> {

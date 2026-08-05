@@ -21,6 +21,7 @@ export const USER_SERVICE = {
     BADGE_UPDATE: 'user.badge.update',
     BADGE_DELETE: 'user.badge.delete',
     BADGE_AWARD: 'user.badge.award',
+    BADGE_REVOKE: 'user.badge.revoke',
     BADGE_FIND_BY_USER: 'user.badge.find_by_user',
   },
 };

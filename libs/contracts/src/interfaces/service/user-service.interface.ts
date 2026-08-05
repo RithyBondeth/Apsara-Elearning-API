@@ -38,5 +38,6 @@ export interface IBadgeService {
   update(id: string, dto: UpdateBadgeRequestDTO): Promise<BadgeResponseDTO>;
   remove(id: string): Promise<DeleteResponseDTO>;
   award(userId: string, badgeId: string): Promise<AwardBadgeResponseDTO>;
+  revoke(userId: string, badgeId: string): Promise<DeleteResponseDTO>;
   findByUser(userId: string): Promise<UserBadgeResponseDTO[]>;
 }
