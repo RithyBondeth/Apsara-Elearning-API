@@ -8,6 +8,7 @@ import {
   resolveCorsOrigin,
   RpcToHttpExceptionFilter,
   setupSwagger,
+  UuidParamPipe,
 } from '@app/common';
 
 async function bootstrap() {
@@ -38,6 +39,7 @@ async function bootstrap() {
   app.enableCors({ origin, credentials: origin !== '*' });
 
   app.useGlobalPipes(
+    new UuidParamPipe(),
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,

@@ -73,7 +73,7 @@ export class CourseService implements ICourseService {
       .select()
       .from(courses)
       .orderBy(courses.createdAt);
-    return rows.map((row) => new CourseResponseDTO(row));
+    return this.withCounts(rows);
   }
 
   async findPublished(): Promise<CourseResponseDTO[]> {

@@ -46,6 +46,11 @@ export class BadgeController implements IBadgeRpcController {
     return this.badgeService.award(payload.userId, payload.badgeId);
   }
 
+  @MessagePattern(USER_SERVICE.ACTIONS.BADGE_REVOKE)
+  revoke(@Payload() payload: { userId: string; badgeId: string }) {
+    return this.badgeService.revoke(payload.userId, payload.badgeId);
+  }
+
   @MessagePattern(USER_SERVICE.ACTIONS.BADGE_FIND_BY_USER)
   findByUser(@Payload() payload: string | { userId: string }) {
     const userId = typeof payload === 'string' ? payload : payload.userId;

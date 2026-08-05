@@ -88,4 +88,16 @@ export class BadgeController implements IAdminBadgeController {
       { badgeId: id, userId },
     );
   }
+
+  @Delete(':id/award/:userId')
+  revokeAward(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ): Promise<DeleteResponseDTO> {
+    return rpcCall<DeleteResponseDTO>(
+      this.userClient,
+      USER_SERVICE.ACTIONS.BADGE_REVOKE,
+      { badgeId: id, userId },
+    );
+  }
 }

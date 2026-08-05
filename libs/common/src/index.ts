@@ -9,6 +9,7 @@ export * from './email';
 export * from './guards';
 export * from './decorators';
 export * from './filters';
+export * from './pipes';
 export * from './health';
 export * from './authorization';
 export * from './swagger/swagger.config';
