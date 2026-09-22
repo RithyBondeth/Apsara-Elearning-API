@@ -1,4 +1,5 @@
 import { CourseEntitlementService } from '@app/common';
+import { of } from 'rxjs';
 import { LessonProgressService } from './lesson-progress.service';
 import type { CertificateService } from './certificate.service';
 
@@ -122,5 +123,112 @@ describe('LessonProgressService.findByLesson', () => {
     const { db } = fakeDb({ selects: [[]] });
     const dto = await service(db).findByLesson('u1', 'l1');
     expect(dto).toMatchObject({ userId: 'u1', lessonId: 'l1', completed: false });
+  });
+});
+
+/** Chainable read node resolving to `resolve()` at await time. */
+function readNode(resolve: () => unknown) {
+  const node: Record<string, unknown> = {};
+  for (const m of ['from', 'leftJoin', 'innerJoin', 'where', 'orderBy', 'limit']) node[m] = () => node;
+  node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
+    Promise.resolve(resolve()).then(res, rej);
+  return node;
+}
+
+/**
+ * Fuller db for the markComplete orchestration. Select order:
+ * courseIdForLesson, ensureEnrolled, isCompleted, recalc lessons, recalc
+ * completed. selectDistinct backs the best-effort streak sync.
+ */
+function markCompleteDb(opts: {
+  courseRow?: unknown[];
+  enrollment?: unknown[];
+  alreadyDone?: unknown[];
+  recalcLessons?: unknown[];
+  recalcCompleted?: unknown[];
+  updated?: unknown[];
+}) {
+  const queue = [
+    opts.courseRow ?? [{ courseId: 'c1' }],
+    opts.enrollment ?? [{ userId: 'u1', courseId: 'c1', completed: false }],
+    opts.alreadyDone ?? [],
+    opts.recalcLessons ?? [{ id: 'l1' }],
+    opts.recalcCompleted ?? [{ id: 'p1' }],
+  ];
+  let si = 0;
+  return {
+    select: () => readNode(() => queue[si++] ?? []),
+    selectDistinct: () => readNode(() => []),
+    insert: () => ({ values: () => ({ onConflictDoUpdate: () => Promise.resolve(undefined) }) }),
+    update: () => ({
+      set: () => ({
+        where: () => ({ returning: () => Promise.resolve(opts.updated ?? [{ id: 'e1', completed: false }]) }),
+      }),
+    }),
+  };
+}
+
+describe('LessonProgressService.markComplete', () => {
+  function build(db: unknown) {
+    const certs = { issue: jest.fn().mockResolvedValue(undefined) };
+    const uc = { send: jest.fn().mockReturnValue(of({})) };
+    const ents = { assertCanEnroll: jest.fn().mockResolvedValue(undefined) };
+    const svc = new LessonProgressService(
+      db as never,
+      uc as never,
+      ents as unknown as CourseEntitlementService,
+      certs as unknown as CertificateService,
+    );
+    return { svc, certs, uc };
+  }
+
+  it('throws 404 when the lesson has no course', async () => {
+    const { svc } = build(markCompleteDb({ courseRow: [] }));
+    await expect(svc.markComplete('u1', 'l1')).rejects.toMatchObject({ error: { statusCode: 404 } });
+  });
+
+  it('throws 400 when the learner is not enrolled', async () => {
+    const { svc } = build(markCompleteDb({ enrollment: [] }));
+    await expect(svc.markComplete('u1', 'l1')).rejects.toMatchObject({ error: { statusCode: 400 } });
+  });
+
+  it('awards lesson XP the first time and returns the lesson completed', async () => {
+    const { svc } = build(markCompleteDb({ alreadyDone: [] }));
+    const res = await svc.markComplete('u1', 'l1');
+    expect(res.completed).toBe(true);
+    expect(res.xpAwarded).toBe(10);
+  });
+
+  it('does not re-award XP when the lesson was already completed', async () => {
+    const { svc } = build(markCompleteDb({ alreadyDone: [{ completed: true }] }));
+    const res = await svc.markComplete('u1', 'l1');
+    expect(res.xpAwarded).toBe(0);
+  });
+
+  it('issues the certificate when this completion finishes the course', async () => {
+    const { svc, certs } = build(markCompleteDb({ updated: [{ id: 'e1', completed: true }] }));
+    await svc.markComplete('u1', 'l1');
+    expect(certs.issue).toHaveBeenCalledWith('u1', 'c1');
+  });
+
+  it('does not issue a certificate while the course is unfinished', async () => {
+    const { svc, certs } = build(markCompleteDb({ updated: [{ id: 'e1', completed: false }] }));
+    await svc.markComplete('u1', 'l1');
+    expect(certs.issue).not.toHaveBeenCalled();
+  });
+
+  it('still completes the lesson when certificate issuance throws', async () => {
+    const db = markCompleteDb({ updated: [{ id: 'e1', completed: true }] });
+    const certs = { issue: jest.fn().mockRejectedValue(new Error('no entitlement')) };
+    const uc = { send: jest.fn().mockReturnValue(of({})) };
+    const ents = { assertCanEnroll: jest.fn().mockResolvedValue(undefined) };
+    const svc = new LessonProgressService(
+      db as never,
+      uc as never,
+      ents as unknown as CourseEntitlementService,
+      certs as unknown as CertificateService,
+    );
+    const res = await svc.markComplete('u1', 'l1');
+    expect(res.completed).toBe(true);
   });
 });
