@@ -137,6 +137,7 @@ a "First Steps" badge.
 | **Auth** | `POST /auth/register` · `login` · `refresh` · `verify-email` · `resend-verification` · `forgot-password` · `reset-password` · 🔒`logout` · 🔒`change-password` |
 | **User** 🔒 | `GET/PATCH /user/me` · `PATCH /user/me/avatar` · `GET /user/me/badges` |
 | **Leaderboard** 🔒 | `GET /leaderboard[?limit=]` — top learners by XP plus the caller's own standing |
+| **Notifications** 🔒 | `GET /notification[?limit=&unreadOnly=]` · `PATCH /notification/read-all` · `PATCH /notification/:id/read` |
 | **Courses** | reads: `GET /course`, `/course/published`, `/course/:id`, `/course/slug/:slug`, `/course/subject/:subjectId`, `/course/grade/:gradeLevelId`, `/course/major/:majorId` · 🔒admin: `POST/PUT/DELETE /course`, `PATCH /course/:id/publish\|unpublish` |
 | **Subjects** | `GET /subject`, `/subject/:id`, `/subject/slug/:slug` · 🔒admin mutations |
 | **Structure** (read-only) | `GET /grade-level[/:id]` · `GET /faculty[/:id]`, `/faculty/slug/:slug` · `GET /major[?facultyId=][/:id]`, `/major/slug/:slug` |
@@ -200,6 +201,27 @@ a rank) and always includes the caller's own standing, even when they fall below
 the returned page. Admins are excluded — they are staff, not competitors. Rows
 carry a first name plus last initial and never an email: the board is visible to
 other learners, and this platform teaches Grade 1–12.
+
+## Notifications
+
+The platform raises an in-app notification when something worth telling a
+learner about happens. Rows live in `notifications` and carry a `type`, a title
+and body, and a `data` payload the client uses to deep-link (a `badgeId`, a
+`courseId`, a certificate code).
+
+`GET /notification` returns the feed newest first plus `unreadCount` — counted
+across everything unread, not just the returned page, because it drives the bell
+badge. Reads and writes are scoped by the JWT's user as well as the row id, so a
+guessed id cannot touch another learner's notifications. `readAt` is a nullable
+timestamp rather than a boolean, and marking an already-read row is a no-op that
+preserves the first read time.
+
+Currently raised on **badge awarded**; the remaining types in
+`NOTIFICATION_TYPES` (`quiz_passed`, `challenge_solved`, `course_completed`,
+`certificate_issued`, `subscription_updated`) are defined and ready for their
+emitting services to call `user.notification.create` over RMQ.
+
+Apply `migrations/20260923_add_notifications.sql`.
 
 ## Environment
 

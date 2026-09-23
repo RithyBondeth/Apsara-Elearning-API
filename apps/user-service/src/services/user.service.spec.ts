@@ -1,4 +1,10 @@
 import { UserService } from './user.service';
+import type { NotificationService } from './notification.service';
+
+/** Leaderboard reads never raise notifications; a stub satisfies the ctor. */
+const notifications = {
+  create: jest.fn(),
+} as unknown as NotificationService;
 
 /**
  * Leaderboard assembly. The ranking itself is a SQL window function, so what is
@@ -40,7 +46,7 @@ describe('UserService.leaderboard', () => {
       row({ rank: 2, userId: 'u2', firstName: 'Chan', lastName: 'Bopha', xp: 900 }),
     ];
     const { db } = fakeDb([ranked, [{ total: 2 }]]);
-    const service = new UserService(db as never);
+    const service = new UserService(db as never, notifications);
 
     const board = await service.leaderboard('u2', 20);
 
@@ -52,7 +58,7 @@ describe('UserService.leaderboard', () => {
 
   it('shows a first name plus last initial, never a full surname or email', async () => {
     const { db } = fakeDb([[row()], [{ total: 1 }]]);
-    const board = await new UserService(db as never).leaderboard('u1', 20);
+    const board = await new UserService(db as never, notifications).leaderboard('u1', 20);
 
     expect(board.entries[0].displayName).toBe('Sok D.');
     expect(JSON.stringify(board.entries[0])).not.toContain('Dara');
@@ -64,13 +70,13 @@ describe('UserService.leaderboard', () => {
       [row({ firstName: null, lastName: null })],
       [{ total: 1 }],
     ]);
-    const board = await new UserService(db as never).leaderboard('u1', 20);
+    const board = await new UserService(db as never, notifications).leaderboard('u1', 20);
     expect(board.entries[0].displayName).toBe('Learner');
   });
 
   it('uses the on-page row as "me" without a second lookup', async () => {
     const { db, selectCount } = fakeDb([[row({ userId: 'u1' })], [{ total: 1 }]]);
-    const board = await new UserService(db as never).leaderboard('u1', 20);
+    const board = await new UserService(db as never, notifications).leaderboard('u1', 20);
 
     expect(board.me).toMatchObject({ userId: 'u1', isViewer: true });
     // ranked page + count only — no extra standing query.
@@ -92,7 +98,7 @@ describe('UserService.leaderboard', () => {
     ];
     // page, count, viewer row, count-ahead
     const { db } = fakeDb([page, [{ total: 50 }], viewer, [{ count: 41 }]]);
-    const board = await new UserService(db as never).leaderboard('u1', 1);
+    const board = await new UserService(db as never, notifications).leaderboard('u1', 1);
 
     expect(board.entries[0].isViewer).toBe(false);
     expect(board.me).toMatchObject({ userId: 'u1', rank: 42, xp: 10, isViewer: true });
@@ -103,25 +109,25 @@ describe('UserService.leaderboard', () => {
     const admin = [{ userId: 'a1', firstName: 'Root', lastName: null, avatar: null, xp: 0, streak: 0, isAdmin: true }];
     const { db } = fakeDb([page, [{ total: 3 }], admin]);
 
-    const board = await new UserService(db as never).leaderboard('a1', 20);
+    const board = await new UserService(db as never, notifications).leaderboard('a1', 20);
     expect(board.me).toBeNull();
   });
 
   it('returns a null "me" when the account no longer exists', async () => {
     const { db } = fakeDb([[row({ userId: 'other' })], [{ total: 1 }], []]);
-    const board = await new UserService(db as never).leaderboard('ghost', 20);
+    const board = await new UserService(db as never, notifications).leaderboard('ghost', 20);
     expect(board.me).toBeNull();
   });
 
   it('treats missing xp/streak as zero', async () => {
     const { db } = fakeDb([[row({ xp: null, streak: null })], [{ total: 1 }]]);
-    const board = await new UserService(db as never).leaderboard('u1', 20);
+    const board = await new UserService(db as never, notifications).leaderboard('u1', 20);
     expect(board.entries[0]).toMatchObject({ xp: 0, streak: 0 });
   });
 
   it('reports an empty board rather than failing', async () => {
     const { db } = fakeDb([[], [{ total: 0 }], []]);
-    const board = await new UserService(db as never).leaderboard('u1', 20);
+    const board = await new UserService(db as never, notifications).leaderboard('u1', 20);
     expect(board.entries).toEqual([]);
     expect(board.total).toBe(0);
   });

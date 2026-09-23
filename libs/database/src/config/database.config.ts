@@ -4,6 +4,7 @@ import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as userSchema from '../schemas/user/user.schema';
 import * as userBadgeSchema from '../schemas/user/user-badge.schema';
 import * as badgeSchema from '../schemas/user/badge.schema';
+import * as notificationSchema from '../schemas/user/notification.schema';
 import * as subjectSchema from '../schemas/course/subject.schema';
 import * as gradeLevelSchema from '../schemas/course/grade-level.schema';
 import * as facultySchema from '../schemas/course/faculty.schema';
@@ -38,6 +39,7 @@ const schema = {
   ...userSchema,
   ...userBadgeSchema,
   ...badgeSchema,
+  ...notificationSchema,
   ...subjectSchema,
   ...gradeLevelSchema,
   ...facultySchema,

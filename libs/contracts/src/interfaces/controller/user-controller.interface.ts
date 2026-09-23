@@ -1,3 +1,9 @@
+import {
+  CreateNotificationDTO,
+  MarkReadResponseDTO,
+  NotificationListResponseDTO,
+  NotificationResponseDTO,
+} from '../../dtos/user/notification.dto';
 import { TAvatarPreset } from '../../constants/domain/avatar.constant';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
@@ -56,4 +62,18 @@ export interface IBadgeRpcController {
   findByUser(
     payload: string | { userId: string },
   ): Promise<UserBadgeResponseDTO[]>;
+}
+
+export interface INotificationRpcController {
+  create(dto: CreateNotificationDTO): Promise<NotificationResponseDTO>;
+  findByUser(payload: {
+    userId: string;
+    limit?: number;
+    unreadOnly?: boolean;
+  }): Promise<NotificationListResponseDTO>;
+  markRead(payload: {
+    userId: string;
+    id: string;
+  }): Promise<MarkReadResponseDTO>;
+  markAllRead(payload: { userId: string }): Promise<MarkReadResponseDTO>;
 }

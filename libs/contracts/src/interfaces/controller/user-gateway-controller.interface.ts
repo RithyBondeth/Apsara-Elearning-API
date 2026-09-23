@@ -1,3 +1,8 @@
+import {
+  MarkReadResponseDTO,
+  NotificationListResponseDTO,
+  NotificationQueryDTO,
+} from '../../dtos/user/notification.dto';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
   AwardBadgeResponseDTO,
@@ -63,4 +68,13 @@ export interface IAdminBadgeController {
   remove(id: string): Promise<DeleteResponseDTO>;
   award(id: string, userId: string): Promise<AwardBadgeResponseDTO>;
   revokeAward(id: string, userId: string): Promise<DeleteResponseDTO>;
+}
+
+export interface INotificationHttpController {
+  findAll(
+    userId: string,
+    query: NotificationQueryDTO,
+  ): Promise<NotificationListResponseDTO>;
+  markRead(userId: string, id: string): Promise<MarkReadResponseDTO>;
+  markAllRead(userId: string): Promise<MarkReadResponseDTO>;
 }
