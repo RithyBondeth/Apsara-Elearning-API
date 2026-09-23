@@ -1,3 +1,7 @@
+import {
+  ContinueLearningDTO,
+  ContinueLearningQueryDTO,
+} from '../../dtos/course/continue-learning.dto';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
   CourseResponseDTO,
@@ -152,6 +156,10 @@ export interface IEnrollmentHttpController {
   enroll(userId: string, courseId: string): Promise<EnrollmentResponseDTO>;
   unenroll(userId: string, courseId: string): Promise<UnenrollResponseDTO>;
   myEnrollments(userId: string): Promise<EnrollmentResponseDTO[]>;
+  continueLearning(
+    userId: string,
+    query: ContinueLearningQueryDTO,
+  ): Promise<ContinueLearningDTO[]>;
   check(userId: string, courseId: string): Promise<EnrollmentCheckResponseDTO>;
 }
 

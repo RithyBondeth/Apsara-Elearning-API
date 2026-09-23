@@ -1,3 +1,4 @@
+import { ContinueLearningDTO } from '../../dtos/course/continue-learning.dto';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
   CourseResponseDTO,
@@ -91,6 +92,10 @@ export interface ICourseService {
 
 export interface IEnrollmentService {
   enroll(userId: string, courseId: string): Promise<EnrollmentResponseDTO>;
+  continueLearning(
+    userId: string,
+    limit: number,
+  ): Promise<ContinueLearningDTO[]>;
   unenroll(userId: string, courseId: string): Promise<UnenrollResponseDTO>;
   findByUser(userId: string): Promise<EnrollmentResponseDTO[]>;
   findByCourse(courseId: string): Promise<EnrollmentResponseDTO[]>;

@@ -7,11 +7,14 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
+  ContinueLearningDTO,
+  ContinueLearningQueryDTO,
   EnrollmentResponseDTO,
   EnrollmentCheckResponseDTO,
   IEnrollmentHttpController,
@@ -96,6 +99,28 @@ export class EnrollmentController implements IEnrollmentHttpController {
       this.courseClient,
       COURSE_SERVICE.ACTIONS.ENROLLMENT_FIND_BY_USER,
       { userId },
+    );
+  }
+
+  @Get('continue')
+  @ApiOperation({
+    summary: 'In-progress courses with the next lesson to open',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description:
+      'Courses the learner has started but not finished, most recently worked on first',
+    type: [ContinueLearningDTO],
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  continueLearning(
+    @CurrentUser('id') userId: string,
+    @Query() query: ContinueLearningQueryDTO,
+  ): Promise<ContinueLearningDTO[]> {
+    return rpcCall<ContinueLearningDTO[]>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.ENROLLMENT_CONTINUE,
+      { userId, limit: query.limit },
     );
   }
 
