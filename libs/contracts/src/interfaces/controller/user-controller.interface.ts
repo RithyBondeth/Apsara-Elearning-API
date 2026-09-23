@@ -8,6 +8,7 @@ import {
   UserBadgeResponseDTO,
 } from '../../dtos/user/badge.dto';
 import { UpdateUserRequestDTO } from '../../dtos/user/update-user.dto';
+import { LeaderboardResponseDTO } from '../../dtos/user/leaderboard.dto';
 import {
   AddXpResponseDTO,
   UserResponseDTO,
@@ -34,6 +35,10 @@ export interface IUserRpcController {
     userId: string;
     streak: number;
   }): Promise<UserResponseDTO>;
+  leaderboard(payload: {
+    viewerId: string;
+    limit?: number;
+  }): Promise<LeaderboardResponseDTO>;
 }
 
 export interface IBadgeRpcController {

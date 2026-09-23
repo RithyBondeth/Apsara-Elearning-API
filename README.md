@@ -136,6 +136,7 @@ a "First Steps" badge.
 |-------|--------|
 | **Auth** | `POST /auth/register` · `login` · `refresh` · `verify-email` · `resend-verification` · `forgot-password` · `reset-password` · 🔒`logout` · 🔒`change-password` |
 | **User** 🔒 | `GET/PATCH /user/me` · `PATCH /user/me/avatar` · `GET /user/me/badges` |
+| **Leaderboard** 🔒 | `GET /leaderboard[?limit=]` — top learners by XP plus the caller's own standing |
 | **Courses** | reads: `GET /course`, `/course/published`, `/course/:id`, `/course/slug/:slug`, `/course/subject/:subjectId`, `/course/grade/:gradeLevelId`, `/course/major/:majorId` · 🔒admin: `POST/PUT/DELETE /course`, `PATCH /course/:id/publish\|unpublish` |
 | **Subjects** | `GET /subject`, `/subject/:id`, `/subject/slug/:slug` · 🔒admin mutations |
 | **Structure** (read-only) | `GET /grade-level[/:id]` · `GET /faculty[/:id]`, `/faculty/slug/:slug` · `GET /major[?facultyId=][/:id]`, `/major/slug/:slug` |
@@ -193,6 +194,12 @@ Completing a lesson grants **10 XP**; passing a quiz grants its `xpReward`
 (default **25**); solving a coding challenge grants its `xpReward` (default
 **50**) — each on first completion only. Crossing a badge's `xpRequired`
 auto-awards it.
+
+`GET /leaderboard` ranks learners by that XP (competition ranking, so ties share
+a rank) and always includes the caller's own standing, even when they fall below
+the returned page. Admins are excluded — they are staff, not competitors. Rows
+carry a first name plus last initial and never an email: the board is visible to
+other learners, and this platform teaches Grade 1–12.
 
 ## Environment
 

@@ -48,6 +48,7 @@ export * from './dtos/course/certificate.dto';
 export * from './dtos/user/update-user.dto';
 export * from './dtos/user/user-response.dto';
 export * from './dtos/user/badge.dto';
+export * from './dtos/user/leaderboard.dto';
 export * from './dtos/assessment/quiz.dto';
 export * from './dtos/assessment/question.dto';
 export * from './dtos/assessment/option.dto';

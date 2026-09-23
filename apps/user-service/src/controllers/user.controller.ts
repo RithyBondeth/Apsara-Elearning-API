@@ -5,6 +5,8 @@ import {
   UpdateUserRequestDTO,
   TAvatarPreset,
   I_USER_SERVICE,
+  LEADERBOARD_DEFAULT_LIMIT,
+  LEADERBOARD_MAX_LIMIT,
 } from '@app/contracts';
 import type { IUserService, IUserRpcController } from '@app/contracts';
 import { idOf, splitUpdate } from '@app/utils';
@@ -55,5 +57,16 @@ export class UserController implements IUserRpcController {
   @MessagePattern(USER_SERVICE.ACTIONS.UPDATE_STREAK)
   updateStreak(@Payload() payload: { userId: string; streak: number }) {
     return this.userService.updateStreak(payload.userId, payload.streak);
+  }
+
+  @MessagePattern(USER_SERVICE.ACTIONS.LEADERBOARD)
+  leaderboard(@Payload() payload: { viewerId: string; limit?: number }) {
+    // The gateway validates `limit`, but this action is callable over RPC by
+    // any service — clamp here so an unbounded page can't be requested.
+    const requested = Number(payload.limit ?? LEADERBOARD_DEFAULT_LIMIT);
+    const limit = Number.isFinite(requested)
+      ? Math.min(Math.max(Math.trunc(requested), 1), LEADERBOARD_MAX_LIMIT)
+      : LEADERBOARD_DEFAULT_LIMIT;
+    return this.userService.leaderboard(payload.viewerId, limit);
   }
 }
