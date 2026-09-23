@@ -88,6 +88,7 @@ export const COURSE_SERVICE = {
     ENROLLMENT_FIND_BY_USER: 'course.enrollment.find_by_user',
     ENROLLMENT_FIND_BY_COURSE: 'course.enrollment.find_by_course',
     ENROLLMENT_CHECK: 'course.enrollment.check', // is user enrolled?
+    ENROLLMENT_CONTINUE: 'course.enrollment.continue',
 
     // Certificates
     CERTIFICATE_ISSUE: 'course.certificate.issue', // idempotent claim

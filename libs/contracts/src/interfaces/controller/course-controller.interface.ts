@@ -1,3 +1,4 @@
+import { ContinueLearningDTO } from '../../dtos/course/continue-learning.dto';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
   CourseResponseDTO,
@@ -98,6 +99,10 @@ export interface IEnrollmentRpcController {
     courseId: string;
   }): Promise<UnenrollResponseDTO>;
   findByUser(payload: { userId: string }): Promise<EnrollmentResponseDTO[]>;
+  continueLearning(payload: {
+    userId: string;
+    limit?: number;
+  }): Promise<ContinueLearningDTO[]>;
   findByCourse(
     payload: string | { courseId: string },
   ): Promise<EnrollmentResponseDTO[]>;
