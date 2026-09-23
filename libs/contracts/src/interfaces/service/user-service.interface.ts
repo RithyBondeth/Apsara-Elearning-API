@@ -8,6 +8,7 @@ import {
   UserBadgeResponseDTO,
 } from '../../dtos/user/badge.dto';
 import { UpdateUserRequestDTO } from '../../dtos/user/update-user.dto';
+import { LeaderboardResponseDTO } from '../../dtos/user/leaderboard.dto';
 import {
   AddXpResponseDTO,
   UserResponseDTO,
@@ -29,6 +30,7 @@ export interface IUserService {
   remove(id: string): Promise<DeleteResponseDTO>;
   addXp(id: string, amount: number): Promise<AddXpResponseDTO>;
   updateStreak(id: string, streak: number): Promise<UserResponseDTO>;
+  leaderboard(viewerId: string, limit: number): Promise<LeaderboardResponseDTO>;
 }
 
 export interface IBadgeService {

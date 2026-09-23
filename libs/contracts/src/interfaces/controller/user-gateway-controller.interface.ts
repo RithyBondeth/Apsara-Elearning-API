@@ -11,6 +11,10 @@ import {
   UpdateUserRequestDTO,
 } from '../../dtos/user/update-user.dto';
 import { UserResponseDTO } from '../../dtos/user/user-response.dto';
+import {
+  LeaderboardQueryDTO,
+  LeaderboardResponseDTO,
+} from '../../dtos/user/leaderboard.dto';
 
 /**
  * HTTP gateway controller contracts for the user domain. `*HttpController`
@@ -34,6 +38,13 @@ export interface IUserHttpController {
 
 export interface IBadgeHttpController {
   findAll(): Promise<BadgeResponseDTO[]>;
+}
+
+export interface ILeaderboardHttpController {
+  findAll(
+    userId: string,
+    query: LeaderboardQueryDTO,
+  ): Promise<LeaderboardResponseDTO>;
 }
 
 // ---- Admin (admin-gateway) ----

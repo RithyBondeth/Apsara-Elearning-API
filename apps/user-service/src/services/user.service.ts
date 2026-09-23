@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { eq, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, lte, sql } from 'drizzle-orm';
 import { user } from '@app/database/schemas/user/user.schema';
 import { badges } from '@app/database/schemas/user/badge.schema';
 import { userBadges } from '@app/database/schemas/user/user-badge.schema';
@@ -11,6 +11,8 @@ import {
   DeleteResponseDTO,
   DRIZZLE,
   IUserService,
+  LeaderboardEntryDTO,
+  LeaderboardResponseDTO,
   TAvatarPreset,
   UpdateUserRequestDTO,
   UserResponseDTO,
@@ -154,6 +156,123 @@ export class UserService implements IUserService {
       .returning(publicColumns);
     if (!updated) throw new RpcNotFoundException('User not found');
     return new UserResponseDTO(updated);
+  }
+
+  /**
+   * XP leaderboard: the top `limit` learners plus the viewer's own row.
+   *
+   * Ranking is competition-style via `rank()`, so tied XP shares a rank. The
+   * viewer's rank is derived the same way — a count of learners strictly ahead
+   * of them, plus one — so a viewer outside the page gets a number consistent
+   * with the rows above.
+   *
+   * Admins are excluded: they are staff, not competitors, and seeding content
+   * should not put them at the top of a student board.
+   */
+  async leaderboard(
+    viewerId: string,
+    limit: number,
+  ): Promise<LeaderboardResponseDTO> {
+    const ranked = await this.db
+      .select({
+        rank: sql<number>`rank() over (order by coalesce(${user.xp}, 0) desc)`,
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        xp: user.xp,
+        streak: user.streak,
+      })
+      .from(user)
+      .where(eq(user.isAdmin, false))
+      .orderBy(desc(user.xp), asc(user.createdAt))
+      .limit(limit);
+
+    const [counted] = await this.db
+      .select({ total: sql<number>`count(*)` })
+      .from(user)
+      .where(eq(user.isAdmin, false));
+    const total = Number(counted?.total ?? 0);
+
+    const entries = ranked.map((row) => this.toLeaderboardEntry(row, viewerId));
+
+    // Reuse the viewer's row when they are already on the page; otherwise look
+    // up just their standing rather than paging the whole board.
+    const onPage = entries.find((entry) => entry.isViewer) ?? null;
+    const me = onPage ?? (await this.viewerStanding(viewerId));
+
+    return new LeaderboardResponseDTO({ entries, me, total });
+  }
+
+  /** The viewer's own row when they fall outside the returned page. */
+  private async viewerStanding(
+    viewerId: string,
+  ): Promise<LeaderboardEntryDTO | null> {
+    const [viewer] = await this.db
+      .select({
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        xp: user.xp,
+        streak: user.streak,
+        isAdmin: user.isAdmin,
+      })
+      .from(user)
+      .where(eq(user.id, viewerId))
+      .limit(1);
+
+    // An admin (or a deleted account) has no place on the board.
+    if (!viewer || viewer.isAdmin) return null;
+
+    const [ahead] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(user)
+      .where(
+        and(
+          eq(user.isAdmin, false),
+          gt(sql`coalesce(${user.xp}, 0)`, viewer.xp ?? 0),
+        ),
+      );
+
+    return this.toLeaderboardEntry(
+      { ...viewer, rank: Number(ahead?.count ?? 0) + 1 },
+      viewerId,
+    );
+  }
+
+  /**
+   * Board rows carry a short display name — first name plus last initial — and
+   * never an email. Learners here include children, so a board other learners
+   * can read must not expose anything that identifies them off-platform.
+   */
+  private toLeaderboardEntry(
+    row: {
+      rank: number | string;
+      userId: string;
+      firstName: string | null;
+      lastName: string | null;
+      avatar: string | null;
+      xp: number | null;
+      streak: number | null;
+    },
+    viewerId: string,
+  ): LeaderboardEntryDTO {
+    const initial = row.lastName?.trim()?.[0];
+    const displayName =
+      [row.firstName?.trim(), initial ? `${initial}.` : null]
+        .filter(Boolean)
+        .join(' ') || 'Learner';
+
+    return new LeaderboardEntryDTO({
+      rank: Number(row.rank),
+      userId: row.userId,
+      displayName,
+      avatar: row.avatar ?? null,
+      xp: row.xp ?? 0,
+      streak: row.streak ?? 0,
+      isViewer: row.userId === viewerId,
+    });
   }
 
   /** Awards any XP-threshold badge the user has now earned but doesn't hold. */

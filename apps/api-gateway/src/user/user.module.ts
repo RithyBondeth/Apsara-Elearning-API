@@ -2,6 +2,7 @@ import { USER_SERVICE } from '@app/contracts/constants/services/user-service.con
 import { Module } from '@nestjs/common';
 import { UserController } from './controllers/user.controller';
 import { BadgeController } from './controllers/badge.controller';
+import { LeaderboardController } from './controllers/leaderboard.controller';
 import { JwtModule, RabbitmqModule } from '@app/common';
 
 @Module({
@@ -14,6 +15,6 @@ import { JwtModule, RabbitmqModule } from '@app/common';
       },
     ]),
   ],
-  controllers: [UserController, BadgeController],
+  controllers: [UserController, BadgeController, LeaderboardController],
 })
 export class UserModule {}

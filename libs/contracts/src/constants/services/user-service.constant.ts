@@ -13,6 +13,7 @@ export const USER_SERVICE = {
     // Gamification
     ADD_XP: 'user.add_xp',
     UPDATE_STREAK: 'user.update_streak',
+    LEADERBOARD: 'user.leaderboard',
 
     // Badges
     BADGE_FIND_ALL: 'user.badge.find_all',
