@@ -8,13 +8,15 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   AI_SERVICE,
   AiMessageResponseDTO,
-  AiUsageResponseDTO,
+  AiUsageQueryDTO,
+  AiUsageSummaryResponseDTO,
   ConversationResponseDTO,
   CreateConversationRequestDTO,
   CreditsResponseDTO,
@@ -172,18 +174,23 @@ export class AiController implements IAiHttpController {
   }
 
   @Get('usage')
-  @ApiOperation({ summary: 'Get user AI usage statistics' })
+  @ApiOperation({
+    summary: 'Get the AI token allowance plus the most recent calls',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Usage stats retrieved successfully',
-    type: [AiUsageResponseDTO],
+    description: 'Allowance and recent usage retrieved successfully',
+    type: AiUsageSummaryResponseDTO,
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  usage(@CurrentUser('id') userId: string): Promise<AiUsageResponseDTO[]> {
-    return rpcCall<AiUsageResponseDTO[]>(
+  usage(
+    @CurrentUser('id') userId: string,
+    @Query() query: AiUsageQueryDTO,
+  ): Promise<AiUsageSummaryResponseDTO> {
+    return rpcCall<AiUsageSummaryResponseDTO>(
       this.aiClient,
       AI_SERVICE.ACTIONS.USAGE_FIND_BY_USER,
-      { userId },
+      { userId, limit: query.limit },
     );
   }
 

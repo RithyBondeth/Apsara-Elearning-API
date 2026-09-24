@@ -146,7 +146,7 @@ a "First Steps" badge.
 | **Progress** 🔒 | `POST /lesson-progress/lesson/:lessonId` · `GET /lesson-progress` · `POST /lesson-progress/course/:courseId/recalculate` |
 | **Quiz** 🔒 | `GET /quiz/lesson/:lessonId` · `POST /quiz/:quizId/start` · `POST /quiz/attempt/:attemptId/submit` · `GET /quiz/attempts` · `GET /quiz/attempt/:id[/answers]` |
 | **Challenge** 🔒 | `GET /challenge/lesson/:lessonId` · `GET /challenge/:id[/test-cases]` · `POST /challenge/:id/submit` · `GET /challenge/submissions` · `GET /challenge/submission/:id` |
-| **Apsara AI** 🔒 | `POST/GET /ai/conversations` · `GET/DELETE /ai/conversations/:id` · `POST/GET /ai/conversations/:id/messages` · `GET /ai/usage` · `GET /ai/credits` |
+| **Apsara AI** 🔒 | `POST/GET /ai/conversations` · `GET/DELETE /ai/conversations/:id` · `POST/GET /ai/conversations/:id/messages` · `GET /ai/usage[?limit=]` · `GET /ai/credits` |
 | **Subscription** | public: `GET /subscription/plans[/:id]`, `POST /subscription/webhook` · 🔒: `POST /subscription/checkout`, `POST /subscription/billing-portal`, `GET /subscription/me\|check\|history\|payments\|entitlements`, `DELETE /subscription/:id` |
 
 ### admin-gateway (`/admin`, port 2222) — all routes require an **admin** token

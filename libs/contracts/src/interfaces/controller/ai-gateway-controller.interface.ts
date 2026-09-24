@@ -9,7 +9,8 @@ import {
   SendMessageResponseDTO,
 } from '../../dtos/ai/message.dto';
 import {
-  AiUsageResponseDTO,
+  AiUsageQueryDTO,
+  AiUsageSummaryResponseDTO,
   CreditsResponseDTO,
 } from '../../dtos/ai/usage.dto';
 
@@ -31,6 +32,9 @@ export interface IAiHttpController {
     userId: string,
     conversationId: string,
   ): Promise<AiMessageResponseDTO[]>;
-  usage(userId: string): Promise<AiUsageResponseDTO[]>;
+  usage(
+    userId: string,
+    query: AiUsageQueryDTO,
+  ): Promise<AiUsageSummaryResponseDTO>;
   credits(userId: string): Promise<CreditsResponseDTO>;
 }

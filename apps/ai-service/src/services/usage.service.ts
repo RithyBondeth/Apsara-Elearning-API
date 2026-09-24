@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { eq, sql } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { aiUsageTracking } from '@app/database/schemas/ai/ai-usage-tracking.schema';
 import {
   AiUsageResponseDTO,
+  AiUsageSummaryResponseDTO,
   CreditsResponseDTO,
   DRIZZLE,
   IUsageService,
@@ -16,13 +17,30 @@ const TOKEN_LIMIT = 1_000_000;
 export class UsageService implements IUsageService {
   constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
 
-  async findByUser(userId: string): Promise<AiUsageResponseDTO[]> {
+  /**
+   * The learner's allowance plus their most recent calls.
+   *
+   * Newest first and bounded: the previous version returned every row this
+   * account had ever generated, ascending, which grows without limit and puts
+   * the least interesting records first.
+   */
+  async findByUser(
+    userId: string,
+    limit: number,
+  ): Promise<AiUsageSummaryResponseDTO> {
     const rows = await this.db
       .select()
       .from(aiUsageTracking)
       .where(eq(aiUsageTracking.userId, userId))
-      .orderBy(aiUsageTracking.createdAt);
-    return rows.map((row) => new AiUsageResponseDTO(row));
+      .orderBy(desc(aiUsageTracking.createdAt))
+      .limit(limit);
+
+    const credits = await this.checkCredits(userId);
+
+    return new AiUsageSummaryResponseDTO({
+      ...credits,
+      recent: rows.map((row) => new AiUsageResponseDTO(row)),
+    });
   }
 
   async checkCredits(userId: string): Promise<CreditsResponseDTO> {

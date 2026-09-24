@@ -9,6 +9,7 @@ import {
 } from '../../dtos/ai/message.dto';
 import {
   AiUsageResponseDTO,
+  AiUsageSummaryResponseDTO,
   CreditsResponseDTO,
 } from '../../dtos/ai/usage.dto';
 
@@ -45,6 +46,9 @@ export interface IMessageService {
 }
 
 export interface IUsageService {
-  findByUser(userId: string): Promise<AiUsageResponseDTO[]>;
+  findByUser(
+    userId: string,
+    limit: number,
+  ): Promise<AiUsageSummaryResponseDTO>;
   checkCredits(userId: string): Promise<CreditsResponseDTO>;
 }

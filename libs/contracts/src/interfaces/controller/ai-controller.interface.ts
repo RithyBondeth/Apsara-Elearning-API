@@ -9,13 +9,17 @@ import {
 } from '../../dtos/ai/message.dto';
 import {
   AiUsageResponseDTO,
+  AiUsageSummaryResponseDTO,
   CreditsResponseDTO,
 } from '../../dtos/ai/usage.dto';
 
 /** RPC controller contracts for ai-service. */
 
 export interface IUsageRpcController {
-  findUsage(payload: { userId: string }): Promise<AiUsageResponseDTO[]>;
+  findUsage(payload: {
+    userId: string;
+    limit?: number;
+  }): Promise<AiUsageSummaryResponseDTO>;
   checkCredits(payload: { userId: string }): Promise<CreditsResponseDTO>;
 }
 
