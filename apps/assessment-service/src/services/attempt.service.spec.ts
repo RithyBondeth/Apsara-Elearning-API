@@ -164,7 +164,16 @@ describe('AttemptService.submit scoring and XP', () => {
     expect(res.totalPoints).toBe(2);
     expect(res.needsReview).toBe(0);
     expect(res.xpAwarded).toBe(25);
-    expect(uc.send).toHaveBeenCalledTimes(1);
+    // Assert the patterns, not the call count — the same first-pass gate now
+    // also raises a notification.
+    expect(uc.send).toHaveBeenCalledWith('user.add_xp', {
+      userId: 'u1',
+      amount: 25,
+    });
+    expect(uc.send).toHaveBeenCalledWith(
+      'user.notification.create',
+      expect.objectContaining({ userId: 'u1', type: 'quiz_passed' }),
+    );
   });
 
   it('weights the score by question points', async () => {

@@ -13,7 +13,11 @@ import {
   SubmissionResultResponseDTO,
   USER_SERVICE,
 } from '@app/contracts';
-import { CourseEntitlementService, RpcNotFoundException } from '@app/common';
+import {
+  CourseEntitlementService,
+  notifyUser,
+  RpcNotFoundException,
+} from '@app/common';
 import { ChallengeService } from './challenge.service';
 import { CodeExecutionService } from '../execution/code-execution.service';
 
@@ -77,6 +81,23 @@ export class SubmissionService implements ISubmissionService {
       !(await this.hasPassedBefore(userId, challengeId, submission.id))
     ) {
       xpAwarded = await this.grantXp(userId, challenge.xpReward ?? 0);
+
+      // Same gate as the XP: only the first solve is worth announcing.
+      await notifyUser(
+        this.userClient,
+        {
+          userId,
+          type: 'challenge_solved',
+          title: `Challenge solved: ${challenge.title}`,
+          body: `All ${result.total} test cases passed.`,
+          data: {
+            challengeId,
+            submissionId: submission.id,
+            lessonId: challenge.lessonId,
+          },
+        },
+        this.logger,
+      );
     }
 
     this.logger.log(

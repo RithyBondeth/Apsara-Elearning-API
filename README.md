@@ -216,10 +216,21 @@ guessed id cannot touch another learner's notifications. `readAt` is a nullable
 timestamp rather than a boolean, and marking an already-read row is a no-op that
 preserves the first read time.
 
-Currently raised on **badge awarded**; the remaining types in
-`NOTIFICATION_TYPES` (`quiz_passed`, `challenge_solved`, `course_completed`,
-`certificate_issued`, `subscription_updated`) are defined and ready for their
-emitting services to call `user.notification.create` over RMQ.
+Raised on **badge awarded** (in-process in user-service), **quiz passed** and
+**challenge solved** (assessment-service), and **course completed** +
+**certificate issued** (course-service). Each fires behind the same first-time
+gate as its XP award, so a retake or a re-marked lesson does not re-announce
+anything; course completion and the certificate are gated on the enrollment
+*transitioning* to complete, because `certificates.issue` is idempotent and
+returns any existing certificate.
+
+Services emit with `notifyUser` from `@app/common`, which — unlike `rpcCall` —
+never throws: the learner has already earned the thing being announced, so a
+broker hiccup must not roll it back.
+
+`subscription_updated` is defined but not yet emitted; it fires from a Stripe
+webhook path that retries, so it needs to hang off the
+already-processed-event check to avoid duplicate notifications.
 
 Apply `migrations/20260923_add_notifications.sql`.
 

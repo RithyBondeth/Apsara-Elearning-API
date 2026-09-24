@@ -24,6 +24,7 @@ import {
 } from '@app/contracts';
 import {
   CourseEntitlementService,
+  notifyUser,
   RpcBadRequestException,
   RpcNotFoundException,
 } from '@app/common';
@@ -244,6 +245,24 @@ export class AttemptService implements IAttemptService {
       !(await this.hasPassedBefore(userId, attempt.quizId, attemptId))
     ) {
       xpAwarded = await this.grantXp(userId, quiz.xpReward ?? 0);
+
+      // Same gate as the XP: a retake that passes again is not news.
+      await notifyUser(
+        this.userClient,
+        {
+          userId,
+          type: 'quiz_passed',
+          title: `Quiz passed: ${quiz.title}`,
+          body: `You scored ${score}%.`,
+          data: {
+            quizId: attempt.quizId,
+            attemptId,
+            lessonId: quiz.lessonId,
+            score,
+          },
+        },
+        this.logger,
+      );
     }
 
     // Per-question review — the study payload: what the student answered,

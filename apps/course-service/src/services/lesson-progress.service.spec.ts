@@ -170,7 +170,9 @@ function markCompleteDb(opts: {
 
 describe('LessonProgressService.markComplete', () => {
   function build(db: unknown) {
-    const certs = { issue: jest.fn().mockResolvedValue(undefined) };
+    const certs = {
+      issue: jest.fn().mockResolvedValue({ code: 'APS-4K7M-QW2X-9BTF' }),
+    };
     const uc = { send: jest.fn().mockReturnValue(of({})) };
     const ents = { assertCanEnroll: jest.fn().mockResolvedValue(undefined) };
     const svc = new LessonProgressService(
@@ -179,7 +181,13 @@ describe('LessonProgressService.markComplete', () => {
       ents as unknown as CourseEntitlementService,
       certs as unknown as CertificateService,
     );
-    return { svc, certs, uc };
+    /** Notification types raised through the user-service client. */
+    const raised = () =>
+      uc.send.mock.calls
+        .filter(([pattern]) => pattern === 'user.notification.create')
+        .map(([, payload]) => (payload as { type: string }).type);
+
+    return { svc, certs, uc, raised };
   }
 
   it('throws 404 when the lesson has no course', async () => {
@@ -215,6 +223,37 @@ describe('LessonProgressService.markComplete', () => {
     const { svc, certs } = build(markCompleteDb({ updated: [{ id: 'e1', completed: false }] }));
     await svc.markComplete('u1', 'l1');
     expect(certs.issue).not.toHaveBeenCalled();
+  });
+
+  it('announces course completion when this lesson finishes the course', async () => {
+    const { svc, raised } = build(
+      markCompleteDb({ updated: [{ id: 'e1', completed: true }] }),
+    );
+    await svc.markComplete('u1', 'l1');
+    expect(raised()).toEqual(
+      expect.arrayContaining(['course_completed', 'certificate_issued']),
+    );
+  });
+
+  it('does not announce completion again for an already-finished course', async () => {
+    // Re-marking a lesson in a finished course must not re-notify.
+    const { svc, raised } = build(
+      markCompleteDb({
+        enrollment: [{ userId: 'u1', courseId: 'c1', completed: true }],
+        updated: [{ id: 'e1', completed: true }],
+      }),
+    );
+    await svc.markComplete('u1', 'l1');
+    expect(raised()).not.toContain('course_completed');
+    expect(raised()).not.toContain('certificate_issued');
+  });
+
+  it('announces nothing while the course is unfinished', async () => {
+    const { svc, raised } = build(
+      markCompleteDb({ updated: [{ id: 'e1', completed: false }] }),
+    );
+    await svc.markComplete('u1', 'l1');
+    expect(raised()).toEqual([]);
   });
 
   it('still completes the lesson when certificate issuance throws', async () => {
