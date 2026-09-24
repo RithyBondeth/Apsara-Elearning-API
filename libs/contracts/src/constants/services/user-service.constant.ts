@@ -15,6 +15,12 @@ export const USER_SERVICE = {
     UPDATE_STREAK: 'user.update_streak',
     LEADERBOARD: 'user.leaderboard',
 
+    // Notifications
+    NOTIFICATION_CREATE: 'user.notification.create',
+    NOTIFICATION_FIND_BY_USER: 'user.notification.find_by_user',
+    NOTIFICATION_MARK_READ: 'user.notification.mark_read',
+    NOTIFICATION_MARK_ALL_READ: 'user.notification.mark_all_read',
+
     // Badges
     BADGE_FIND_ALL: 'user.badge.find_all',
     BADGE_FIND_ONE: 'user.badge.find_one',

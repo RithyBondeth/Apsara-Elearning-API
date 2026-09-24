@@ -1,3 +1,9 @@
+import {
+  CreateNotificationDTO,
+  MarkReadResponseDTO,
+  NotificationListResponseDTO,
+  NotificationResponseDTO,
+} from '../../dtos/user/notification.dto';
 import { TAvatarPreset } from '../../constants/domain/avatar.constant';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
@@ -20,6 +26,7 @@ import {
  */
 export const I_USER_SERVICE = 'IUserService';
 export const I_BADGE_SERVICE = 'IBadgeService';
+export const I_NOTIFICATION_SERVICE = 'INotificationService';
 
 export interface IUserService {
   findAll(): Promise<UserResponseDTO[]>;
@@ -42,4 +49,15 @@ export interface IBadgeService {
   award(userId: string, badgeId: string): Promise<AwardBadgeResponseDTO>;
   revoke(userId: string, badgeId: string): Promise<DeleteResponseDTO>;
   findByUser(userId: string): Promise<UserBadgeResponseDTO[]>;
+}
+
+export interface INotificationService {
+  create(dto: CreateNotificationDTO): Promise<NotificationResponseDTO>;
+  findByUser(
+    userId: string,
+    limit: number,
+    unreadOnly: boolean,
+  ): Promise<NotificationListResponseDTO>;
+  markRead(userId: string, id: string): Promise<MarkReadResponseDTO>;
+  markAllRead(userId: string): Promise<MarkReadResponseDTO>;
 }

@@ -18,6 +18,7 @@ import {
   UserResponseDTO,
 } from '@app/contracts';
 import { RpcBadRequestException, RpcNotFoundException } from '@app/common';
+import { NotificationService } from './notification.service';
 
 /**
  * Columns safe to return to clients — never expose password, tokens, or OTPs.
@@ -44,7 +45,10 @@ const publicColumns = {
 export class UserService implements IUserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    private readonly notifications: NotificationService,
+  ) {}
 
   async findAll(): Promise<UserResponseDTO[]> {
     const rows = await this.db
@@ -296,6 +300,22 @@ export class UserService implements IUserService {
         .values({ userId, badgeId: badge.id })
         .onConflictDoNothing();
       this.logger.log(`Badge "${badge.name}" awarded to ${userId}`);
+
+      // Best effort: the learner has earned the badge either way, so a failed
+      // notification must not roll back or throw out of the XP grant.
+      try {
+        await this.notifications.create({
+          userId,
+          type: 'badge_awarded',
+          title: `Badge earned: ${badge.name}`,
+          body: badge.description ?? undefined,
+          data: { badgeId: badge.id },
+        });
+      } catch (error) {
+        this.logger.error(
+          `Badge notification failed for ${userId}: ${error instanceof Error ? error.message : error}`,
+        );
+      }
     }
     return toAward;
   }
