@@ -17,6 +17,7 @@ import {
 } from '@app/contracts';
 import {
   CourseEntitlementService,
+  notifyUser,
   RpcBadRequestException,
   RpcNotFoundException,
 } from '@app/common';
@@ -46,7 +47,9 @@ export class LessonProgressService implements ILessonProgressService {
   ): Promise<LessonCompletionResponseDTO> {
     const courseId = await this.courseIdForLesson(lessonId);
     await this.entitlements.assertCanEnroll(userId, courseId);
-    await this.ensureEnrolled(userId, courseId);
+    const priorEnrollment = await this.ensureEnrolled(userId, courseId);
+    // Marking a lesson in an already-finished course must not re-announce it.
+    const wasCompleted = priorEnrollment.completed === true;
 
     const alreadyCompleted = await this.isCompleted(userId, lessonId);
 
@@ -72,8 +75,22 @@ export class LessonProgressService implements ILessonProgressService {
     // learner's broken streak is corrected rather than resumed.
     await this.syncStreak(userId);
 
+    if (enrollment.completed && !wasCompleted) {
+      await notifyUser(
+        this.userClient,
+        {
+          userId,
+          type: 'course_completed',
+          title: 'Course complete',
+          body: 'You finished every lesson. Nice work.',
+          data: { courseId },
+        },
+        this.logger,
+      );
+    }
+
     if (enrollment.completed) {
-      await this.issueCertificate(userId, courseId);
+      await this.issueCertificate(userId, courseId, !wasCompleted);
     }
 
     this.logger.log(`User ${userId} completed lesson ${lessonId}`);
@@ -158,9 +175,25 @@ export class LessonProgressService implements ILessonProgressService {
   private async issueCertificate(
     userId: string,
     courseId: string,
+    announce: boolean,
   ): Promise<void> {
     try {
-      await this.certificates.issue(userId, courseId);
+      const certificate = await this.certificates.issue(userId, courseId);
+      // `issue` is idempotent and returns any existing certificate, so the
+      // caller decides whether this is the moment worth announcing.
+      if (announce) {
+        await notifyUser(
+          this.userClient,
+          {
+            userId,
+            type: 'certificate_issued',
+            title: 'Certificate ready',
+            body: 'Your course certificate is available to view and share.',
+            data: { courseId, code: certificate.code },
+          },
+          this.logger,
+        );
+      }
     } catch (error) {
       this.logger.debug(
         `No certificate issued for ${userId} on ${courseId}: ${error instanceof Error ? error.message : error}`,
@@ -273,6 +306,7 @@ export class LessonProgressService implements ILessonProgressService {
     return row.courseId;
   }
 
+  /** Returns the enrollment so the caller can see its pre-update state. */
   private async ensureEnrolled(userId: string, courseId: string) {
     const [enrollment] = await this.db
       .select()
@@ -284,5 +318,6 @@ export class LessonProgressService implements ILessonProgressService {
     if (!enrollment) {
       throw new RpcBadRequestException('You are not enrolled in this course');
     }
+    return enrollment;
   }
 }

@@ -82,7 +82,16 @@ describe('SubmissionService.create', () => {
     expect(res.passed).toBe(true);
     expect(res.testCasesPassed).toBe(2);
     expect(res.xpAwarded).toBe(50);
-    expect(uc.send).toHaveBeenCalledTimes(1);
+    // Patterns rather than a call count — the first-solve gate now also raises
+    // a notification.
+    expect(uc.send).toHaveBeenCalledWith('user.add_xp', {
+      userId: 'u1',
+      amount: 50,
+    });
+    expect(uc.send).toHaveBeenCalledWith(
+      'user.notification.create',
+      expect.objectContaining({ userId: 'u1', type: 'challenge_solved' }),
+    );
   });
 
   it('computes a partial score and awards no XP when not all cases pass', async () => {
