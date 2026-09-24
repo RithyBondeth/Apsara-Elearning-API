@@ -138,6 +138,7 @@ a "First Steps" badge.
 | **User** 🔒 | `GET/PATCH /user/me` · `PATCH /user/me/avatar` · `GET /user/me/badges` |
 | **Leaderboard** 🔒 | `GET /leaderboard[?limit=]` — top learners by XP plus the caller's own standing |
 | **Notifications** 🔒 | `GET /notification[?limit=&unreadOnly=]` · `PATCH /notification/read-all` · `PATCH /notification/:id/read` |
+| **Ratings** | `GET /course/:courseId/ratings[?limit=]` · 🔒`GET /course/:courseId/rating/me` · 🔒`PUT/DELETE /course/:courseId/rating` |
 | **Courses** | reads: `GET /course`, `/course/published`, `/course/:id`, `/course/slug/:slug`, `/course/subject/:subjectId`, `/course/grade/:gradeLevelId`, `/course/major/:majorId` · 🔒admin: `POST/PUT/DELETE /course`, `PATCH /course/:id/publish\|unpublish` |
 | **Subjects** | `GET /subject`, `/subject/:id`, `/subject/slug/:slug` · 🔒admin mutations |
 | **Structure** (read-only) | `GET /grade-level[/:id]` · `GET /faculty[/:id]`, `/faculty/slug/:slug` · `GET /major[?facultyId=][/:id]`, `/major/slug/:slug` |
@@ -201,6 +202,30 @@ a rank) and always includes the caller's own standing, even when they fall below
 the returned page. Admins are excluded — they are staff, not competitors. Rows
 carry a first name plus last initial and never an email: the board is visible to
 other learners, and this platform teaches Grade 1–12.
+
+## Course ratings
+
+Learners rate a course 1–5 with an optional written review. One row per learner
+per course, so rating again replaces the previous one — an average cannot be
+inflated by a single account. Rating requires an **enrollment** (not
+completion): someone who never opened the course is not a signal, but a learner
+partway through has a real opinion.
+
+`GET /course/:courseId/ratings` is public and returns `average`, `count`, a star
+`distribution`, and the most recent written reviews. **`average` is `null`, not
+`0`, when nothing has been rated**, so a client cannot render an unrated course
+as a zero-star one. Ratings left without text still count toward the average but
+are not listed.
+
+Reviews carry a first name plus last initial and never an email — the same rule
+the leaderboard follows, because a course page is public and this platform
+teaches Grade 1–12.
+
+The 1–5 bound is a database check constraint as well as a DTO rule: the RPC
+action is callable by any service, and an out-of-range value would silently skew
+every average for that course.
+
+Apply `migrations/20260924_add_course_ratings.sql`.
 
 ## Notifications
 

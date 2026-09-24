@@ -31,6 +31,11 @@ export class CourseController implements ICourseRpcController {
     return this.courseService.findPublished();
   }
 
+  @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_PUBLIC_STATS)
+  getPublicStats() {
+    return this.courseService.getPublicStats();
+  }
+
   @MessagePattern(COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED_ONE)
   findPublishedOne(@Payload() payload: string | { id: string }) {
     return this.courseService.findPublishedOne(idOf(payload));

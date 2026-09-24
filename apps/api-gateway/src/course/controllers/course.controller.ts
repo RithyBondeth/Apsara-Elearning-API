@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpStatus,
   Inject,
   Param,
@@ -19,6 +20,7 @@ import {
   UpdateCourseRequestDTO,
   CourseResponseDTO,
   ModuleWithLessonsResponseDTO,
+  PlatformStatsResponseDTO,
   SearchCoursesRequestDTO,
 } from '@app/contracts';
 import {
@@ -88,6 +90,24 @@ export class CourseController {
     return rpcCall<CourseResponseDTO[]>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_FIND_PUBLISHED,
+      {},
+    );
+  }
+
+  @Get('stats')
+  @Header('Cache-Control', 'public, max-age=300')
+  @ApiOperation({
+    summary: 'Public catalog totals (published courses, lessons, questions, subjects)',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Catalog totals retrieved',
+    type: PlatformStatsResponseDTO,
+  })
+  getPublicStats() {
+    return rpcCall<PlatformStatsResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.COURSE_PUBLIC_STATS,
       {},
     );
   }

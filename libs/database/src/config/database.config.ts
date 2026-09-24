@@ -12,6 +12,7 @@ import * as majorSchema from '../schemas/course/major.schema';
 import * as programmingCategorySchema from '../schemas/course/programming-category.schema';
 import * as courseSchema from '../schemas/course/course.schema';
 import * as enrollmentSchema from '../schemas/course/enrollment.schema';
+import * as courseRatingSchema from '../schemas/course/course-rating.schema';
 import * as certificateSchema from '../schemas/course/certificate.schema';
 import * as moduleSchema from '../schemas/course/module.schema';
 import * as lessonSchema from '../schemas/course/lessons/lesson.schema';
@@ -47,6 +48,7 @@ const schema = {
   ...programmingCategorySchema,
   ...courseSchema,
   ...enrollmentSchema,
+  ...courseRatingSchema,
   ...certificateSchema,
   ...moduleSchema,
   ...lessonSchema,
