@@ -1,8 +1,14 @@
+import {
+  RatingResponseDTO,
+  RatingSummaryResponseDTO,
+  UpsertRatingRequestDTO,
+} from '../../dtos/course/rating.dto';
 import { ContinueLearningDTO } from '../../dtos/course/continue-learning.dto';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
   CourseResponseDTO,
   CreateCourseRequestDTO,
+  PlatformStatsResponseDTO,
   SearchCoursesRequestDTO,
   UpdateCourseRequestDTO,
 } from '../../dtos/course/course.dto';
@@ -62,6 +68,7 @@ export interface ICourseRpcController {
   create(dto: CreateCourseRequestDTO): Promise<CourseResponseDTO>;
   findAll(): Promise<CourseResponseDTO[]>;
   findPublished(): Promise<CourseResponseDTO[]>;
+  getPublicStats(): Promise<PlatformStatsResponseDTO>;
   search(payload: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]>;
   findStructure(payload: {
     courseId: string;
@@ -219,4 +226,24 @@ export interface ISubjectRpcController {
     payload: UpdateSubjectRequestDTO & { id: string },
   ): Promise<SubjectResponseDTO>;
   remove(payload: string | { id: string }): Promise<DeleteResponseDTO>;
+}
+
+export interface IRatingRpcController {
+  upsert(payload: {
+    userId: string;
+    courseId: string;
+    dto: UpsertRatingRequestDTO;
+  }): Promise<RatingResponseDTO>;
+  remove(payload: {
+    userId: string;
+    courseId: string;
+  }): Promise<DeleteResponseDTO>;
+  findByCourse(payload: {
+    courseId: string;
+    limit?: number;
+  }): Promise<RatingSummaryResponseDTO>;
+  findMine(payload: {
+    userId: string;
+    courseId: string;
+  }): Promise<RatingResponseDTO | null>;
 }

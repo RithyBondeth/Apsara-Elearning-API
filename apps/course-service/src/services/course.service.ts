@@ -8,6 +8,8 @@ import { majors } from '@app/database/schemas/course/major.schema';
 import { programmingCategories } from '@app/database/schemas/course/programming-category.schema';
 import { modules } from '@app/database/schemas/course/module.schema';
 import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
+import { quizzes } from '@app/database/schemas/course/quizzes/quiz.schema';
+import { quizQuestions } from '@app/database/schemas/course/quizzes/quiz-question.schema';
 import {
   CourseResponseDTO,
   CreateCourseRequestDTO,
@@ -16,6 +18,7 @@ import {
   ICourseService,
   LessonResponseDTO,
   ModuleWithLessonsResponseDTO,
+  PlatformStatsResponseDTO,
   SearchCoursesRequestDTO,
   UpdateCourseRequestDTO,
 } from '@app/contracts';
@@ -26,9 +29,13 @@ import {
   RpcNotFoundException,
 } from '@app/common';
 
+/** How long the public landing-page totals are served from memory. */
+export const PUBLIC_STATS_TTL_MS = 5 * 60 * 1000;
+
 @Injectable()
 export class CourseService implements ICourseService {
   private readonly logger = new Logger(CourseService.name);
+  private statsCache?: { value: PlatformStatsResponseDTO; expiresAt: number };
 
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
@@ -83,6 +90,42 @@ export class CourseService implements ICourseService {
       .where(eq(courses.published, true))
       .orderBy(courses.createdAt);
     return this.withCounts(rows);
+  }
+
+  /**
+   * Catalog totals for the public landing page, counted over published courses
+   * only. One aggregate query, then cached for PUBLIC_STATS_TTL_MS — every
+   * anonymous landing view hits this, and the numbers change only when content
+   * is published.
+   */
+  async getPublicStats(): Promise<PlatformStatsResponseDTO> {
+    const now = Date.now();
+    if (this.statsCache && this.statsCache.expiresAt > now) {
+      return this.statsCache.value;
+    }
+
+    const [row] = await this.db
+      .select({
+        courses: sql<number>`count(distinct ${courses.id})::int`,
+        lessons: sql<number>`count(distinct ${lessons.id})::int`,
+        questions: sql<number>`count(distinct ${quizQuestions.id})::int`,
+        subjects: sql<number>`count(distinct ${courses.subjectId})::int`,
+      })
+      .from(courses)
+      .leftJoin(modules, eq(modules.courseId, courses.id))
+      .leftJoin(lessons, eq(lessons.moduleId, modules.id))
+      .leftJoin(quizzes, eq(quizzes.lessonId, lessons.id))
+      .leftJoin(quizQuestions, eq(quizQuestions.quizId, quizzes.id))
+      .where(eq(courses.published, true));
+
+    const value = new PlatformStatsResponseDTO({
+      courses: row?.courses ?? 0,
+      lessons: row?.lessons ?? 0,
+      questions: row?.questions ?? 0,
+      subjects: row?.subjects ?? 0,
+    });
+    this.statsCache = { value, expiresAt: now + PUBLIC_STATS_TTL_MS };
+    return value;
   }
 
   async findPublishedOne(id: string): Promise<CourseResponseDTO> {

@@ -1,4 +1,4 @@
-import { CourseService } from './course.service';
+import { CourseService, PUBLIC_STATS_TTL_MS } from './course.service';
 import type { CourseEntitlementService } from '@app/common';
 
 /**
@@ -189,5 +189,54 @@ describe('CourseService catalog counts', () => {
 
     await expect(service.findPublished()).resolves.toEqual([]);
     expect(queryCount()).toBe(1);
+  });
+});
+
+describe('CourseService.getPublicStats', () => {
+  afterEach(() => jest.useRealTimers());
+
+  it('returns the published catalog totals from one aggregate query', async () => {
+    const { db, queryCount } = fakeDb([
+      [{ courses: 9, lessons: 320, questions: 850, subjects: 4 }],
+    ]);
+    const service = new CourseService(db as never, entitlements(true));
+
+    await expect(service.getPublicStats()).resolves.toEqual({
+      courses: 9,
+      lessons: 320,
+      questions: 850,
+      subjects: 4,
+    });
+    expect(queryCount()).toBe(1);
+  });
+
+  it('reports zeros when nothing is published', async () => {
+    const { db } = fakeDb([[]]);
+    const service = new CourseService(db as never, entitlements(true));
+
+    await expect(service.getPublicStats()).resolves.toEqual({
+      courses: 0,
+      lessons: 0,
+      questions: 0,
+      subjects: 0,
+    });
+  });
+
+  it('serves repeat calls from memory until the TTL lapses', async () => {
+    jest.useFakeTimers();
+    const { db, queryCount } = fakeDb([
+      [{ courses: 1, lessons: 2, questions: 3, subjects: 1 }],
+      [{ courses: 2, lessons: 4, questions: 6, subjects: 2 }],
+    ]);
+    const service = new CourseService(db as never, entitlements(true));
+
+    await service.getPublicStats();
+    await service.getPublicStats();
+    expect(queryCount()).toBe(1);
+
+    jest.advanceTimersByTime(PUBLIC_STATS_TTL_MS + 1);
+    const refreshed = await service.getPublicStats();
+    expect(queryCount()).toBe(2);
+    expect(refreshed.courses).toBe(2);
   });
 });

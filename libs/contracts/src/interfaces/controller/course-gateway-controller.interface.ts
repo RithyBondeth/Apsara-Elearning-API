@@ -1,4 +1,10 @@
 import {
+  RatingQueryDTO,
+  RatingResponseDTO,
+  RatingSummaryResponseDTO,
+  UpsertRatingRequestDTO,
+} from '../../dtos/course/rating.dto';
+import {
   ContinueLearningDTO,
   ContinueLearningQueryDTO,
 } from '../../dtos/course/continue-learning.dto';
@@ -248,4 +254,21 @@ export interface IAdminProgrammingCategoryController {
     dto: UpdateProgrammingCategoryRequestDTO,
   ): Promise<ProgrammingCategoryResponseDTO>;
   remove(id: string): Promise<DeleteResponseDTO>;
+}
+
+export interface IRatingHttpController {
+  findByCourse(
+    courseId: string,
+    query: RatingQueryDTO,
+  ): Promise<RatingSummaryResponseDTO>;
+  findMine(
+    userId: string,
+    courseId: string,
+  ): Promise<RatingResponseDTO | null>;
+  upsert(
+    userId: string,
+    courseId: string,
+    dto: UpsertRatingRequestDTO,
+  ): Promise<RatingResponseDTO>;
+  remove(userId: string, courseId: string): Promise<DeleteResponseDTO>;
 }

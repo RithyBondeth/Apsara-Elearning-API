@@ -185,6 +185,34 @@ export class SearchCoursesRequestDTO {
   offset?: number;
 }
 
+/**
+ * Public catalog totals for the landing page. Counts only published content,
+ * so the numbers shown to visitors are always ones they can actually open.
+ */
+export class PlatformStatsResponseDTO {
+  constructor(partial: DtoInit<PlatformStatsResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ description: 'Published courses', example: 9 })
+  courses: number;
+
+  @ApiProperty({ description: 'Lessons in published courses', example: 320 })
+  lessons: number;
+
+  @ApiProperty({
+    description: 'Quiz questions in published courses',
+    example: 850,
+  })
+  questions: number;
+
+  @ApiProperty({
+    description: 'Distinct subjects with at least one published course',
+    example: 4,
+  })
+  subjects: number;
+}
+
 export class CourseResponseDTO extends CreateCourseRequestDTO {
   constructor(partial: DtoInit<CourseResponseDTO> = {}) {
     super();

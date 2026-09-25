@@ -1,8 +1,14 @@
+import {
+  RatingResponseDTO,
+  RatingSummaryResponseDTO,
+  UpsertRatingRequestDTO,
+} from '../../dtos/course/rating.dto';
 import { ContinueLearningDTO } from '../../dtos/course/continue-learning.dto';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
   CourseResponseDTO,
   CreateCourseRequestDTO,
+  PlatformStatsResponseDTO,
   SearchCoursesRequestDTO,
   UpdateCourseRequestDTO,
 } from '../../dtos/course/course.dto';
@@ -59,6 +65,7 @@ import {
 
 export const I_COURSE_SERVICE = 'ICourseService';
 export const I_ENROLLMENT_SERVICE = 'IEnrollmentService';
+export const I_RATING_SERVICE = 'IRatingService';
 export const I_FACULTY_SERVICE = 'IFacultyService';
 export const I_GRADE_LEVEL_SERVICE = 'IGradeLevelService';
 export const I_LESSON_SERVICE = 'ILessonService';
@@ -72,6 +79,7 @@ export interface ICourseService {
   create(dto: CreateCourseRequestDTO): Promise<CourseResponseDTO>;
   findAll(): Promise<CourseResponseDTO[]>;
   findPublished(): Promise<CourseResponseDTO[]>;
+  getPublicStats(): Promise<PlatformStatsResponseDTO>;
   findPublishedOne(id: string): Promise<CourseResponseDTO>;
   findPublishedBySlug(slug: string): Promise<CourseResponseDTO>;
   search(dto: SearchCoursesRequestDTO): Promise<CourseResponseDTO[]>;
@@ -198,4 +206,18 @@ export interface ISubjectService {
   findBySlug(slug: string): Promise<SubjectResponseDTO>;
   update(id: string, dto: UpdateSubjectRequestDTO): Promise<SubjectResponseDTO>;
   remove(id: string): Promise<DeleteResponseDTO>;
+}
+
+export interface IRatingService {
+  upsert(
+    userId: string,
+    courseId: string,
+    dto: UpsertRatingRequestDTO,
+  ): Promise<RatingResponseDTO>;
+  remove(userId: string, courseId: string): Promise<DeleteResponseDTO>;
+  findByCourse(
+    courseId: string,
+    limit: number,
+  ): Promise<RatingSummaryResponseDTO>;
+  findMine(userId: string, courseId: string): Promise<RatingResponseDTO | null>;
 }
