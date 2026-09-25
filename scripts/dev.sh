@@ -16,8 +16,8 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
-echo "▶ Applying database migrations…"
-npm run db:migrate
+echo "▶ Preparing database (schema + migrations)…"
+npm run db:setup
 
 echo "▶ Starting all services (watch mode). Ctrl-C to stop."
 npm run start:all

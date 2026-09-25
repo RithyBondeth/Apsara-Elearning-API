@@ -1,50 +1,29 @@
+// Marks every migration in migrations/ as applied without running it.
+//
+// Use once on a database whose schema was created with `npm run db:push`: the
+// pushed schema already contains every migration's effect, so running them
+// would fail or duplicate work. `npm run db:setup` does push + baseline for a
+// new database in one step — prefer that.
 import 'dotenv/config';
-import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
+import {
+  FRESH_DATABASE_HINT,
+  hasBaseSchema,
+  recordAllAsApplied,
+} from './lib/migrations.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const drizzleDir = join(root, 'drizzle');
-const sql = postgres(process.env.DATABASE_URL);
+const sql = postgres(process.env.DATABASE_URL, { max: 1 });
 
 async function main() {
-  const journal = JSON.parse(
-    readFileSync(join(drizzleDir, 'meta', '_journal.json'), 'utf8'),
-  );
-
-  await sql`CREATE SCHEMA IF NOT EXISTS drizzle`;
-  await sql`CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (
-    id SERIAL PRIMARY KEY,
-    hash text NOT NULL,
-    created_at bigint
-  )`;
-
-  let added = 0;
-  for (const entry of journal.entries) {
-    const content = readFileSync(join(drizzleDir, `${entry.tag}.sql`), 'utf8');
-    const hash = createHash('sha256').update(content).digest('hex');
-
-    const [existing] = await sql`
-      SELECT 1 FROM drizzle.__drizzle_migrations WHERE hash = ${hash} LIMIT 1`;
-    if (existing) {
-      console.log(`  • ${entry.tag} already recorded`);
-      continue;
-    }
-    await sql`
-      INSERT INTO drizzle.__drizzle_migrations ("hash", "created_at")
-      VALUES (${hash}, ${entry.when})`;
-    console.log(`  ✓ marked ${entry.tag} as applied`);
-    added++;
-  }
-
+  if (!(await hasBaseSchema(sql))) throw new Error(FRESH_DATABASE_HINT);
+  const added = await recordAllAsApplied(sql);
   console.log(`\nBaseline complete (${added} new record(s)).`);
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch((err) => {
+  .then(() => sql.end())
+  .catch(async (err) => {
     console.error('Baseline failed:', err.message);
-    process.exit(1);
+    await sql.end({ timeout: 1 });
+    process.exitCode = 1;
   });

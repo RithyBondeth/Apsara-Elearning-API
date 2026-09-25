@@ -1,12 +1,12 @@
 import 'dotenv/config';
-import { createHash } from 'node:crypto';
-import { readdir, readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
+import {
+  FRESH_DATABASE_HINT,
+  ensureTrackingTable,
+  hasBaseSchema,
+  listMigrations,
+} from './lib/migrations.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const migrationsDir = join(root, 'migrations');
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
@@ -15,37 +15,18 @@ if (!databaseUrl) {
 
 const sql = postgres(databaseUrl, { max: 1 });
 const lockName = 'apsara-elearning-app-migrations';
-const migrationOrder = [
-  '20260728_add_course_entitlements.sql',
-  '20260728_add_stripe_billing.sql',
-  '20260728_harden_stripe_webhooks.sql',
-  '20260728_add_named_entitlements.sql',
-];
 
 async function main() {
   await sql`SELECT pg_advisory_lock(hashtext(${lockName}))`;
 
   try {
-    await sql`CREATE SCHEMA IF NOT EXISTS apsara_migrations`;
-    await sql`CREATE TABLE IF NOT EXISTS apsara_migrations.applied_migrations (
-      name text PRIMARY KEY,
-      checksum text NOT NULL,
-      applied_at timestamptz NOT NULL DEFAULT now()
-    )`;
-
-    const discovered = (await readdir(migrationsDir)).filter((name) =>
-      name.endsWith('.sql'),
-    );
-    const unknown = discovered.filter((name) => !migrationOrder.includes(name));
-    const migrationNames = [
-      ...migrationOrder.filter((name) => discovered.includes(name)),
-      ...unknown.sort(),
-    ];
+    if (!(await hasBaseSchema(sql))) {
+      throw new Error(FRESH_DATABASE_HINT);
+    }
+    await ensureTrackingTable(sql);
 
     let applied = 0;
-    for (const name of migrationNames) {
-      const content = await readFile(join(migrationsDir, name), 'utf8');
-      const checksum = createHash('sha256').update(content).digest('hex');
+    for (const { name, content, checksum } of await listMigrations()) {
       const [existing] = await sql`
         SELECT checksum
         FROM apsara_migrations.applied_migrations
