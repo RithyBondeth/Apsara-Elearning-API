@@ -4,6 +4,7 @@ import { and, desc, eq, isNotNull, not, sql, type SQL } from 'drizzle-orm';
 import { courseRatings } from '@app/database/schemas/course/course-rating.schema';
 import { enrollments } from '@app/database/schemas/course/enrollment.schema';
 import { courses } from '@app/database/schemas/course/course.schema';
+import { testimonials } from '@app/database/schemas/course/testimonial.schema';
 import { user } from '@app/database/schemas/user/user.schema';
 import {
   ADMIN_REVIEWS_LIMIT,
@@ -13,6 +14,7 @@ import {
   DRIZZLE,
   FeaturedReviewDTO,
   FeaturedReviewsResponseDTO,
+  PublicTestimonialDTO,
   IRatingService,
   RatingResponseDTO,
   RatingSummaryResponseDTO,
@@ -237,6 +239,21 @@ export class RatingService implements IRatingService {
       .orderBy(desc(courseRatings.updatedAt))
       .limit(limit);
 
+    const quotes = await this.db
+      .select({
+        id: testimonials.id,
+        name: testimonials.name,
+        role: testimonials.role,
+        roleKm: testimonials.roleKm,
+        quote: testimonials.quote,
+        quoteKm: testimonials.quoteKm,
+        avatar: testimonials.avatar,
+      })
+      .from(testimonials)
+      .where(eq(testimonials.published, true))
+      .orderBy(desc(testimonials.updatedAt))
+      .limit(limit);
+
     const count = summary?.count ?? 0;
     const average =
       count > 0 && summary?.average != null
@@ -255,6 +272,7 @@ export class RatingService implements IRatingService {
             courseSlug: row.courseSlug,
           }),
       ),
+      testimonials: quotes.map((q) => new PublicTestimonialDTO(q)),
     });
   }
 

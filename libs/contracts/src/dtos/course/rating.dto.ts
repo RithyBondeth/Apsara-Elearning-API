@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { DtoInit } from '../../types/dto-init';
+import { PublicTestimonialDTO } from './testimonial.dto';
 
 export const RATINGS_DEFAULT_LIMIT = 10;
 export const RATINGS_MAX_LIMIT = 50;
@@ -155,6 +156,12 @@ export class FeaturedReviewsResponseDTO {
 
   @ApiProperty({ type: [FeaturedReviewDTO] })
   items: FeaturedReviewDTO[];
+
+  @ApiProperty({
+    type: [PublicTestimonialDTO],
+    description: 'Published testimonials from teachers and beta testers',
+  })
+  testimonials: PublicTestimonialDTO[];
 }
 
 /** A written review as the moderation list shows it. */

@@ -347,7 +347,27 @@ describe('RatingService.findFeatured', () => {
       average: null,
       count: 0,
       items: [],
+      testimonials: [],
     });
+  });
+
+  it('includes published testimonials without their consent record', async () => {
+    const quote = {
+      id: 't1',
+      name: 'Sophea K.',
+      role: 'Grade 12 Chemistry teacher',
+      roleKm: null,
+      quote: 'My students use it every evening.',
+      quoteKm: null,
+      avatar: 'star',
+    };
+    const { db } = featureDb([[{ count: 0, average: null }], [], [quote]]);
+    const service = new RatingService(db as never);
+
+    const { testimonials } = await service.findFeatured(6);
+
+    expect(testimonials).toEqual([expect.objectContaining(quote)]);
+    expect(testimonials[0]).not.toHaveProperty('consentSource');
   });
 });
 

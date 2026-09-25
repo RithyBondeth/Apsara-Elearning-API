@@ -6,6 +6,7 @@ import { CourseController } from './controllers/course.controller';
 import { ModuleController } from './controllers/module.controller';
 import { LessonController } from './controllers/lesson.controller';
 import { ReviewController } from './controllers/review.controller';
+import { TestimonialController } from './controllers/testimonial.controller';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ReviewController } from './controllers/review.controller';
     ModuleController,
     LessonController,
     ReviewController,
+    TestimonialController,
   ],
 })
 export class CourseModule {}
