@@ -11,6 +11,7 @@ import {
   I_COURSE_SERVICE,
   I_ENROLLMENT_SERVICE,
   I_RATING_SERVICE,
+  I_TESTIMONIAL_SERVICE,
   I_FACULTY_SERVICE,
   I_GRADE_LEVEL_SERVICE,
   I_LESSON_SERVICE,
@@ -24,8 +25,10 @@ import { CourseController } from './controllers/course.controller';
 import { CourseService } from './services/course.service';
 import { EnrollmentController } from './controllers/enrollment.controller';
 import { RatingController } from './controllers/rating.controller';
+import { TestimonialController } from './controllers/testimonial.controller';
 import { EnrollmentService } from './services/enrollment.service';
 import { RatingService } from './services/rating.service';
+import { TestimonialService } from './services/testimonial.service';
 import { FacultyController } from './controllers/faculty.controller';
 import { FacultyService } from './services/faculty.service';
 import { GradeLevelController } from './controllers/grade-level.controller';
@@ -62,6 +65,7 @@ import { CourseEntitlementService, EntitlementService } from '@app/common';
     CourseController,
     EnrollmentController,
     RatingController,
+    TestimonialController,
     FacultyController,
     GradeLevelController,
     LessonController,
@@ -80,6 +84,7 @@ import { CourseEntitlementService, EntitlementService } from '@app/common';
     { provide: I_COURSE_SERVICE, useClass: CourseService },
     { provide: I_ENROLLMENT_SERVICE, useClass: EnrollmentService },
     { provide: I_RATING_SERVICE, useClass: RatingService },
+    { provide: I_TESTIMONIAL_SERVICE, useClass: TestimonialService },
     { provide: I_FACULTY_SERVICE, useClass: FacultyService },
     { provide: I_GRADE_LEVEL_SERVICE, useClass: GradeLevelService },
     { provide: I_LESSON_SERVICE, useClass: LessonService },

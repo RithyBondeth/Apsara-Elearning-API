@@ -1,4 +1,5 @@
 import {
+  boolean,
   check,
   index,
   integer,
@@ -36,12 +37,17 @@ export const courseRatings = pgTable(
       .notNull(),
     rating: integer('rating').notNull(),
     review: text('review'),
+    /** Shown on the landing page. Set only by an admin; cleared when the review is edited. */
+    featured: boolean('featured').notNull().default(false),
     ...timestamps,
   },
   // Named explicitly so the hand-written migration and a later `db:push` agree.
   (t) => [
     unique().on(t.userId, t.courseId),
-    check('course_ratings_rating_range', sql`${t.rating} >= 1 and ${t.rating} <= 5`),
+    check(
+      'course_ratings_rating_range',
+      sql`${t.rating} >= 1 and ${t.rating} <= 5`,
+    ),
     index('course_ratings_course_id_index').on(t.courseId),
   ],
 );

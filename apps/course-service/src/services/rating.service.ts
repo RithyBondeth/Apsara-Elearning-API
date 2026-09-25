@@ -1,18 +1,30 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, not, sql, type SQL } from 'drizzle-orm';
 import { courseRatings } from '@app/database/schemas/course/course-rating.schema';
 import { enrollments } from '@app/database/schemas/course/enrollment.schema';
+import { courses } from '@app/database/schemas/course/course.schema';
+import { testimonials } from '@app/database/schemas/course/testimonial.schema';
 import { user } from '@app/database/schemas/user/user.schema';
 import {
+  ADMIN_REVIEWS_LIMIT,
+  AdminReviewDTO,
+  DEMO_EMAIL_DOMAIN,
   DeleteResponseDTO,
   DRIZZLE,
+  FeaturedReviewDTO,
+  FeaturedReviewsResponseDTO,
+  PublicTestimonialDTO,
   IRatingService,
   RatingResponseDTO,
   RatingSummaryResponseDTO,
   UpsertRatingRequestDTO,
 } from '@app/contracts';
-import { RpcForbiddenException, RpcNotFoundException } from '@app/common';
+import {
+  RpcBadRequestException,
+  RpcForbiddenException,
+  RpcNotFoundException,
+} from '@app/common';
 
 @Injectable()
 export class RatingService implements IRatingService {
@@ -41,9 +53,7 @@ export class RatingService implements IRatingService {
       )
       .limit(1);
     if (!enrollment) {
-      throw new RpcForbiddenException(
-        'Enroll in this course before rating it',
-      );
+      throw new RpcForbiddenException('Enroll in this course before rating it');
     }
 
     const review = dto.review?.trim() ? dto.review.trim() : null;
@@ -52,12 +62,24 @@ export class RatingService implements IRatingService {
       .values({ userId, courseId, rating: dto.rating, review })
       .onConflictDoUpdate({
         target: [courseRatings.userId, courseRatings.courseId],
-        set: { rating: dto.rating, review, updatedAt: new Date() },
+        set: {
+          rating: dto.rating,
+          review,
+          // Approval covers the text an admin read. Any edit — text or stars —
+          // takes the review off the landing page until it is featured again.
+          featured: sql`${courseRatings.featured} and ${courseRatings.review} is not distinct from excluded.review and ${courseRatings.rating} = excluded.rating`,
+          updatedAt: new Date(),
+        },
       })
       .returning();
 
     this.logger.log(`User ${userId} rated course ${courseId}: ${dto.rating}`);
-    return this.toDTO({ ...saved, firstName: null, lastName: null, avatar: null });
+    return this.toDTO({
+      ...saved,
+      firstName: null,
+      lastName: null,
+      avatar: null,
+    });
   }
 
   async remove(userId: string, courseId: string): Promise<DeleteResponseDTO> {
@@ -159,7 +181,182 @@ export class RatingService implements IRatingService {
       )
       .limit(1);
     if (!found) return null;
-    return this.toDTO({ ...found, firstName: null, lastName: null, avatar: null });
+    return this.toDTO({
+      ...found,
+      firstName: null,
+      lastName: null,
+      avatar: null,
+    });
+  }
+
+  /**
+   * Landing-page reviews: the admin-featured written reviews on published
+   * courses, plus the overall average and count across *every* rating on
+   * published courses — so curating quotes cannot hide a low score.
+   *
+   * In production, seeded demo accounts are excluded from both, so demo data
+   * can never reach real visitors even if the seed script was run by mistake.
+   */
+  async findFeatured(limit: number): Promise<FeaturedReviewsResponseDTO> {
+    const scope: SQL[] = [eq(courses.published, true)];
+    if (process.env.NODE_ENV === 'production') {
+      scope.push(not(sql`${user.email} ilike ${'%@' + DEMO_EMAIL_DOMAIN}`));
+    }
+
+    const [summary] = await this.db
+      .select({
+        count: sql<number>`count(*)::int`,
+        average: sql<number | null>`avg(${courseRatings.rating})::float`,
+      })
+      .from(courseRatings)
+      .innerJoin(courses, eq(courseRatings.courseId, courses.id))
+      .innerJoin(user, eq(courseRatings.userId, user.id))
+      .where(and(...scope));
+
+    const rows = await this.db
+      .select({
+        id: courseRatings.id,
+        rating: courseRatings.rating,
+        review: courseRatings.review,
+        createdAt: courseRatings.createdAt,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        courseTitle: courses.title,
+        courseTitleKm: courses.titleKm,
+        courseSlug: courses.slug,
+      })
+      .from(courseRatings)
+      .innerJoin(courses, eq(courseRatings.courseId, courses.id))
+      .innerJoin(user, eq(courseRatings.userId, user.id))
+      .where(
+        and(
+          ...scope,
+          eq(courseRatings.featured, true),
+          isNotNull(courseRatings.review),
+        ),
+      )
+      .orderBy(desc(courseRatings.updatedAt))
+      .limit(limit);
+
+    const quotes = await this.db
+      .select({
+        id: testimonials.id,
+        name: testimonials.name,
+        role: testimonials.role,
+        roleKm: testimonials.roleKm,
+        quote: testimonials.quote,
+        quoteKm: testimonials.quoteKm,
+        avatar: testimonials.avatar,
+      })
+      .from(testimonials)
+      .where(eq(testimonials.published, true))
+      .orderBy(desc(testimonials.updatedAt))
+      .limit(limit);
+
+    const count = summary?.count ?? 0;
+    const average =
+      count > 0 && summary?.average != null
+        ? Math.round(summary.average * 10) / 10
+        : null;
+
+    return new FeaturedReviewsResponseDTO({
+      average,
+      count,
+      items: rows.map(
+        (row) =>
+          new FeaturedReviewDTO({
+            ...this.toDTO(row),
+            courseTitle: row.courseTitle,
+            courseTitleKm: row.courseTitleKm,
+            courseSlug: row.courseSlug,
+          }),
+      ),
+      testimonials: quotes.map((q) => new PublicTestimonialDTO(q)),
+    });
+  }
+
+  /** Every written review, newest first, for the admin moderation list. */
+  async listForAdmin(): Promise<AdminReviewDTO[]> {
+    const rows = await this.db
+      .select(this.adminColumns())
+      .from(courseRatings)
+      .innerJoin(courses, eq(courseRatings.courseId, courses.id))
+      .innerJoin(user, eq(courseRatings.userId, user.id))
+      .where(isNotNull(courseRatings.review))
+      .orderBy(desc(courseRatings.updatedAt))
+      .limit(ADMIN_REVIEWS_LIMIT);
+    return rows.map((row) => this.toAdminDTO(row));
+  }
+
+  /** Feature or unfeature one review. Only written reviews can be featured. */
+  async setFeatured(id: string, featured: boolean): Promise<AdminReviewDTO> {
+    const [existing] = await this.db
+      .select({ review: courseRatings.review })
+      .from(courseRatings)
+      .where(eq(courseRatings.id, id))
+      .limit(1);
+    if (!existing) throw new RpcNotFoundException('Review not found');
+    if (featured && !existing.review) {
+      throw new RpcBadRequestException('Only written reviews can be featured');
+    }
+
+    await this.db
+      .update(courseRatings)
+      .set({ featured })
+      .where(eq(courseRatings.id, id));
+
+    const [row] = await this.db
+      .select(this.adminColumns())
+      .from(courseRatings)
+      .innerJoin(courses, eq(courseRatings.courseId, courses.id))
+      .innerJoin(user, eq(courseRatings.userId, user.id))
+      .where(eq(courseRatings.id, id))
+      .limit(1);
+
+    this.logger.log(`Review ${id} ${featured ? 'featured' : 'unfeatured'}`);
+    return this.toAdminDTO(row);
+  }
+
+  private adminColumns() {
+    return {
+      id: courseRatings.id,
+      rating: courseRatings.rating,
+      review: courseRatings.review,
+      featured: courseRatings.featured,
+      createdAt: courseRatings.createdAt,
+      updatedAt: courseRatings.updatedAt,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatar: user.avatar,
+      email: user.email,
+      courseTitle: courses.title,
+    };
+  }
+
+  private toAdminDTO(row: {
+    id: string;
+    rating: number;
+    review: string | null;
+    featured: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    firstName: string | null;
+    lastName: string | null;
+    avatar: string | null;
+    email: string;
+    courseTitle: string;
+  }): AdminReviewDTO {
+    return new AdminReviewDTO({
+      id: row.id,
+      rating: row.rating,
+      review: row.review ?? '',
+      featured: row.featured,
+      displayName: this.toDTO(row).displayName,
+      email: row.email,
+      courseTitle: row.courseTitle,
+      updatedAt: row.updatedAt,
+    });
   }
 
   /**

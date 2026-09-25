@@ -46,6 +46,7 @@ export * from './dtos/course/lesson-progress.dto';
 export * from './dtos/course/enrollment.dto';
 export * from './dtos/course/continue-learning.dto';
 export * from './dtos/course/rating.dto';
+export * from './dtos/course/testimonial.dto';
 export * from './dtos/course/certificate.dto';
 export * from './dtos/user/update-user.dto';
 export * from './dtos/user/user-response.dto';

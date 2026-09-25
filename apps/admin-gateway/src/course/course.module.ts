@@ -5,6 +5,8 @@ import { COURSE_SERVICE } from '@app/contracts/constants/services/course-service
 import { CourseController } from './controllers/course.controller';
 import { ModuleController } from './controllers/module.controller';
 import { LessonController } from './controllers/lesson.controller';
+import { ReviewController } from './controllers/review.controller';
+import { TestimonialController } from './controllers/testimonial.controller';
 
 @Module({
   imports: [
@@ -22,6 +24,12 @@ import { LessonController } from './controllers/lesson.controller';
       },
     ]),
   ],
-  controllers: [CourseController, ModuleController, LessonController],
+  controllers: [
+    CourseController,
+    ModuleController,
+    LessonController,
+    ReviewController,
+    TestimonialController,
+  ],
 })
 export class CourseModule {}

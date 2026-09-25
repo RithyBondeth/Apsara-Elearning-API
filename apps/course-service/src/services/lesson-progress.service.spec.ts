@@ -138,7 +138,8 @@ function readNode(resolve: () => unknown) {
 /**
  * Fuller db for the markComplete orchestration. Select order:
  * courseIdForLesson, ensureEnrolled, isCompleted, recalc lessons, recalc
- * completed. selectDistinct backs the best-effort streak sync.
+ * completed, then — only when this lesson finishes the course — the rating
+ * lookup behind the review request. selectDistinct backs the best-effort streak sync.
  */
 function markCompleteDb(opts: {
   courseRow?: unknown[];
@@ -147,6 +148,7 @@ function markCompleteDb(opts: {
   recalcLessons?: unknown[];
   recalcCompleted?: unknown[];
   updated?: unknown[];
+  ratingLookup?: unknown[];
 }) {
   const queue = [
     opts.courseRow ?? [{ courseId: 'c1' }],
@@ -154,6 +156,7 @@ function markCompleteDb(opts: {
     opts.alreadyDone ?? [],
     opts.recalcLessons ?? [{ id: 'l1' }],
     opts.recalcCompleted ?? [{ id: 'p1' }],
+    opts.ratingLookup ?? [{ title: 'Grade 12 Chemistry', slug: 'chemistry', ratingId: null }],
   ];
   let si = 0;
   return {
@@ -254,6 +257,43 @@ describe('LessonProgressService.markComplete', () => {
     );
     await svc.markComplete('u1', 'l1');
     expect(raised()).toEqual([]);
+  });
+
+  it('asks for a rating when this lesson finishes an unrated course', async () => {
+    const { svc, uc } = build(
+      markCompleteDb({ updated: [{ id: 'e1', completed: true }] }),
+    );
+    await svc.markComplete('u1', 'l1');
+    const request = uc.send.mock.calls.find(
+      ([, payload]) => (payload as { type: string }).type === 'rating_requested',
+    );
+    expect(request?.[1]).toMatchObject({
+      userId: 'u1',
+      title: 'How was Grade 12 Chemistry?',
+      data: { courseId: 'c1', courseSlug: 'chemistry' },
+    });
+  });
+
+  it('does not ask for a rating the learner already left', async () => {
+    const { svc, raised } = build(
+      markCompleteDb({
+        updated: [{ id: 'e1', completed: true }],
+        ratingLookup: [{ title: 'Chemistry', slug: 'chemistry', ratingId: 'r1' }],
+      }),
+    );
+    await svc.markComplete('u1', 'l1');
+    expect(raised()).not.toContain('rating_requested');
+  });
+
+  it('does not ask for a rating again on an already-finished course', async () => {
+    const { svc, raised } = build(
+      markCompleteDb({
+        enrollment: [{ userId: 'u1', courseId: 'c1', completed: true }],
+        updated: [{ id: 'e1', completed: true }],
+      }),
+    );
+    await svc.markComplete('u1', 'l1');
+    expect(raised()).not.toContain('rating_requested');
   });
 
   it('still completes the lesson when certificate issuance throws', async () => {

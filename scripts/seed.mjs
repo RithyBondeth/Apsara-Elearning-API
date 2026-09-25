@@ -13,6 +13,16 @@ import { seedSubscriptionPlans } from './lib/seed-subscription-plans.mjs';
 
 /** Key-points heading that closes each maths lesson — the detail supplement
  *  is inserted just before it so the summary stays last. */
+import { randomBytes } from 'node:crypto';
+
+// This script deletes and re-creates demo users, courses and reviews. It must
+// never touch a production database — demo reviews on a live site would be
+// fake testimonials shown to real visitors.
+if (process.env.NODE_ENV === 'production') {
+  console.error('Refusing to seed: NODE_ENV=production. This script is for local development only.');
+  process.exit(1);
+}
+
 const sql = postgres(process.env.DATABASE_URL);
 const saltRounds = parseInt(process.env.BCRYPT_SALT ?? '10', 10);
 
@@ -22,6 +32,27 @@ const STUDENT = {
   password: 'Student@123',
 };
 const COURSE_SLUG = 'intro-to-javascript';
+
+// Demo reviewers — dev only. The `.test` domain is reserved (RFC 2606), so these
+// can never be real inboxes, and it matches DEMO_EMAIL_DOMAIN in
+// libs/contracts: in production the public reviews endpoint excludes it.
+const DEMO_EMAIL_DOMAIN = 'apsara-elearning.test';
+// [first, last, avatar, course slug, stars, review | null, featured]
+const DEMO_REVIEWS = [
+  ['Sokha', 'Pich', 'flower', 'math', 5,
+    'មេរៀនស៊្វីត និងលីមីត ពន្យល់ច្បាស់ណាស់ ហើយលំហាត់ជួយខ្ញុំត្រៀមបាក់ឌុបបានល្អ។', true],
+  ['Dara', 'Chan', 'rocket', 'chemistry', 5,
+    'The step-by-step explanations finally made organic chemistry click for me.', true],
+  ['Bopha', 'Meas', 'star', 'biology', 4,
+    'មាតិកាជីវវិទ្យាល្អ ហើយគ្រូ AI ឆ្លើយសំណួររបស់ខ្ញុំជាភាសាខ្មែរ។', true],
+  ['Rithy', 'Keo', 'brain', 'python', 5,
+    'Great first course in Python — short lessons I could finish after school.', true],
+  ['Vannak', 'Lim', 'bot', 'math-basic', 4,
+    'Practice quizzes after every lesson helped me see what I still got wrong.', true],
+  ['Srey', 'Noun', 'leaf', 'english', 3,
+    'Useful, but I would like more listening exercises.', false],
+  ['Visal', 'Heng', 'cat', 'biology', 5, null, false],
+];
 
 // XP-threshold badges — user-service auto-awards these when addXp crosses
 // xpRequired. Icons are lucide slugs the web frontend maps to components.
@@ -116,6 +147,8 @@ async function clearDemo() {
   await sql`DELETE FROM courses WHERE slug = ANY(${DEMO_COURSE_SLUGS})`;
   await sql`DELETE FROM badges WHERE name = ANY(${BADGE_NAMES})`;
   await sql`DELETE FROM users WHERE email IN (${ADMIN.email}, ${STUDENT.email})`;
+  // Cascades to their enrollments and ratings.
+  await sql`DELETE FROM users WHERE email LIKE ${'%@' + DEMO_EMAIL_DOMAIN}`;
 }
 
 
@@ -568,9 +601,28 @@ async function seed() {
               VALUES (${name}, ${description}, ${icon}, ${xpRequired})`;
   }
 
+  console.log('Creating demo reviewers and reviews (dev only)…');
+  for (const [first, last, avatar, slug, stars, review, featured] of DEMO_REVIEWS) {
+    const email = `${first}.${last}@${DEMO_EMAIL_DOMAIN}`.toLowerCase();
+    // Random password: demo reviewers exist to be displayed, not logged into.
+    const hash = await bcrypt.hash(randomBytes(24).toString('hex'), saltRounds);
+    const [reviewer] = await sql`
+      INSERT INTO users (email, password, first_name, last_name, avatar, is_email_verified, is_admin)
+      VALUES (${email}, ${hash}, ${first}, ${last}, ${avatar}, true, false)
+      RETURNING id`;
+    const [course] = await sql`SELECT id FROM courses WHERE slug = ${slug}`;
+    await sql`INSERT INTO enrollments (user_id, course_id) VALUES (${reviewer.id}, ${course.id})`;
+    await sql`INSERT INTO course_ratings (user_id, course_id, rating, review, featured)
+              VALUES (${reviewer.id}, ${course.id}, ${stars}, ${review}, ${featured})`;
+  }
+
   console.log('\n✓ Seed complete.');
   console.log(`  Admin:   ${ADMIN.email} / ${ADMIN.password}`);
   console.log(`  Student: ${STUDENT.email} / ${STUDENT.password}`);
+  console.log(
+    `  Reviews: ${DEMO_REVIEWS.length} demo ratings (${DEMO_REVIEWS.filter((r) => r[6]).length} featured) ` +
+      `from @${DEMO_EMAIL_DOMAIN} accounts — dev only, hidden from the public endpoint in production.`,
+  );
   console.log(
     `  Plans (${SUBSCRIPTION_PLANS.length}): ${SUBSCRIPTION_PLANS.map((p) => `${p.slug} $${p.price}`).join(', ')}.`,
   );

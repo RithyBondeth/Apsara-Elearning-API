@@ -19,6 +19,7 @@ import {
   CreateCourseRequestDTO,
   UpdateCourseRequestDTO,
   CourseResponseDTO,
+  FeaturedReviewsResponseDTO,
   ModuleWithLessonsResponseDTO,
   PlatformStatsResponseDTO,
   SearchCoursesRequestDTO,
@@ -97,7 +98,8 @@ export class CourseController {
   @Get('stats')
   @Header('Cache-Control', 'public, max-age=300')
   @ApiOperation({
-    summary: 'Public catalog totals (published courses, lessons, questions, subjects)',
+    summary:
+      'Public catalog totals (published courses, lessons, questions, subjects)',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -108,6 +110,26 @@ export class CourseController {
     return rpcCall<PlatformStatsResponseDTO>(
       this.courseClient,
       COURSE_SERVICE.ACTIONS.COURSE_PUBLIC_STATS,
+      {},
+    );
+  }
+
+  // Declared before ':id/structure', which would otherwise capture this path.
+  @Get('reviews/featured')
+  @Header('Cache-Control', 'public, max-age=300')
+  @ApiOperation({
+    summary:
+      'Admin-featured reviews for the landing page, with the overall rating average and count',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Featured reviews retrieved',
+    type: FeaturedReviewsResponseDTO,
+  })
+  getFeaturedReviews() {
+    return rpcCall<FeaturedReviewsResponseDTO>(
+      this.courseClient,
+      COURSE_SERVICE.ACTIONS.RATING_FIND_FEATURED,
       {},
     );
   }

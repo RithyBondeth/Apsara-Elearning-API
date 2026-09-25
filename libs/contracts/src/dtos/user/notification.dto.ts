@@ -26,6 +26,7 @@ export const NOTIFICATION_TYPES = [
   'course_completed',
   'certificate_issued',
   'subscription_updated',
+  'rating_requested',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

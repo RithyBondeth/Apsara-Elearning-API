@@ -1,8 +1,15 @@
 import {
+  AdminReviewDTO,
+  FeaturedReviewsResponseDTO,
   RatingResponseDTO,
   RatingSummaryResponseDTO,
   UpsertRatingRequestDTO,
 } from '../../dtos/course/rating.dto';
+import {
+  CreateTestimonialRequestDTO,
+  TestimonialResponseDTO,
+  UpdateTestimonialRequestDTO,
+} from '../../dtos/course/testimonial.dto';
 import { ContinueLearningDTO } from '../../dtos/course/continue-learning.dto';
 import { DeleteResponseDTO } from '../../dtos/common/delete-response.dto';
 import {
@@ -66,6 +73,7 @@ import {
 export const I_COURSE_SERVICE = 'ICourseService';
 export const I_ENROLLMENT_SERVICE = 'IEnrollmentService';
 export const I_RATING_SERVICE = 'IRatingService';
+export const I_TESTIMONIAL_SERVICE = 'ITestimonialService';
 export const I_FACULTY_SERVICE = 'IFacultyService';
 export const I_GRADE_LEVEL_SERVICE = 'IGradeLevelService';
 export const I_LESSON_SERVICE = 'ILessonService';
@@ -220,4 +228,17 @@ export interface IRatingService {
     limit: number,
   ): Promise<RatingSummaryResponseDTO>;
   findMine(userId: string, courseId: string): Promise<RatingResponseDTO | null>;
+  findFeatured(limit: number): Promise<FeaturedReviewsResponseDTO>;
+  listForAdmin(): Promise<AdminReviewDTO[]>;
+  setFeatured(id: string, featured: boolean): Promise<AdminReviewDTO>;
+}
+
+export interface ITestimonialService {
+  create(dto: CreateTestimonialRequestDTO): Promise<TestimonialResponseDTO>;
+  findAll(): Promise<TestimonialResponseDTO[]>;
+  update(
+    id: string,
+    dto: UpdateTestimonialRequestDTO,
+  ): Promise<TestimonialResponseDTO>;
+  remove(id: string): Promise<DeleteResponseDTO>;
 }
