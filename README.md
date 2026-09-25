@@ -58,10 +58,16 @@ RPC exceptions), `@app/contracts` (message patterns + DTOs), `@app/database`
 
 ```bash
 npm install
-cp .env.example .env   # then fill in values (see "Environment" below)
-npm run db:migrate     # apply committed, checksum-verified SQL migrations
-npm run seed           # optional: load demo data
+cp .env.example .env   # set the three JWT_*_SECRET values (32+ chars each)
+npm run docker:up      # PostgreSQL + RabbitMQ
+npm run db:setup       # new database: create schema; existing: apply migrations
+npm run seed           # optional: demo users, courses and reviews (never in production)
 ```
+
+Only the JWT secrets need real values locally. Email, AI, Judge0 and Stripe
+keys can stay blank: emails (including verification codes and reset tokens)
+are printed to the service logs, the AI tutor and code grading run in mock
+mode, and checkout is unavailable.
 
 To add or refresh only the non-destructive local pricing catalog, run
 `npm run seed:plans`. Stripe Price IDs are read from
@@ -75,8 +81,8 @@ To add or refresh only the non-destructive local pricing catalog, run
 npm run dev            # starts RabbitMQ + all services with hot reload
 ```
 
-The development and production launch scripts apply pending migrations before
-starting services. Applied files are recorded in
+`npm run dev` prepares the database with `db:setup` and the production script
+applies pending migrations with `db:migrate` before starting services. Applied files are recorded in
 `apsara_migrations.applied_migrations`; an edited historical migration is
 rejected so deployed schema history cannot silently drift.
 
@@ -270,7 +276,8 @@ Apply `migrations/20260923_add_notifications.sql`.
 | `BCRYPT_SALT` | — | default `12` |
 | `RABBITMQ_URL` + `*_QUEUE` | ✅ | broker URL + one queue name per service |
 | `API_GATEWAY_PORT` / `ADMIN_GATEWAY_PORT` | — | default `1111` / `2222` |
-| `RESEND_API_KEY` / `EMAIL_FROM` | ✅ | transactional email (verification, reset) |
+| `RESEND_API_KEY` | prod | transactional email; **logged instead of sent when blank** (not allowed in production) |
+| `EMAIL_FROM` | ✅ | sender address |
 | `AI_PROVIDER` | — | default provider: `anthropic`, `openai`, `deepseek`, or `gemini`; default `anthropic` |
 | `AI_MODEL` / `AI_MAX_TOKENS` | — | optional global model override / max output tokens |
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | — | enables Claude; **mock replies without key** |
@@ -356,12 +363,24 @@ billing migration.
 
 ## Database
 
-Schema lives in `libs/database/src/schemas/**`. The dev workflow is **`db:push`**
-(`npm run db:push`) — `drizzle/` holds a generated migration baseline
-(`npm run db:generate` / `db:migrate` for migration-based flows). On a database
-created via `db:push`, run **`npm run db:baseline`** once to mark that baseline
-as already-applied so `db:migrate` becomes truthful (a no-op for the baseline,
-applying only future migrations). `npm run db:studio` opens Drizzle Studio.
+Schema lives in `libs/database/src/schemas/**` and is always the full, current
+schema. `migrations/*.sql` are the incremental changes applied to existing
+databases; each is also reflected in the schema files (same table, index and
+constraint names), so a freshly pushed database already contains them.
+Applied migrations are recorded, with checksums, in
+`apsara_migrations.applied_migrations`.
+
+| Command | Use it for |
+|---------|------------|
+| `npm run db:setup` | **Any local database.** Empty → `drizzle-kit push` + record every migration as applied. Existing → same as `db:migrate`. Push only runs on an empty database, so it cannot drop data. |
+| `npm run db:migrate` | Existing databases (and production): apply pending migrations. Refuses an empty database and points to `db:setup`. |
+| `npm run db:baseline` | A database you created yourself with `db:push`: record every migration as applied without running it. |
+| `npm run db:push` / `db:studio` | Drizzle schema push / Drizzle Studio. |
+
+**Adding a schema change:** edit the schema file *and* add a migration in
+`migrations/` that produces the same result (same names). If a migration adds
+an index or constraint that the schema files don't declare, a fresh
+`db:setup` database will silently lack it.
 
 ## Tooling
 

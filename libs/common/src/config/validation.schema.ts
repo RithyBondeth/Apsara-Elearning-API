@@ -41,7 +41,13 @@ export const validationSchema = Joi.object({
   AI_QUEUE: Joi.string().required(),
 
   // Email
-  RESEND_API_KEY: Joi.string().required(),
+  // Required in production. Elsewhere it may be blank: EmailService then logs
+  // each email (including verification codes) instead of sending it.
+  RESEND_API_KEY: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().required(),
+    otherwise: Joi.string().allow('').optional(),
+  }),
   EMAIL_FROM: Joi.string().required(),
   // Optional: configuration.ts falls back to EMAIL_FROM. Required() here made
   // every gateway fail to boot from a fresh clone, since .env.example ships it

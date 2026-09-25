@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CreateEmailResponse, Resend } from 'resend';
 import { RESEND_CLIENT } from '@app/contracts';
@@ -12,9 +13,11 @@ export interface ISendEmailOptions {
 
 @Injectable()
 export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
+
   constructor(
     @Inject(RESEND_CLIENT)
-    private readonly resend: Resend,
+    private readonly resend: Resend | null,
     private readonly configService: ConfigService,
   ) {}
 
@@ -24,6 +27,23 @@ export class EmailService {
     html: string,
     options: ISendEmailOptions = {},
   ): Promise<CreateEmailResponse> {
+    // No API key (allowed outside production): log instead of sending, so a
+    // developer can still read verification codes and reset tokens.
+    if (!this.resend) {
+      const body = (options.text ?? html)
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      this.logger.warn(
+        `RESEND_API_KEY not set — email not sent.\n  To: ${to}\n  Subject: ${subject}\n  ${body}`,
+      );
+      return {
+        data: { id: `dev-log-${randomUUID()}` },
+        error: null,
+        headers: null,
+      };
+    }
+
     return this.resend.emails.send(
       {
         from: this.configService.get<string>('EMAIL_FROM')!,
