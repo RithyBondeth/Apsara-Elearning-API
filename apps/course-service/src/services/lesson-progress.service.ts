@@ -7,6 +7,8 @@ import { lessonProgress } from '@app/database/schemas/course/lessons/lesson-prog
 import { lessons } from '@app/database/schemas/course/lessons/lesson.schema';
 import { modules } from '@app/database/schemas/course/module.schema';
 import { enrollments } from '@app/database/schemas/course/enrollment.schema';
+import { courses } from '@app/database/schemas/course/course.schema';
+import { courseRatings } from '@app/database/schemas/course/course-rating.schema';
 import {
   DRIZZLE,
   EnrollmentResponseDTO,
@@ -93,6 +95,10 @@ export class LessonProgressService implements ILessonProgressService {
       await this.issueCertificate(userId, courseId, !wasCompleted);
     }
 
+    if (enrollment.completed && !wasCompleted) {
+      await this.requestRating(userId, courseId);
+    }
+
     this.logger.log(`User ${userId} completed lesson ${lessonId}`);
     return new LessonCompletionResponseDTO({
       lessonId,
@@ -172,6 +178,43 @@ export class LessonProgressService implements ILessonProgressService {
    * issue simply fails) must still get their lesson marked complete. They can
    * claim it later through the explicit endpoint — issuing is idempotent.
    */
+  /**
+   * Finishing a course is the moment a learner has the most complete opinion
+   * of it, so ask for a rating then — unless they already left one. Real
+   * reviews are the only kind the landing page shows.
+   */
+  private async requestRating(userId: string, courseId: string) {
+    const [row] = await this.db
+      .select({
+        title: courses.title,
+        slug: courses.slug,
+        ratingId: courseRatings.id,
+      })
+      .from(courses)
+      .leftJoin(
+        courseRatings,
+        and(
+          eq(courseRatings.courseId, courses.id),
+          eq(courseRatings.userId, userId),
+        ),
+      )
+      .where(eq(courses.id, courseId))
+      .limit(1);
+    if (!row || row.ratingId) return;
+
+    await notifyUser(
+      this.userClient,
+      {
+        userId,
+        type: 'rating_requested',
+        title: `How was ${row.title}?`,
+        body: 'Rate the course — your review helps other students choose.',
+        data: { courseId, courseSlug: row.slug },
+      },
+      this.logger,
+    );
+  }
+
   private async issueCertificate(
     userId: string,
     courseId: string,
