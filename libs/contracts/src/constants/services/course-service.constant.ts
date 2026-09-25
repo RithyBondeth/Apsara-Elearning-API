@@ -96,6 +96,9 @@ export const COURSE_SERVICE = {
     RATING_DELETE: 'course.rating.delete',
     RATING_FIND_BY_COURSE: 'course.rating.find_by_course',
     RATING_FIND_MINE: 'course.rating.find_mine',
+    RATING_FIND_FEATURED: 'course.rating.find_featured', // landing page (public)
+    RATING_ADMIN_LIST: 'course.rating.admin_list', // moderation list (admin)
+    RATING_SET_FEATURED: 'course.rating.set_featured', // feature/unfeature (admin)
 
     // Certificates
     CERTIFICATE_ISSUE: 'course.certificate.issue', // idempotent claim

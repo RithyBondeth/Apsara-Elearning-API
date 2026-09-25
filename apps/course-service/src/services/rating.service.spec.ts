@@ -23,7 +23,14 @@ function fakeDb(
 
   const readNode = (resolve: () => unknown) => {
     const node: Record<string, unknown> = {};
-    for (const m of ['from', 'innerJoin', 'where', 'orderBy', 'groupBy', 'limit']) {
+    for (const m of [
+      'from',
+      'innerJoin',
+      'where',
+      'orderBy',
+      'groupBy',
+      'limit',
+    ]) {
       node[m] = () => node;
     }
     node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
@@ -81,7 +88,11 @@ describe('RatingService.upsert', () => {
       review: 'Clear explanations.',
     });
 
-    expect(inserted[0]).toMatchObject({ userId: 'u1', courseId: 'c1', rating: 5 });
+    expect(inserted[0]).toMatchObject({
+      userId: 'u1',
+      courseId: 'c1',
+      rating: 5,
+    });
     expect(saved).toMatchObject({ id: 'r1', rating: 5 });
   });
 
@@ -124,7 +135,13 @@ describe('RatingService.findByCourse', () => {
     // A zero here would render an unrated course as a zero-star one.
     expect(summary.average).toBeNull();
     expect(summary.count).toBe(0);
-    expect(summary.distribution).toEqual({ '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 });
+    expect(summary.distribution).toEqual({
+      '1': 0,
+      '2': 0,
+      '3': 0,
+      '4': 0,
+      '5': 0,
+    });
   });
 
   it('averages the buckets and fills the distribution', async () => {
@@ -143,7 +160,15 @@ describe('RatingService.findByCourse', () => {
   });
 
   it('rounds the average to one decimal place', async () => {
-    const { db } = fakeDb({ selects: [[{ rating: 5, count: 1 }, { rating: 4, count: 2 }], []] });
+    const { db } = fakeDb({
+      selects: [
+        [
+          { rating: 5, count: 1 },
+          { rating: 4, count: 2 },
+        ],
+        [],
+      ],
+    });
     const summary = await new RatingService(db as never).findByCourse('c1', 10);
     // 13/3 = 4.333... -> 4.3
     expect(summary.average).toBe(4.3);
@@ -215,5 +240,148 @@ describe('RatingService.remove', () => {
     await expect(
       new RatingService(db as never).remove('u1', 'c1'),
     ).rejects.toMatchObject({ error: { statusCode: 404 } });
+  });
+});
+
+/**
+ * Featured reviews. A second stand-in because these methods also call
+ * `update().set()`: every select/update chain resolves to the next queued
+ * result set, in call order.
+ */
+function featureDb(results: unknown[][]) {
+  let calls = 0;
+  const updates: unknown[] = [];
+  const chain = () => {
+    const index = calls++;
+    const node: Record<string, unknown> = {};
+    for (const method of [
+      'from',
+      'innerJoin',
+      'leftJoin',
+      'where',
+      'orderBy',
+      'groupBy',
+      'limit',
+    ]) {
+      node[method] = () => node;
+    }
+    node.set = (values: unknown) => {
+      updates.push(values);
+      return node;
+    };
+    node.then = (
+      resolve: (v: unknown) => unknown,
+      reject: (r: unknown) => unknown,
+    ) => Promise.resolve(results[index] ?? []).then(resolve, reject);
+    return node;
+  };
+  return { db: { select: chain, update: chain }, updates };
+}
+
+const featuredRow = (id: string, rating: number) => ({
+  id,
+  rating,
+  review: `Review ${id}`,
+  createdAt: new Date('2026-09-01'),
+  firstName: 'Sokha',
+  lastName: 'Pich',
+  avatar: 'rocket',
+  courseTitle: 'Grade 12 Chemistry',
+  courseTitleKm: 'គីមីវិទ្យា ថ្នាក់ទី១២',
+  courseSlug: 'chemistry',
+});
+
+const adminRow = (featured: boolean) => ({
+  id: 'r1',
+  rating: 5,
+  review: 'Great',
+  featured,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  firstName: 'Dara',
+  lastName: 'Chan',
+  avatar: null,
+  email: 'dara@example.com',
+  courseTitle: 'Biology',
+});
+
+describe('RatingService.findFeatured', () => {
+  it('returns featured reviews with the overall average and count', async () => {
+    const { db } = featureDb([
+      [{ count: 12, average: 4.66666 }],
+      [featuredRow('a', 5), featuredRow('b', 4)],
+    ]);
+    const service = new RatingService(db as never);
+
+    const result = await service.findFeatured(6);
+
+    expect(result.count).toBe(12);
+    expect(result.average).toBe(4.7);
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]).toMatchObject({
+      displayName: 'Sokha P.',
+      courseTitle: 'Grade 12 Chemistry',
+      courseSlug: 'chemistry',
+      rating: 5,
+    });
+  });
+
+  it('never exposes an email or surname on the public payload', async () => {
+    const { db } = featureDb([
+      [{ count: 1, average: 5 }],
+      [featuredRow('a', 5)],
+    ]);
+    const service = new RatingService(db as never);
+
+    const [item] = (await service.findFeatured(6)).items;
+
+    expect(JSON.stringify(item)).not.toContain('Pich');
+    expect(item).not.toHaveProperty('email');
+  });
+
+  it('reports a null average, not zero, when nothing is rated', async () => {
+    const { db } = featureDb([[{ count: 0, average: null }], []]);
+    const service = new RatingService(db as never);
+
+    await expect(service.findFeatured(6)).resolves.toMatchObject({
+      average: null,
+      count: 0,
+      items: [],
+    });
+  });
+});
+
+describe('RatingService.setFeatured', () => {
+  it('features a written review and returns its admin view', async () => {
+    const { db, updates } = featureDb([
+      [{ review: 'Great' }],
+      [],
+      [adminRow(true)],
+    ]);
+    const service = new RatingService(db as never);
+
+    const result = await service.setFeatured('r1', true);
+
+    expect(updates).toEqual([{ featured: true }]);
+    expect(result).toMatchObject({ featured: true, displayName: 'Dara C.' });
+  });
+
+  it('refuses to feature a rating that has no written review', async () => {
+    const { db, updates } = featureDb([[{ review: null }]]);
+    const service = new RatingService(db as never);
+
+    await expect(service.setFeatured('r1', true)).rejects.toThrow(
+      'Only written reviews can be featured',
+    );
+    expect(updates).toEqual([]);
+  });
+
+  it('throws when the review does not exist', async () => {
+    const { db } = featureDb([[]]);
+    const service = new RatingService(db as never);
+
+    await expect(service.setFeatured('missing', false)).rejects.toThrow(
+      'Review not found',
+    );
   });
 });

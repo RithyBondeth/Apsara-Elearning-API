@@ -1,4 +1,6 @@
 import {
+  AdminReviewDTO,
+  FeaturedReviewsResponseDTO,
   RatingResponseDTO,
   RatingSummaryResponseDTO,
   UpsertRatingRequestDTO,
@@ -246,4 +248,10 @@ export interface IRatingRpcController {
     userId: string;
     courseId: string;
   }): Promise<RatingResponseDTO | null>;
+  findFeatured(): Promise<FeaturedReviewsResponseDTO>;
+  listForAdmin(): Promise<AdminReviewDTO[]>;
+  setFeatured(payload: {
+    id: string;
+    featured: boolean;
+  }): Promise<AdminReviewDTO>;
 }

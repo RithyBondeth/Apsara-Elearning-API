@@ -2,6 +2,7 @@ import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   COURSE_SERVICE,
+  FEATURED_REVIEWS_LIMIT,
   I_RATING_SERVICE,
   RATINGS_DEFAULT_LIMIT,
   RATINGS_MAX_LIMIT,
@@ -18,7 +19,11 @@ export class RatingController implements IRatingRpcController {
   @MessagePattern(COURSE_SERVICE.ACTIONS.RATING_UPSERT)
   upsert(
     @Payload()
-    payload: { userId: string; courseId: string; dto: UpsertRatingRequestDTO },
+    payload: {
+      userId: string;
+      courseId: string;
+      dto: UpsertRatingRequestDTO;
+    },
   ) {
     return this.ratingService.upsert(
       payload.userId,
@@ -45,5 +50,23 @@ export class RatingController implements IRatingRpcController {
   @MessagePattern(COURSE_SERVICE.ACTIONS.RATING_FIND_MINE)
   findMine(@Payload() payload: { userId: string; courseId: string }) {
     return this.ratingService.findMine(payload.userId, payload.courseId);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.RATING_FIND_FEATURED)
+  findFeatured() {
+    return this.ratingService.findFeatured(FEATURED_REVIEWS_LIMIT);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.RATING_ADMIN_LIST)
+  listForAdmin() {
+    return this.ratingService.listForAdmin();
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.RATING_SET_FEATURED)
+  setFeatured(@Payload() payload: { id: string; featured: boolean }) {
+    return this.ratingService.setFeatured(
+      payload.id,
+      payload.featured === true,
+    );
   }
 }

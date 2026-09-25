@@ -1,4 +1,6 @@
 import {
+  AdminReviewDTO,
+  FeaturedReviewsResponseDTO,
   RatingResponseDTO,
   RatingSummaryResponseDTO,
   UpsertRatingRequestDTO,
@@ -220,4 +222,7 @@ export interface IRatingService {
     limit: number,
   ): Promise<RatingSummaryResponseDTO>;
   findMine(userId: string, courseId: string): Promise<RatingResponseDTO | null>;
+  findFeatured(limit: number): Promise<FeaturedReviewsResponseDTO>;
+  listForAdmin(): Promise<AdminReviewDTO[]>;
+  setFeatured(id: string, featured: boolean): Promise<AdminReviewDTO>;
 }

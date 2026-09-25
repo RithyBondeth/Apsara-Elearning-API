@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -13,6 +14,16 @@ import type { DtoInit } from '../../types/dto-init';
 export const RATINGS_DEFAULT_LIMIT = 10;
 export const RATINGS_MAX_LIMIT = 50;
 export const REVIEW_MAX_LENGTH = 2000;
+/** How many featured reviews the landing page shows at most. */
+export const FEATURED_REVIEWS_LIMIT = 6;
+/** Moderation list size — written reviews only, newest first. */
+export const ADMIN_REVIEWS_LIMIT = 200;
+/**
+ * Seeded demo accounts use this email domain (see scripts/seed.mjs). In
+ * production they are excluded from every public review figure, so demo data
+ * can never reach real visitors even if it was seeded by mistake.
+ */
+export const DEMO_EMAIL_DOMAIN = 'apsara-elearning.test';
 
 export class RatingQueryDTO {
   @ApiPropertyOptional({
@@ -66,7 +77,10 @@ export class RatingResponseDTO {
   @ApiPropertyOptional({ example: 'Clear explanations.' })
   review?: string | null;
 
-  @ApiProperty({ example: 'Sok D.', description: 'First name plus last initial' })
+  @ApiProperty({
+    example: 'Sok D.',
+    description: 'First name plus last initial',
+  })
   displayName: string;
 
   @ApiPropertyOptional({ example: 'rocket' })
@@ -100,7 +114,67 @@ export class RatingSummaryResponseDTO {
 
   @ApiProperty({
     type: [RatingResponseDTO],
-    description: 'Most recent written reviews first; ratings with no text are excluded',
+    description:
+      'Most recent written reviews first; ratings with no text are excluded',
   })
   items: RatingResponseDTO[];
+}
+
+/** A featured review plus the course it is about, for the landing page. */
+export class FeaturedReviewDTO extends RatingResponseDTO {
+  constructor(partial: DtoInit<FeaturedReviewDTO> = {}) {
+    super();
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ example: 'Grade 12 Chemistry' })
+  courseTitle: string;
+
+  @ApiPropertyOptional({ example: 'គីមីវិទ្យា ថ្នាក់ទី១២' })
+  courseTitleKm?: string | null;
+
+  @ApiProperty({ example: 'chemistry' })
+  courseSlug: string;
+}
+
+/**
+ * Landing-page reviews. `average` and `count` cover every rating on published
+ * courses — not just the featured ones — so curating quotes cannot hide a low
+ * overall score.
+ */
+export class FeaturedReviewsResponseDTO {
+  constructor(partial: DtoInit<FeaturedReviewsResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiPropertyOptional({ example: 4.7, nullable: true })
+  average: number | null;
+
+  @ApiProperty({ example: 38 })
+  count: number;
+
+  @ApiProperty({ type: [FeaturedReviewDTO] })
+  items: FeaturedReviewDTO[];
+}
+
+/** A written review as the moderation list shows it. */
+export class AdminReviewDTO {
+  constructor(partial: DtoInit<AdminReviewDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty() id: string;
+  @ApiProperty({ example: 5 }) rating: number;
+  @ApiProperty() review: string;
+  @ApiProperty() featured: boolean;
+  @ApiProperty({ example: 'Sok D.' }) displayName: string;
+  @ApiProperty({ example: 'sok@example.com' }) email: string;
+  @ApiProperty() courseTitle: string;
+  @ApiProperty() updatedAt: Date;
+}
+
+export class SetReviewFeaturedRequestDTO {
+  @ApiProperty({ example: true })
+  @IsBoolean()
+  featured: boolean;
 }
