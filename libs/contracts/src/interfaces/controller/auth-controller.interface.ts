@@ -1,4 +1,8 @@
 import { ChangePasswordPayloadDTO } from '../../dtos/auth/change-password.dto';
+import {
+  AccountDeletionPayloadDTO,
+  AccountDeletionResponseDTO,
+} from '../../dtos/auth/account-deletion.dto';
 import { ForgotPasswordRequestDTO } from '../../dtos/auth/forgot-password.dto';
 import { LoginRequestDTO, LoginResponseDTO } from '../../dtos/auth/login.dto';
 import { MessageResponseDTO } from '../../dtos/auth/message-response.dto';
@@ -47,4 +51,8 @@ export interface IResetPasswordRpcController {
 
 export interface IChangePasswordRpcController {
   changePassword(dto: ChangePasswordPayloadDTO): Promise<MessageResponseDTO>;
+}
+
+export interface IAccountDeletionRpcController {
+  request(dto: AccountDeletionPayloadDTO): Promise<AccountDeletionResponseDTO>;
 }

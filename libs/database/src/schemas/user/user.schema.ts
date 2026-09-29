@@ -22,6 +22,12 @@ export const user = pgTable('users', {
   isAdmin: boolean('is_admin').notNull().default(false),
   // Set by an admin; blocks login and token refresh. Null = active.
   suspendedAt: timestamp('suspended_at', { withTimezone: true, mode: 'date' }),
+  // Set when the user asks to delete their account; purged after the grace
+  // period unless they sign in again (which clears it). Null = none pending.
+  deletionRequestedAt: timestamp('deletion_requested_at', {
+    withTimezone: true,
+    mode: 'date',
+  }),
 
   // Email Password
   email: text('email').notNull().unique(),

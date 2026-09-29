@@ -44,6 +44,13 @@ export class UserResponseDTO {
   })
   suspendedAt?: Date | null;
 
+  @ApiPropertyOptional({
+    nullable: true,
+    description:
+      'When the user asked to delete their account; null when none pending',
+  })
+  deletionRequestedAt?: Date | null;
+
   @ApiProperty({ example: 'john@example.com' })
   email: string;
 

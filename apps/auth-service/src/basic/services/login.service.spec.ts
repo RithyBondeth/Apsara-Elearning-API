@@ -88,6 +88,32 @@ describe('LoginService.login account state', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
+  it('cancels a pending account deletion by signing in', async () => {
+    const set = jest.fn();
+    const { db } = fakeDb(account({ deletionRequestedAt: new Date() }));
+    (db as { update: unknown }).update = () => ({
+      set: (v: unknown) => {
+        set(v);
+        return { where: () => Promise.resolve(undefined) };
+      },
+    });
+    const service = new LoginService(db as never, jwt(), config, attempts);
+
+    const res = await service.login({ email: 'a@b.com', password: PASSWORD });
+
+    expect(res.deletionCancelled).toBe(true);
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({ deletionRequestedAt: null }),
+    );
+  });
+
+  it('does not flag a normal sign-in as a cancelled deletion', async () => {
+    const { db } = fakeDb(account());
+    const service = new LoginService(db as never, jwt(), config, attempts);
+    const res = await service.login({ email: 'a@b.com', password: PASSWORD });
+    expect(res.deletionCancelled).toBeUndefined();
+  });
+
   it('does not reveal suspension to a wrong password', async () => {
     const { db } = fakeDb(account({ suspendedAt: new Date() }));
     const service = new LoginService(db as never, jwt(), config, attempts);

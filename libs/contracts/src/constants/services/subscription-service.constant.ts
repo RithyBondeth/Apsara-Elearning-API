@@ -14,6 +14,8 @@ export const SUBSCRIPTION_SERVICE = {
     SUBSCRIPTION_FIND_BY_USER: 'subscription.find_by_user',
     SUBSCRIPTION_FIND_ACTIVE: 'subscription.find_active', // active sub for a user
     SUBSCRIPTION_CANCEL: 'subscription.cancel',
+    // Stop every renewal a user has (account deletion); idempotent.
+    SUBSCRIPTION_STOP_RENEWALS: 'subscription.stop_renewals',
     SUBSCRIPTION_CHECK: 'subscription.check', // is user subscribed?
     ENTITLEMENT_RESOLVE: 'subscription.entitlement.resolve',
     ENTITLEMENT_GRANTS_FIND: 'subscription.entitlement.grants.find',

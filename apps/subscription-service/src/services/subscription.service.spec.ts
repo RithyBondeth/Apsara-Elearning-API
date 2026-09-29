@@ -154,3 +154,64 @@ describe('SubscriptionService provider scoping', () => {
     expect(result.sessionId).toBe('ref_1');
   });
 });
+
+describe('SubscriptionService.stopRenewals (account deletion)', () => {
+  const planService = {} as unknown as PlanService;
+  const snapshot = {
+    cancelAtPeriodEnd: true,
+    status: 'active',
+    currentPeriodEnd: new Date('2026-10-20T00:00:00Z'),
+  };
+
+  function registryWith(cancelAtPeriodEnd: jest.Mock) {
+    return {
+      active: () => ({ id: 'stripe', cancelAtPeriodEnd }),
+    } as unknown as PaymentProviderRegistry;
+  }
+
+  it('sets every renewing subscription to end at period end', async () => {
+    const cancel = jest.fn().mockResolvedValue(snapshot);
+    const { db } = fakeDb([
+      [
+        { id: 's1', providerSubscriptionId: 'sub_1' },
+        { id: 's2', providerSubscriptionId: 'sub_2' },
+      ],
+    ]);
+    const service = new SubscriptionService(
+      db as never,
+      planService,
+      registryWith(cancel),
+    );
+
+    await expect(service.stopRenewals('u1')).resolves.toEqual({ stopped: 2 });
+    expect(cancel).toHaveBeenCalledWith('sub_1');
+    expect(cancel).toHaveBeenCalledWith('sub_2');
+  });
+
+  it('only considers still-billing, not-yet-cancelled provider subscriptions', async () => {
+    const { db, wheres } = fakeDb([[]]);
+    const service = new SubscriptionService(
+      db as never,
+      planService,
+      registryWith(jest.fn()),
+    );
+
+    await expect(service.stopRenewals('u1')).resolves.toEqual({ stopped: 0 });
+    const filter = boundParams(wheres[0]);
+    expect(filter).toEqual(
+      expect.arrayContaining(['u1', false, 'active', 'trialing', 'past_due']),
+    );
+    expect(filter).not.toContain('incomplete');
+  });
+
+  it('throws when the provider refuses, so the purge job retries', async () => {
+    const cancel = jest.fn().mockRejectedValue(new Error('stripe down'));
+    const { db } = fakeDb([[{ id: 's1', providerSubscriptionId: 'sub_1' }]]);
+    const service = new SubscriptionService(
+      db as never,
+      planService,
+      registryWith(cancel),
+    );
+    await expect(service.stopRenewals('u1')).rejects.toThrow('stripe down');
+  });
+});

@@ -35,6 +35,7 @@ const publicColumns = {
   xp: user.xp,
   isAdmin: user.isAdmin,
   suspendedAt: user.suspendedAt,
+  deletionRequestedAt: user.deletionRequestedAt,
   email: user.email,
   isEmailVerified: user.isEmailVerified,
   phone: user.phone,
@@ -43,8 +44,13 @@ const publicColumns = {
   updatedAt: user.updatedAt,
 };
 
-/** Who competes on the XP leaderboard: active learners only. */
-const onLeaderboard = and(eq(user.isAdmin, false), isNull(user.suspendedAt));
+/** Who competes on the XP leaderboard: active learners only — not staff,
+ *  suspended accounts, or accounts waiting to be deleted. */
+const onLeaderboard = and(
+  eq(user.isAdmin, false),
+  isNull(user.suspendedAt),
+  isNull(user.deletionRequestedAt),
+);
 
 @Injectable()
 export class UserService implements IUserService {
@@ -326,13 +332,20 @@ export class UserService implements IUserService {
         streak: user.streak,
         isAdmin: user.isAdmin,
         suspendedAt: user.suspendedAt,
+        deletionRequestedAt: user.deletionRequestedAt,
       })
       .from(user)
       .where(eq(user.id, viewerId))
       .limit(1);
 
     // An admin, a suspended or a deleted account has no place on the board.
-    if (!viewer || viewer.isAdmin || viewer.suspendedAt) return null;
+    if (
+      !viewer ||
+      viewer.isAdmin ||
+      viewer.suspendedAt ||
+      viewer.deletionRequestedAt
+    )
+      return null;
 
     const [ahead] = await this.db
       .select({ count: sql<number>`count(*)` })

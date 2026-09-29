@@ -147,6 +147,15 @@ describe('TokenService.refresh', () => {
     await expect(service.refresh(VALID)).rejects.toMatchObject(UNAUTHORIZED);
   });
 
+  it('rejects a user whose account deletion is pending', async () => {
+    const db = fakeDb({
+      selectRows: [verifiedUser({ deletionRequestedAt: new Date() })],
+      rotatedRows: [{ id: 'u1' }],
+    });
+    const service = new TokenService(db as never, jwt(), config);
+    await expect(service.refresh(VALID)).rejects.toMatchObject(UNAUTHORIZED);
+  });
+
   it('rejects when the compare-and-swap rotates zero rows (token already used)', async () => {
     // A concurrent request rotated first, so the CAS update matches nothing.
     const db = fakeDb({ selectRows: [verifiedUser()], rotatedRows: [] });

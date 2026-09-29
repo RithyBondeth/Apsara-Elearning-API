@@ -97,6 +97,10 @@ export class LoginService implements ILoginService {
       Date.now() + ms(refreshExpiresStr as StringValue),
     );
 
+    // Signing in during the deletion grace period is how a learner changes
+    // their mind — it cancels the pending deletion.
+    const deletionCancelled = Boolean(foundUser.deletionRequestedAt);
+
     await this.db
       .update(user)
       .set({
@@ -104,15 +108,19 @@ export class LoginService implements ILoginService {
         refreshTokenExpiresAt,
         lastLoginAt: new Date(),
         lastLoginMethod: 'email_password',
+        ...(deletionCancelled ? { deletionRequestedAt: null } : {}),
       })
       .where(eq(user.id, foundUser.id));
 
-    this.logger.log(`User logged in: ${email}`);
+    this.logger.log(
+      `User logged in: ${email}${deletionCancelled ? ' (account deletion cancelled)' : ''}`,
+    );
 
     return new LoginResponseDTO({
       message: 'Login successful',
       accessToken,
       refreshToken,
+      ...(deletionCancelled ? { deletionCancelled: true } : {}),
     });
   }
 }

@@ -80,4 +80,7 @@ export interface ISubscriptionService {
   findActive(userId: string): Promise<ActiveSubscriptionResponseDTO | null>;
   check(userId: string): Promise<SubscriptionCheckResponseDTO>;
   cancel(userId: string, id: string): Promise<CancelSubscriptionResponseDTO>;
+  /** Sets every renewing subscription to end at period end; returns how many
+   *  were changed. Throws if any can't be stopped. */
+  stopRenewals(userId: string): Promise<{ stopped: number }>;
 }

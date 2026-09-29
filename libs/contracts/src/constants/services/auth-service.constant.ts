@@ -18,5 +18,8 @@ export const AUTH_SERVICE = {
     FORGOT_PASSWORD: 'auth.forgot_password',
     RESET_PASSWORD: 'auth.reset_password',
     CHANGE_PASSWORD: 'auth.change_password',
+
+    // Account deletion (7-day grace period)
+    ACCOUNT_DELETION_REQUEST: 'auth.account_deletion.request',
   },
 };

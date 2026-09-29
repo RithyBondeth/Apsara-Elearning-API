@@ -5,7 +5,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 export class LoginRequestDTO {
@@ -34,6 +34,12 @@ export class LoginResponseDTO {
 
   @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsIn...' })
   refreshToken: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'True when this sign-in cancelled a pending account deletion',
+  })
+  deletionCancelled?: boolean;
 
   constructor(partial: Partial<LoginResponseDTO>) {
     Object.assign(this, partial);
