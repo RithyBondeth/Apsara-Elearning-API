@@ -43,6 +43,9 @@ const publicColumns = {
   updatedAt: user.updatedAt,
 };
 
+/** Who competes on the XP leaderboard: active learners only. */
+const onLeaderboard = and(eq(user.isAdmin, false), isNull(user.suspendedAt));
+
 @Injectable()
 export class UserService implements IUserService {
   private readonly logger = new Logger(UserService.name);
@@ -270,7 +273,9 @@ export class UserService implements IUserService {
    * with the rows above.
    *
    * Admins are excluded: they are staff, not competitors, and seeding content
-   * should not put them at the top of a student board.
+   * should not put them at the top of a student board. Suspended accounts are
+   * excluded too — suspension is often for exactly what a public board shows
+   * (an offensive name, farmed XP) — and reappear when reinstated.
    */
   async leaderboard(
     viewerId: string,
@@ -287,14 +292,14 @@ export class UserService implements IUserService {
         streak: user.streak,
       })
       .from(user)
-      .where(eq(user.isAdmin, false))
+      .where(onLeaderboard)
       .orderBy(desc(user.xp), asc(user.createdAt))
       .limit(limit);
 
     const [counted] = await this.db
       .select({ total: sql<number>`count(*)` })
       .from(user)
-      .where(eq(user.isAdmin, false));
+      .where(onLeaderboard);
     const total = Number(counted?.total ?? 0);
 
     const entries = ranked.map((row) => this.toLeaderboardEntry(row, viewerId));
@@ -320,22 +325,20 @@ export class UserService implements IUserService {
         xp: user.xp,
         streak: user.streak,
         isAdmin: user.isAdmin,
+        suspendedAt: user.suspendedAt,
       })
       .from(user)
       .where(eq(user.id, viewerId))
       .limit(1);
 
-    // An admin (or a deleted account) has no place on the board.
-    if (!viewer || viewer.isAdmin) return null;
+    // An admin, a suspended or a deleted account has no place on the board.
+    if (!viewer || viewer.isAdmin || viewer.suspendedAt) return null;
 
     const [ahead] = await this.db
       .select({ count: sql<number>`count(*)` })
       .from(user)
       .where(
-        and(
-          eq(user.isAdmin, false),
-          gt(sql`coalesce(${user.xp}, 0)`, viewer.xp ?? 0),
-        ),
+        and(onLeaderboard, gt(sql`coalesce(${user.xp}, 0)`, viewer.xp ?? 0)),
       );
 
     return this.toLeaderboardEntry(

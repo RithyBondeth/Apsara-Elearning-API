@@ -113,6 +113,16 @@ describe('UserService.leaderboard', () => {
     expect(board.me).toBeNull();
   });
 
+  it('returns a null "me" for a suspended learner, who is hidden from the board', async () => {
+    const { db } = fakeDb([
+      [row({ userId: 'u1' })],
+      [{ total: 1 }],
+      [{ userId: 'u9', xp: 50, streak: 0, isAdmin: false, suspendedAt: new Date() }],
+    ]);
+    const board = await new UserService(db as never, notifications).leaderboard('u9', 20);
+    expect(board.me).toBeNull();
+  });
+
   it('returns a null "me" when the account no longer exists', async () => {
     const { db } = fakeDb([[row({ userId: 'other' })], [{ total: 1 }], []]);
     const board = await new UserService(db as never, notifications).leaderboard('ghost', 20);
