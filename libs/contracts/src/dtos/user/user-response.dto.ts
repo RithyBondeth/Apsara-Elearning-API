@@ -38,6 +38,12 @@ export class UserResponseDTO {
   @ApiProperty({ example: false })
   isAdmin: boolean;
 
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'When an admin suspended the account; null when active',
+  })
+  suspendedAt?: Date | null;
+
   @ApiProperty({ example: 'john@example.com' })
   email: string;
 

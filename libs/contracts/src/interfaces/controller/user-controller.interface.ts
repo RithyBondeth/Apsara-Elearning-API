@@ -13,7 +13,10 @@ import {
   UpdateBadgeRequestDTO,
   UserBadgeResponseDTO,
 } from '../../dtos/user/badge.dto';
-import { UpdateUserRequestDTO } from '../../dtos/user/update-user.dto';
+import {
+  AdminUpdateUserRequestDTO,
+  UpdateUserRequestDTO,
+} from '../../dtos/user/update-user.dto';
 import { LeaderboardResponseDTO } from '../../dtos/user/leaderboard.dto';
 import {
   AddXpResponseDTO,
@@ -35,7 +38,14 @@ export interface IUserRpcController {
     id: string;
     avatar: TAvatarPreset;
   }): Promise<UserResponseDTO>;
-  remove(payload: string | { id: string }): Promise<DeleteResponseDTO>;
+  adminUpdate(payload: {
+    id: string;
+    actorId: string;
+    dto: AdminUpdateUserRequestDTO;
+  }): Promise<UserResponseDTO>;
+  remove(
+    payload: string | { id: string; actorId?: string },
+  ): Promise<DeleteResponseDTO>;
   addXp(payload: { userId: string; amount: number }): Promise<AddXpResponseDTO>;
   updateStreak(payload: {
     userId: string;

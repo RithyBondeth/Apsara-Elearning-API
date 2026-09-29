@@ -9,6 +9,7 @@ export const USER_SERVICE = {
     UPDATE: 'user.update',
     DELETE: 'user.delete',
     UPDATE_AVATAR: 'user.update_avatar',
+    ADMIN_UPDATE: 'user.admin_update',
 
     // Gamification
     ADD_XP: 'user.add_xp',

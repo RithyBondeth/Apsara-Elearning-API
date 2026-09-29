@@ -12,6 +12,7 @@ import {
   UserBadgeResponseDTO,
 } from '../../dtos/user/badge.dto';
 import {
+  AdminUpdateUserRequestDTO,
   UpdateAvatarRequestDTO,
   UpdateUserRequestDTO,
 } from '../../dtos/user/update-user.dto';
@@ -57,7 +58,12 @@ export interface ILeaderboardHttpController {
 export interface IAdminUserController {
   findAll(): Promise<UserResponseDTO[]>;
   findOne(id: string): Promise<UserResponseDTO>;
-  remove(id: string): Promise<DeleteResponseDTO>;
+  update(
+    actorId: string,
+    id: string,
+    dto: AdminUpdateUserRequestDTO,
+  ): Promise<UserResponseDTO>;
+  remove(actorId: string, id: string): Promise<DeleteResponseDTO>;
 }
 
 export interface IAdminBadgeController {
