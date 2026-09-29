@@ -283,3 +283,83 @@ describe('AttemptService.submit scoring and XP', () => {
     expect(res.passed).toBe(false);
   });
 });
+
+describe('AttemptService.review', () => {
+  const done = {
+    id: 'a1',
+    quizId: 'q1',
+    userId: 'u1',
+    score: 50,
+    correctAnswers: 1,
+    totalQuestions: 2,
+    completedAt: new Date(),
+  };
+  const row = (attempt: object, extra: object = {}) => ({
+    attempt,
+    quizTitle: 'Quiz',
+    lessonId: 'l1',
+    lessonTitle: 'Lesson',
+    courseSlug: 'course',
+    ...extra,
+  });
+
+  it('throws 404 when the attempt is missing or not the user’s', async () => {
+    const { db } = fakeDb({ selects: [[]] });
+    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 404 } });
+  });
+
+  it('refuses an unsubmitted attempt so the answer key cannot leak', async () => {
+    const { db } = fakeDb({ selects: [[row({ ...done, completedAt: null })]] });
+    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 400 } });
+    expect(entitlements.assertCanReadLesson).not.toHaveBeenCalled();
+  });
+
+  it('throws 404 when the quiz no longer exists', async () => {
+    const { db } = fakeDb({ selects: [[row(done, { lessonId: null })]] });
+    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 404 } });
+  });
+
+  it('checks lesson access before revealing the review', async () => {
+    const denied = {
+      assertCanReadLesson: jest.fn().mockRejectedValue({ error: { statusCode: 403 } }),
+    } as unknown as CourseEntitlementService;
+    const { db } = fakeDb({ selects: [[row(done)]] });
+    const service = new AttemptService(db as never, userClient() as never, denied);
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 403 } });
+    expect(denied.assertCanReadLesson).toHaveBeenCalledWith({ id: 'l1' }, 'u1');
+  });
+
+  it('replays the stored answers in question order with the stored score', async () => {
+    const questions = [numericQ('qq2', 7, 1, 1), numericQ('qq1', 3, 2, 0)];
+    const answers = [
+      { questionId: 'qq1', selectedOptionId: null, answerData: { value: '3' }, isCorrect: true, pointsAwarded: 2, requiresReview: false },
+      { questionId: 'qq2', selectedOptionId: null, answerData: { value: '9' }, isCorrect: false, pointsAwarded: 0, requiresReview: false },
+    ];
+    // Query order: attempt row → questions → options (none for numeric) → answers.
+    const { db } = fakeDb({ selects: [[row(done)], questions, [], answers] });
+    const service = new AttemptService(db as never, userClient() as never, entitlements);
+
+    const res = await service.review('u1', 'a1');
+
+    expect(res.score).toBe(50);
+    expect(res.passed).toBe(false);
+    expect(res.correctAnswers).toBe(1);
+    expect(res.total).toBe(2);
+    expect(res.earnedPoints).toBe(2);
+    expect(res.totalPoints).toBe(3);
+    expect(res.attempt).toMatchObject({ quizTitle: 'Quiz', courseSlug: 'course', lessonId: 'l1' });
+    expect(res.review.map((r) => r.questionId)).toEqual(['qq1', 'qq2']);
+    expect(res.review[0]).toMatchObject({ isCorrect: true, yourAnswer: { answerData: { value: '3' } } });
+    expect(res.review[1]).toMatchObject({ isCorrect: false, correctAnswer: { value: 7 } });
+  });
+
+  it('shows an unanswered question as not answered', async () => {
+    const { db } = fakeDb({ selects: [[row(done)], [numericQ('qq1', 3)], [], []] });
+    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    const res = await service.review('u1', 'a1');
+    expect(res.review[0]).toMatchObject({ yourAnswer: null, isCorrect: false });
+  });
+});

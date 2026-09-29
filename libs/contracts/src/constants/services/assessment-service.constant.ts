@@ -28,6 +28,7 @@ export const ASSESSMENT_SERVICE = {
     ATTEMPT_FIND_ALL: 'assessment.attempt.find_all', // by userId
     ATTEMPT_FIND_ONE: 'assessment.attempt.find_one',
     ATTEMPT_FIND_BY_QUIZ: 'assessment.attempt.find_by_quiz',
+    ATTEMPT_REVIEW: 'assessment.attempt.review',
 
     // Quiz Attempt Answers
     ATTEMPT_ANSWER_FIND_ALL: 'assessment.attempt_answer.find_all', // by attemptId
