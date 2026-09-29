@@ -19,6 +19,7 @@ import {
   StartAttemptResponseDTO,
   SubmitAttemptRequestDTO,
   SubmitAttemptResponseDTO,
+  AttemptReviewResponseDTO,
 } from '@app/contracts';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import {
@@ -111,6 +112,35 @@ export class QuizController implements IQuizHttpController {
     return rpcCall<AttemptAnswerResponseDTO[]>(
       this.client,
       ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_ANSWER_FIND_ALL,
+      { attemptId: id, userId },
+    );
+  }
+
+  @Get('attempt/:id/review')
+  @ApiOperation({
+    summary: 'Review a submitted quiz attempt question by question',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Scored per-question review of the attempt',
+    type: AttemptReviewResponseDTO,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Attempt has not been submitted yet',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Attempt not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  attemptReview(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<AttemptReviewResponseDTO> {
+    return rpcCall<AttemptReviewResponseDTO>(
+      this.client,
+      ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_REVIEW,
       { attemptId: id, userId },
     );
   }

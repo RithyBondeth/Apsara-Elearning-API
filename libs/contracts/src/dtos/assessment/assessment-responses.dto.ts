@@ -222,6 +222,43 @@ export class SubmitAttemptResponseDTO {
 
 // ---- Challenge submission (graded) ----
 
+/**
+ * A finished attempt re-opened from the learner's history: the same scored
+ * review `submit` returns, minus `xpAwarded` (XP is a submit-time event).
+ */
+export class AttemptReviewResponseDTO {
+  constructor(partial: DtoInit<AttemptReviewResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ type: AttemptResponseDTO })
+  attempt: AttemptResponseDTO;
+
+  @ApiProperty({ example: 85 })
+  score: number;
+
+  @ApiProperty({ example: true })
+  passed: boolean;
+
+  @ApiProperty({ example: 4 })
+  correctAnswers: number;
+
+  @ApiProperty({ example: 5 })
+  total: number;
+
+  @ApiProperty({ example: 8 })
+  earnedPoints: number;
+
+  @ApiProperty({ example: 10 })
+  totalPoints: number;
+
+  @ApiProperty({ example: 0 })
+  needsReview: number;
+
+  @ApiProperty({ type: [AttemptReviewItemDTO] })
+  review: AttemptReviewItemDTO[];
+}
+
 export class SubmissionResultResponseDTO {
   constructor(partial: DtoInit<SubmissionResultResponseDTO> = {}) {
     Object.assign(this, partial);
