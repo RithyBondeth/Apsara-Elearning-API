@@ -123,3 +123,38 @@ describe('PaymentService refunds', () => {
     expect(db.insert).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('PaymentService webhooks for deleted accounts', () => {
+  it("ignores a subscription whose user was deleted instead of recreating it", async () => {
+    // existing row → none; plan mapping → found; owner lookup → gone.
+    const selects = [
+      limitedQuery([]),
+      limitedQuery([{ id: 'plan-1' }]),
+      limitedQuery([]),
+    ];
+    const insert = jest.fn();
+    const db = {
+      select: jest.fn(() => selects.shift()),
+      insert,
+      update: jest.fn(() => updateQuery()),
+    };
+    const service = new PaymentService(db as never, {} as never);
+
+    const result = await (
+      service as unknown as {
+        syncSubscription: (s: Stripe.Subscription) => Promise<unknown>;
+      }
+    ).syncSubscription({
+      id: 'sub_gone',
+      status: 'canceled',
+      metadata: { userId: 'deleted-user', planId: 'plan-1' },
+      items: { data: [{ price: { id: 'price_1' } }] },
+      customer: 'cus_1',
+      cancel_at_period_end: true,
+      trial_end: null,
+    } as unknown as Stripe.Subscription);
+
+    expect(result).toBeNull();
+    expect(insert).not.toHaveBeenCalled();
+  });
+});

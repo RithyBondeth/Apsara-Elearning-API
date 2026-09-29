@@ -1,6 +1,8 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
+  index,
   integer,
   pgTable,
   text,
@@ -9,68 +11,87 @@ import {
 import { id } from '../common/id.schema';
 import { timestamps } from '../common/timestap.schema';
 
-export const user = pgTable('users', {
-  ...id,
-  // User Info
-  firstName: text('first_name'),
-  lastName: text('last_name'),
-  gender: text('gender'),
-  dateOfBirth: date('date_of_birth'),
-  avatar: text('avatar'),
-  streak: integer('streak').default(0),
-  xp: integer('xp').default(0),
-  isAdmin: boolean('is_admin').notNull().default(false),
-  // Set by an admin; blocks login and token refresh. Null = active.
-  suspendedAt: timestamp('suspended_at', { withTimezone: true, mode: 'date' }),
-
-  // Email Password
-  email: text('email').notNull().unique(),
-  password: text('password').notNull(),
-
-  // Reset Password
-  resetPasswordToken: text('reset_password_token'),
-  resetPasswordTokenExpiresAt: timestamp('reset_password_token_expires_at', {
-    withTimezone: true,
-    mode: 'date',
-  }),
-
-  // Phone OTP
-  phone: text('phone'),
-  otpCode: text('otp_code'),
-  otpCodeExpiresAt: timestamp('otp_code_expires_at', {
-    withTimezone: true,
-    mode: 'date',
-  }),
-
-  // Email Verification
-  isEmailVerified: boolean('is_email_verified').default(false),
-  emailVerificationToken: text('email_verification_token'),
-  emailVerificationTokenExpiresAt: timestamp(
-    'email_verification_token_expires_at',
-    {
+export const user = pgTable(
+  'users',
+  {
+    ...id,
+    // User Info
+    firstName: text('first_name'),
+    lastName: text('last_name'),
+    gender: text('gender'),
+    dateOfBirth: date('date_of_birth'),
+    avatar: text('avatar'),
+    streak: integer('streak').default(0),
+    xp: integer('xp').default(0),
+    isAdmin: boolean('is_admin').notNull().default(false),
+    // Set by an admin; blocks login and token refresh. Null = active.
+    suspendedAt: timestamp('suspended_at', {
       withTimezone: true,
       mode: 'date',
-    },
-  ),
+    }),
+    // Set when the user asks to delete their account; purged after the grace
+    // period unless they sign in again (which clears it). Null = none pending.
+    deletionRequestedAt: timestamp('deletion_requested_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
 
-  // Refresh Token
-  refreshToken: text('refresh_token'),
-  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', {
-    withTimezone: true,
-    mode: 'date',
-  }),
+    // Email Password
+    email: text('email').notNull().unique(),
+    password: text('password').notNull(),
 
-  // Social Login
-  googleId: text('google_id').unique(),
-  githubId: text('github_id').unique(),
-  facebookId: text('facebook_id').unique(),
+    // Reset Password
+    resetPasswordToken: text('reset_password_token'),
+    resetPasswordTokenExpiresAt: timestamp('reset_password_token_expires_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
 
-  // Last Login
-  lastLoginAt: timestamp('last_login_at', {
-    withTimezone: true,
-    mode: 'date',
-  }),
-  lastLoginMethod: text('last_login_method'),
+    // Phone OTP
+    phone: text('phone'),
+    otpCode: text('otp_code'),
+    otpCodeExpiresAt: timestamp('otp_code_expires_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
 
-  ...timestamps,
-});
+    // Email Verification
+    isEmailVerified: boolean('is_email_verified').default(false),
+    emailVerificationToken: text('email_verification_token'),
+    emailVerificationTokenExpiresAt: timestamp(
+      'email_verification_token_expires_at',
+      {
+        withTimezone: true,
+        mode: 'date',
+      },
+    ),
+
+    // Refresh Token
+    refreshToken: text('refresh_token'),
+    refreshTokenExpiresAt: timestamp('refresh_token_expires_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+
+    // Social Login
+    googleId: text('google_id').unique(),
+    githubId: text('github_id').unique(),
+    facebookId: text('facebook_id').unique(),
+
+    // Last Login
+    lastLoginAt: timestamp('last_login_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
+    lastLoginMethod: text('last_login_method'),
+
+    ...timestamps,
+  },
+  // Matches migrations/20260929_add_account_deletion.sql: the purge job scans
+  // for due requests, which are always a tiny slice of the table.
+  (t) => [
+    index('users_deletion_requested_at_idx')
+      .on(t.deletionRequestedAt)
+      .where(sql`${t.deletionRequestedAt} IS NOT NULL`),
+  ],
+);

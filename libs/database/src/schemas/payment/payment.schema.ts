@@ -6,9 +6,9 @@ import { subscriptions } from '../subscription/subscription.schema';
 
 export const payments = pgTable('payments', {
   ...id,
-  userId: uuid('user_id')
-    .references(() => user.id, { onDelete: 'cascade' })
-    .notNull(),
+  // Nullable: when an account is deleted its payments are kept as accounting
+  // records and unlinked (set null) rather than deleted with it.
+  userId: uuid('user_id').references(() => user.id, { onDelete: 'set null' }),
   subscriptionId: uuid('subscription_id').references(() => subscriptions.id, {
     onDelete: 'set null',
   }),

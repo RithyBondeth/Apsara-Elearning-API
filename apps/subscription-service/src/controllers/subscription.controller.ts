@@ -86,6 +86,11 @@ export class SubscriptionController implements ISubscriptionRpcController {
     return this.subscriptions.cancel(payload.userId, payload.id);
   }
 
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_STOP_RENEWALS)
+  stopRenewals(@Payload() payload: { userId: string }) {
+    return this.subscriptions.stopRenewals(payload.userId);
+  }
+
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.SUBSCRIPTION_CHECK)
   check(@Payload() payload: { userId: string }) {
     return this.subscriptions.check(payload.userId);

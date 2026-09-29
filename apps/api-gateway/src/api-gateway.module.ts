@@ -15,6 +15,7 @@ import { ChallengeModule } from './challenge/challenge.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { HealthModule } from './health/health.module';
 import { SupportModule } from './support/support.module';
+import { AccountModule } from './account/account.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SupportModule } from './support/support.module';
     ChallengeModule,
     SubscriptionModule,
     SupportModule,
+    AccountModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useExisting: GatewayThrottlerGuard }],

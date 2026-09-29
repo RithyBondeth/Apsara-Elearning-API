@@ -106,4 +106,26 @@ export class EmailService {
       `,
     );
   }
+
+  /**
+   * Confirms a deletion request and how to undo it. Sent even though the
+   * learner just clicked the button — if someone else did (a shared or
+   * unlocked device), this is how the owner finds out in time.
+   */
+  async sendAccountDeletionEmail(
+    email: string,
+    deleteAfter: Date,
+  ): Promise<CreateEmailResponse> {
+    const when = deleteAfter.toUTCString();
+    return this.sendEmail(
+      email,
+      'Your account is scheduled for deletion',
+      `
+      <h2>Account deletion requested</h2>
+      <p>Your Apsara Elearning account and all of its data will be permanently deleted after <strong>${when}</strong>.</p>
+      <p><strong>Changed your mind?</strong> Just sign in before then and the deletion is cancelled.</p>
+      <p>If you didn't ask for this, sign in now to cancel it, then change your password.</p>
+      `,
+    );
+  }
 }

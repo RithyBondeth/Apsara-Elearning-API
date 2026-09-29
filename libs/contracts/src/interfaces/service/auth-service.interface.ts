@@ -1,4 +1,8 @@
 import { ChangePasswordPayloadDTO } from '../../dtos/auth/change-password.dto';
+import {
+  AccountDeletionPayloadDTO,
+  AccountDeletionResponseDTO,
+} from '../../dtos/auth/account-deletion.dto';
 import { ForgotPasswordRequestDTO } from '../../dtos/auth/forgot-password.dto';
 import { LoginRequestDTO, LoginResponseDTO } from '../../dtos/auth/login.dto';
 import { MessageResponseDTO } from '../../dtos/auth/message-response.dto';
@@ -18,6 +22,7 @@ export const I_LOGIN_SERVICE = 'ILoginService';
 export const I_TOKEN_SERVICE = 'ITokenService';
 export const I_EMAIL_VERIFICATION_SERVICE = 'IEmailVerificationService';
 export const I_PASSWORD_SERVICE = 'IPasswordService';
+export const I_ACCOUNT_DELETION_SERVICE = 'IAccountDeletionService';
 
 export interface IRegisterService {
   register(registerDTO: RegisterRequestDTO): Promise<RegisterResponseDTO>;
@@ -41,4 +46,8 @@ export interface IPasswordService {
   forgotPassword(dto: ForgotPasswordRequestDTO): Promise<MessageResponseDTO>;
   resetPassword(dto: ResetPasswordRequestDTO): Promise<MessageResponseDTO>;
   changePassword(dto: ChangePasswordPayloadDTO): Promise<MessageResponseDTO>;
+}
+
+export interface IAccountDeletionService {
+  request(dto: AccountDeletionPayloadDTO): Promise<AccountDeletionResponseDTO>;
 }

@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   gt,
+  inArray,
   isNotNull,
   isNull,
   lte,
@@ -30,6 +31,9 @@ import {
 } from '@app/common';
 import { PaymentProviderRegistry } from '../payment/payment-provider.registry';
 import { PlanService } from './plan.service';
+
+/** Provider statuses that can still produce a charge. */
+const RENEWING_STATUSES = ['active', 'trialing', 'past_due', 'unpaid'];
 
 @Injectable()
 export class SubscriptionService implements ISubscriptionService {
@@ -167,6 +171,53 @@ export class SubscriptionService implements ISubscriptionService {
       id,
       subscription: new SubscriptionResponseDTO(cancelled),
     });
+  }
+
+  /**
+   * Account deletion: make sure nothing renews. Each still-billing provider
+   * subscription is set to end at period end — the learner keeps what they
+   * paid for until then, and is never charged again.
+   *
+   * Idempotent, and throws if any subscription can't be stopped, so the purge
+   * job can retry rather than delete an account Stripe would keep billing.
+   * `incomplete` subscriptions are skipped: they never charge and expire on
+   * their own.
+   */
+  async stopRenewals(userId: string): Promise<{ stopped: number }> {
+    const renewing = await this.db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.cancelAtPeriodEnd, false),
+          isNotNull(subscriptions.providerSubscriptionId),
+          inArray(subscriptions.status, RENEWING_STATUSES),
+        ),
+      );
+
+    for (const sub of renewing) {
+      const snapshot = await this.providers
+        .active()
+        .cancelAtPeriodEnd(sub.providerSubscriptionId!);
+      await this.db
+        .update(subscriptions)
+        .set({
+          cancelAtPeriodEnd: snapshot.cancelAtPeriodEnd,
+          status: snapshot.status,
+          currentPeriodEnd: snapshot.currentPeriodEnd,
+          expiresAt: snapshot.currentPeriodEnd,
+          updatedAt: new Date(),
+        })
+        .where(eq(subscriptions.id, sub.id));
+    }
+
+    if (renewing.length) {
+      this.logger.log(
+        `Stopped ${renewing.length} renewal(s) for user ${userId}`,
+      );
+    }
+    return { stopped: renewing.length };
   }
 
   private activeWhere(userId: string) {

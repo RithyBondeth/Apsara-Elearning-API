@@ -50,6 +50,7 @@ export interface ISubscriptionRpcController {
     userId: string;
     id: string;
   }): Promise<CancelSubscriptionResponseDTO>;
+  stopRenewals(payload: { userId: string }): Promise<{ stopped: number }>;
   check(payload: { userId: string }): Promise<SubscriptionCheckResponseDTO>;
   resolveEntitlements(payload: {
     userId: string;

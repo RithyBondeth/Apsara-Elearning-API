@@ -9,6 +9,7 @@ import {
 } from '@app/common';
 import { DatabaseModule } from '@app/database';
 import {
+  I_ACCOUNT_DELETION_SERVICE,
   I_EMAIL_VERIFICATION_SERVICE,
   I_LOGIN_SERVICE,
   I_PASSWORD_SERVICE,
@@ -24,12 +25,14 @@ import { ResendVerificationController } from './basic/controllers/resend-verific
 import { ForgotPasswordController } from './basic/controllers/forgot-password.controller';
 import { ResetPasswordController } from './basic/controllers/reset-password.controller';
 import { ChangePasswordController } from './basic/controllers/change-password.controller';
+import { AccountDeletionController } from './basic/controllers/account-deletion.controller';
 import { RegisterService } from './basic/services/register.service';
 import { LoginService } from './basic/services/login.service';
 import { LoginAttemptsService } from './basic/services/login-attempts.service';
 import { TokenService } from './basic/services/token.service';
 import { EmailVerificationService } from './basic/services/email-verification.service';
 import { PasswordService } from './basic/services/password.service';
+import { AccountDeletionService } from './basic/services/account-deletion.service';
 import { AuthHealthController } from './health/health.controller';
 
 @Module({
@@ -52,6 +55,7 @@ import { AuthHealthController } from './health/health.controller';
     ForgotPasswordController,
     ResetPasswordController,
     ChangePasswordController,
+    AccountDeletionController,
     AuthHealthController,
   ],
   providers: [
@@ -64,6 +68,7 @@ import { AuthHealthController } from './health/health.controller';
       useClass: EmailVerificationService,
     },
     { provide: I_PASSWORD_SERVICE, useClass: PasswordService },
+    { provide: I_ACCOUNT_DELETION_SERVICE, useClass: AccountDeletionService },
   ],
 })
 export class AuthServiceModule {}

@@ -18,6 +18,7 @@ import { stripeWebhookEvents } from '@app/database/schemas/payment/stripe-webhoo
 import { paymentRefunds } from '@app/database/schemas/payment/payment-refund.schema';
 import { subscriptions } from '@app/database/schemas/subscription/subscription.schema';
 import { plans } from '@app/database/schemas/subscription/plan.schema';
+import { user } from '@app/database/schemas/user/user.schema';
 import {
   DRIZZLE,
   IPaymentService,
@@ -180,6 +181,7 @@ export class PaymentService implements IPaymentService {
       await this.gateway.retrieveSubscription(subscriptionId),
       invoice.parent?.subscription_details?.metadata ?? undefined,
     );
+    if (!local) return;
     const references = await this.gateway.invoicePaymentReferences(invoice.id);
     if (status === 'failed') {
       const [plan] = await this.db
@@ -391,7 +393,7 @@ export class PaymentService implements IPaymentService {
   private async syncSubscription(
     stripeSubscription: Stripe.Subscription,
     fallbackMetadata?: Stripe.Metadata,
-  ): Promise<typeof subscriptions.$inferSelect> {
+  ): Promise<typeof subscriptions.$inferSelect | null> {
     const [existing] = await this.db
       .select()
       .from(subscriptions)
@@ -418,6 +420,24 @@ export class PaymentService implements IPaymentService {
       throw new RpcInternalException(
         `Cannot map Stripe subscription ${stripeSubscription.id} to a user and plan`,
       );
+    }
+
+    // A deleted account's subscription still reports in until it ends at
+    // period end (deletion stops renewal but can't end it early). Its local
+    // row went with the account; recreating it would violate the user FK
+    // and make Stripe retry the event for days.
+    if (!existing) {
+      const [owner] = await this.db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.id, userId))
+        .limit(1);
+      if (!owner) {
+        this.logger.warn(
+          `Ignoring Stripe subscription ${stripeSubscription.id}: user ${userId} no longer exists`,
+        );
+        return null;
+      }
     }
 
     const periodStart = this.periodBoundary(stripeSubscription, 'start');
