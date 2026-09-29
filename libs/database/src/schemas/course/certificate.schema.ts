@@ -33,6 +33,12 @@ export const certificates = pgTable(
       .notNull()
       .defaultNow(),
     revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
+    // Audit trail for a revocation: shown to the learner and admins only,
+    // never on public verification.
+    revocationReason: text('revocation_reason'),
+    revokedBy: uuid('revoked_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
     ...timestamps,
   },
   // Named explicitly so the hand-written migration and a later `db:push`

@@ -1,3 +1,4 @@
+import { of } from 'rxjs';
 import { CertificateService } from './certificate.service';
 import type { EntitlementService } from '@app/common';
 
@@ -41,6 +42,10 @@ function buildEntitlements(has: boolean) {
 }
 const entitlements = (has: boolean) => buildEntitlements(has).service;
 
+/** user-service client for notifications; `send` is inspectable. */
+const userClient = () =>
+  ({ send: jest.fn(() => of({})) }) as unknown as import('@nestjs/microservices').ClientProxy;
+
 const COURSE = {
   id: 'course-1',
   title: 'Grade 12 Mathematics',
@@ -60,7 +65,7 @@ describe('CertificateService.issue', () => {
   it('returns the existing certificate rather than issuing a second', async () => {
     const db = fakeDb([[{ certificate: CERT, course: COURSE }]]);
     const entitle = buildEntitlements(true);
-    const service = new CertificateService(db as never, entitle.service);
+    const service = new CertificateService(db as never, entitle.service, userClient());
 
     const result = await service.issue('user-1', 'course-1');
 
@@ -72,7 +77,7 @@ describe('CertificateService.issue', () => {
 
   it('refuses when the learner is not enrolled', async () => {
     const db = fakeDb([[], []]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     await expect(service.issue('user-1', 'course-1')).rejects.toThrow(
       /not enrolled/i,
@@ -81,7 +86,7 @@ describe('CertificateService.issue', () => {
 
   it('refuses while the course is unfinished', async () => {
     const db = fakeDb([[], [{ completed: false }]]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     await expect(service.issue('user-1', 'course-1')).rejects.toThrow(
       /Finish every lesson/i,
@@ -90,7 +95,7 @@ describe('CertificateService.issue', () => {
 
   it('refuses without the certificates entitlement', async () => {
     const db = fakeDb([[], [{ completed: true }]]);
-    const service = new CertificateService(db as never, entitlements(false));
+    const service = new CertificateService(db as never, entitlements(false), userClient());
 
     await expect(service.issue('user-1', 'course-1')).rejects.toThrow(
       /plan including certificates/i,
@@ -105,7 +110,7 @@ describe('CertificateService.issue', () => {
       [CERT], // insert ... returning
     ]);
     const entitle = buildEntitlements(true);
-    const service = new CertificateService(db as never, entitle.service);
+    const service = new CertificateService(db as never, entitle.service, userClient());
 
     const result = await service.issue('user-1', 'course-1');
 
@@ -122,7 +127,7 @@ describe('CertificateService.issue', () => {
       [], // insert lost the race, onConflictDoNothing returned nothing
       [{ certificate: CERT, course: COURSE }], // re-read finds the winner
     ]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     await expect(service.issue('user-1', 'course-1')).resolves.toMatchObject({
       code: CERT.code,
@@ -134,7 +139,7 @@ describe('CertificateService.verify', () => {
   it('reports an unknown code as invalid instead of throwing', async () => {
     // A 404 here would let anyone probe which codes exist.
     const db = fakeDb([[]]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     const result = await service.verify('APS-0000-0000-0000');
 
@@ -144,7 +149,7 @@ describe('CertificateService.verify', () => {
 
   it('rejects a malformed code without hitting the database', async () => {
     const db = fakeDb([]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     await expect(service.verify('not-a-code')).resolves.toMatchObject({
       valid: false,
@@ -162,7 +167,7 @@ describe('CertificateService.verify', () => {
         },
       ],
     ]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     const result = await service.verify('aps4k7mqw2x9btf');
 
@@ -186,7 +191,7 @@ describe('CertificateService.verify', () => {
         },
       ],
     ]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     const result = await service.verify(CERT.code);
 
@@ -205,10 +210,153 @@ describe('CertificateService.verify', () => {
         },
       ],
     ]);
-    const service = new CertificateService(db as never, entitlements(true));
+    const service = new CertificateService(db as never, entitlements(true), userClient());
 
     await expect(service.verify(CERT.code)).resolves.toMatchObject({
       learnerName: 'Learner',
     });
+  });
+});
+
+/**
+ * Admin revocation. Queue order per call: lookup → update → re-read.
+ * `set` captures what was written.
+ */
+function writeDb(results: unknown[][]) {
+  let index = 0;
+  const set = jest.fn();
+  const node = (): Record<string, unknown> => {
+    const self: Record<string, unknown> = {};
+    for (const method of ['from', 'innerJoin', 'where', 'orderBy', 'limit']) {
+      self[method] = () => self;
+    }
+    self.set = (v: unknown) => {
+      set(v);
+      return self;
+    };
+    self.then = (
+      resolve: (value: unknown) => unknown,
+      reject: (reason: unknown) => unknown,
+    ) => Promise.resolve(results[index++] ?? []).then(resolve, reject);
+    return self;
+  };
+  return { db: { select: () => node(), update: () => node() }, set };
+}
+
+const adminRow = (over: Record<string, unknown> = {}) => ({
+  certificate: { ...CERT, revocationReason: null, revokedBy: null, ...over },
+  courseTitle: COURSE.title,
+  firstName: 'Sok',
+  lastName: 'Dara',
+  email: 'dara@example.com',
+});
+
+describe('CertificateService admin revocation', () => {
+  const REASON = 'Quiz answers were shared between accounts';
+
+  it('revokes with a reason, records who did it, and tells the holder', async () => {
+    const { db, set } = writeDb([
+      [{ certificate: CERT, course: COURSE }],
+      [],
+      [adminRow({ revokedAt: new Date(), revocationReason: REASON, revokedBy: 'admin-1' })],
+    ]);
+    const client = userClient();
+    const service = new CertificateService(db as never, entitlements(true), client);
+
+    const res = await service.revoke('cert-1', 'admin-1', `  ${REASON}  `);
+
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({ revocationReason: REASON, revokedBy: 'admin-1' }),
+    );
+    expect(set.mock.calls[0][0].revokedAt).toBeInstanceOf(Date);
+    expect(res).toMatchObject({ revocationReason: REASON, learnerName: 'Sok Dara' });
+    expect(client.send).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        userId: 'user-1',
+        type: 'certificate_revoked',
+        body: `Reason: ${REASON}`,
+      }),
+    );
+  });
+
+  it('requires a real reason', async () => {
+    const { db, set } = writeDb([[{ certificate: CERT, course: COURSE }]]);
+    const service = new CertificateService(db as never, entitlements(true), userClient());
+    await expect(service.revoke('cert-1', 'admin-1', '   ok ')).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it("won't overwrite an existing revocation's reason", async () => {
+    const { db, set } = writeDb([
+      [{ certificate: { ...CERT, revokedAt: new Date() }, course: COURSE }],
+    ]);
+    const service = new CertificateService(db as never, entitlements(true), userClient());
+    await expect(service.revoke('cert-1', 'admin-1', REASON)).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('throws 404 for an unknown certificate', async () => {
+    const { db } = writeDb([[]]);
+    const service = new CertificateService(db as never, entitlements(true), userClient());
+    await expect(service.revoke('nope', 'admin-1', REASON)).rejects.toMatchObject({
+      error: { statusCode: 404 },
+    });
+  });
+
+  it('reinstates: clears the audit fields and tells the holder', async () => {
+    const { db, set } = writeDb([
+      [{ certificate: { ...CERT, revokedAt: new Date() }, course: COURSE }],
+      [],
+      [adminRow()],
+    ]);
+    const client = userClient();
+    const service = new CertificateService(db as never, entitlements(true), client);
+
+    await service.reinstate('cert-1', 'admin-1');
+
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({ revokedAt: null, revocationReason: null, revokedBy: null }),
+    );
+    expect(client.send).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ type: 'certificate_issued' }),
+    );
+  });
+
+  it("refuses to reinstate one that isn't revoked", async () => {
+    const { db } = writeDb([[{ certificate: CERT, course: COURSE }]]);
+    const service = new CertificateService(db as never, entitlements(true), userClient());
+    await expect(service.reinstate('cert-1', 'admin-1')).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
+  });
+
+  it('lists with the holder named, falling back to email', async () => {
+    const { db } = writeDb([[adminRow(), { ...adminRow(), firstName: null, lastName: null }]]);
+    const service = new CertificateService(db as never, entitlements(true), userClient());
+    const rows = await service.adminList('APS');
+    expect(rows.map((r) => r.learnerName)).toEqual(['Sok Dara', 'dara@example.com']);
+  });
+
+  it("never exposes the reason on public verification", async () => {
+    const { db } = writeDb([
+      [
+        {
+          certificate: { ...CERT, revokedAt: new Date(), revocationReason: 'private note' },
+          course: COURSE,
+          firstName: 'Sok',
+          lastName: 'Dara',
+        },
+      ],
+    ]);
+    const service = new CertificateService(db as never, entitlements(true), userClient());
+    const res = await service.verify(CERT.code);
+    expect(res.valid).toBe(false);
+    expect(JSON.stringify(res)).not.toContain('private note');
   });
 });

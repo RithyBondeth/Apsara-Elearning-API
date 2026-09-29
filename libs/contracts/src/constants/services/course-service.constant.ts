@@ -110,6 +110,9 @@ export const COURSE_SERVICE = {
     CERTIFICATE_ISSUE: 'course.certificate.issue', // idempotent claim
     CERTIFICATE_FIND_BY_USER: 'course.certificate.find_by_user',
     CERTIFICATE_VERIFY: 'course.certificate.verify', // public, by code
+    CERTIFICATE_ADMIN_LIST: 'course.certificate.admin_list', // admin search
+    CERTIFICATE_REVOKE: 'course.certificate.revoke', // admin, with reason
+    CERTIFICATE_REINSTATE: 'course.certificate.reinstate', // admin
 
     // Lesson Progress
     PROGRESS_MARK_COMPLETE: 'course.progress.mark_complete',

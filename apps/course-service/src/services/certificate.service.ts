@@ -1,17 +1,21 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, desc, eq } from 'drizzle-orm';
+import { ClientProxy } from '@nestjs/microservices';
+import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { certificates } from '@app/database/schemas/course/certificate.schema';
 import { enrollments } from '@app/database/schemas/course/enrollment.schema';
 import { courses } from '@app/database/schemas/course/course.schema';
 import { user } from '@app/database/schemas/user/user.schema';
 import {
+  AdminCertificateDTO,
   CertificateResponseDTO,
   CertificateVerificationResponseDTO,
   DRIZZLE,
+  USER_SERVICE,
 } from '@app/contracts';
 import {
   EntitlementService,
+  notifyUser,
   RpcBadRequestException,
   RpcForbiddenException,
   RpcNotFoundException,
@@ -21,6 +25,9 @@ import { generateCertificateCode, normalizeCertificateCode } from '@app/utils';
 /** Retries on the (vanishingly unlikely) chance a generated code collides. */
 const MAX_CODE_ATTEMPTS = 5;
 
+/** The admin list is a search tool, not an export; cap what one query returns. */
+const ADMIN_LIST_LIMIT = 200;
+
 @Injectable()
 export class CertificateService {
   private readonly logger = new Logger(CertificateService.name);
@@ -28,6 +35,7 @@ export class CertificateService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     private readonly entitlements: EntitlementService,
+    @Inject(USER_SERVICE.NAME) private readonly userClient: ClientProxy,
   ) {}
 
   /**
@@ -140,6 +148,169 @@ export class CertificateService {
     });
   }
 
+  /**
+   * Admin search, newest first. `q` matches the code, the learner's name or
+   * email, or the course title; without it this is the most recent issues.
+   */
+  async adminList(q?: string): Promise<AdminCertificateDTO[]> {
+    const term = q?.trim();
+    const like = term ? `%${term.replace(/[%_\\]/g, '\\$&')}%` : null;
+    const rows = await this.adminSelect()
+      .where(
+        like
+          ? or(
+              ilike(certificates.code, like),
+              ilike(user.email, like),
+              ilike(courses.title, like),
+              ilike(
+                sql`concat_ws(' ', ${user.firstName}, ${user.lastName})`,
+                like,
+              ),
+            )
+          : undefined,
+      )
+      .orderBy(desc(certificates.issuedAt))
+      .limit(ADMIN_LIST_LIMIT);
+    return rows.map((row) => this.toAdminDTO(row));
+  }
+
+  /**
+   * Withdraws a certificate. Public verification then reports it invalid, and
+   * the holder is told why. Refuses to re-revoke rather than silently
+   * replacing the recorded reason.
+   */
+  async revoke(
+    id: string,
+    actorId: string,
+    reason: string,
+  ): Promise<AdminCertificateDTO> {
+    const trimmed = reason.trim();
+    if (trimmed.length < 5) {
+      throw new RpcBadRequestException('Give a reason for revoking');
+    }
+    const row = await this.findById(id);
+    if (row.certificate.revokedAt) {
+      throw new RpcBadRequestException('Certificate is already revoked');
+    }
+
+    await this.db
+      .update(certificates)
+      .set({
+        revokedAt: new Date(),
+        revocationReason: trimmed,
+        revokedBy: actorId,
+        updatedAt: new Date(),
+      })
+      .where(eq(certificates.id, id));
+
+    await notifyUser(
+      this.userClient,
+      {
+        userId: row.certificate.userId,
+        type: 'certificate_revoked',
+        title: `Certificate withdrawn: ${row.course.title}`,
+        body: `Reason: ${trimmed}`,
+        data: { certificateId: id, courseId: row.certificate.courseId },
+      },
+      this.logger,
+    );
+    this.logger.log(
+      `Certificate ${row.certificate.code} revoked by ${actorId}`,
+    );
+    return this.adminOne(id);
+  }
+
+  /** Undoes a revocation (e.g. one made in error) and tells the holder. */
+  async reinstate(id: string, actorId: string): Promise<AdminCertificateDTO> {
+    const row = await this.findById(id);
+    if (!row.certificate.revokedAt) {
+      throw new RpcBadRequestException('Certificate is not revoked');
+    }
+
+    await this.db
+      .update(certificates)
+      .set({
+        revokedAt: null,
+        revocationReason: null,
+        revokedBy: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(certificates.id, id));
+
+    await notifyUser(
+      this.userClient,
+      {
+        userId: row.certificate.userId,
+        type: 'certificate_issued',
+        title: `Certificate reinstated: ${row.course.title}`,
+        body: 'Your certificate is valid again.',
+        data: { certificateId: id, courseId: row.certificate.courseId },
+      },
+      this.logger,
+    );
+    this.logger.log(
+      `Certificate ${row.certificate.code} reinstated by ${actorId}`,
+    );
+    return this.adminOne(id);
+  }
+
+  private async findById(id: string) {
+    const [row] = await this.db
+      .select({ certificate: certificates, course: courses })
+      .from(certificates)
+      .innerJoin(courses, eq(certificates.courseId, courses.id))
+      .where(eq(certificates.id, id))
+      .limit(1);
+    if (!row) throw new RpcNotFoundException('Certificate not found');
+    return row;
+  }
+
+  private async adminOne(id: string): Promise<AdminCertificateDTO> {
+    const [row] = await this.adminSelect()
+      .where(eq(certificates.id, id))
+      .limit(1);
+    if (!row) throw new RpcNotFoundException('Certificate not found');
+    return this.toAdminDTO(row);
+  }
+
+  /** A certificate with its holder and course, as the admin console lists it. */
+  private adminSelect() {
+    return this.db
+      .select({
+        certificate: certificates,
+        courseTitle: courses.title,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      })
+      .from(certificates)
+      .innerJoin(courses, eq(certificates.courseId, courses.id))
+      .innerJoin(user, eq(certificates.userId, user.id));
+  }
+
+  private toAdminDTO(row: {
+    certificate: typeof certificates.$inferSelect;
+    courseTitle: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  }): AdminCertificateDTO {
+    return new AdminCertificateDTO({
+      id: row.certificate.id,
+      code: row.certificate.code,
+      userId: row.certificate.userId,
+      learnerName:
+        [row.firstName, row.lastName].filter(Boolean).join(' ') || row.email,
+      learnerEmail: row.email,
+      courseId: row.certificate.courseId,
+      courseTitle: row.courseTitle,
+      issuedAt: row.certificate.issuedAt,
+      revokedAt: row.certificate.revokedAt,
+      revocationReason: row.certificate.revocationReason,
+      revokedBy: row.certificate.revokedBy,
+    });
+  }
+
   private async findRow(userId: string, courseId: string) {
     const [row] = await this.db
       .select({ certificate: certificates, course: courses })
@@ -190,6 +361,7 @@ export class CertificateService {
       courseSlug: course.slug,
       issuedAt: certificate.issuedAt,
       revokedAt: certificate.revokedAt,
+      revocationReason: certificate.revocationReason,
     });
   }
 }

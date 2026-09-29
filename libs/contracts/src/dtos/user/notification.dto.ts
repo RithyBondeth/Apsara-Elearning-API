@@ -25,6 +25,7 @@ export const NOTIFICATION_TYPES = [
   'challenge_solved',
   'course_completed',
   'certificate_issued',
+  'certificate_revoked',
   'subscription_updated',
   'rating_requested',
 ] as const;
