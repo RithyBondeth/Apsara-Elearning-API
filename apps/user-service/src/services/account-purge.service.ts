@@ -30,7 +30,8 @@ const BATCH_SIZE = 100;
  * Renewals are stopped again right before deleting, and an account whose
  * renewals can't be confirmed stopped is skipped until the next run — never
  * delete someone Stripe would keep charging. Deleting the user row cascades
- * to all of their data.
+ * to all of their data, except payment records: those are kept as accounting
+ * records and unlinked from the account (payments.user_id is set null).
  */
 @Injectable()
 export class AccountPurgeService
