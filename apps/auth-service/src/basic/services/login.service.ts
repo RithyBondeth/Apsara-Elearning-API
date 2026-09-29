@@ -70,6 +70,12 @@ export class LoginService implements ILoginService {
       throw new RpcForbiddenException('Email not verified');
     }
 
+    // 3b. Suspended by an admin. Only revealed after a correct password, so it
+    //     can't be used to probe which emails have accounts.
+    if (foundUser.suspendedAt) {
+      throw new RpcForbiddenException('Account suspended');
+    }
+
     // 4. Generate tokens
     const jwtPayload: IJWTPayload = {
       id: foundUser.id,

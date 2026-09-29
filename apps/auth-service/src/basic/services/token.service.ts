@@ -45,7 +45,8 @@ export class TokenService implements ITokenService {
       foundUser.refreshToken !== presentedTokenHash ||
       !foundUser.refreshTokenExpiresAt ||
       foundUser.refreshTokenExpiresAt.getTime() < Date.now() ||
-      !foundUser.isEmailVerified
+      !foundUser.isEmailVerified ||
+      foundUser.suspendedAt
     ) {
       throw new RpcUnauthorizedException('Invalid or expired refresh token');
     }

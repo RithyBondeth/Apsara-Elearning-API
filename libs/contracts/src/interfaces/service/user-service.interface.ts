@@ -13,7 +13,10 @@ import {
   UpdateBadgeRequestDTO,
   UserBadgeResponseDTO,
 } from '../../dtos/user/badge.dto';
-import { UpdateUserRequestDTO } from '../../dtos/user/update-user.dto';
+import {
+  AdminUpdateUserRequestDTO,
+  UpdateUserRequestDTO,
+} from '../../dtos/user/update-user.dto';
 import { LeaderboardResponseDTO } from '../../dtos/user/leaderboard.dto';
 import {
   AddXpResponseDTO,
@@ -34,7 +37,13 @@ export interface IUserService {
   findByEmail(email: string): Promise<UserResponseDTO>;
   update(id: string, dto: UpdateUserRequestDTO): Promise<UserResponseDTO>;
   updateAvatar(id: string, avatar: TAvatarPreset): Promise<UserResponseDTO>;
-  remove(id: string): Promise<DeleteResponseDTO>;
+  /** `actorId` is the admin making the change; guards self-lockout. */
+  adminUpdate(
+    id: string,
+    actorId: string,
+    dto: AdminUpdateUserRequestDTO,
+  ): Promise<UserResponseDTO>;
+  remove(id: string, actorId?: string): Promise<DeleteResponseDTO>;
   addXp(id: string, amount: number): Promise<AddXpResponseDTO>;
   updateStreak(id: string, streak: number): Promise<UserResponseDTO>;
   leaderboard(viewerId: string, limit: number): Promise<LeaderboardResponseDTO>;

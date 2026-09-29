@@ -20,6 +20,8 @@ export const user = pgTable('users', {
   streak: integer('streak').default(0),
   xp: integer('xp').default(0),
   isAdmin: boolean('is_admin').notNull().default(false),
+  // Set by an admin; blocks login and token refresh. Null = active.
+  suspendedAt: timestamp('suspended_at', { withTimezone: true, mode: 'date' }),
 
   // Email Password
   email: text('email').notNull().unique(),
