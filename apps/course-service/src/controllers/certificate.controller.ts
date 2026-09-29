@@ -23,4 +23,23 @@ export class CertificateController {
     const code = typeof payload === 'string' ? payload : payload.code;
     return this.certificateService.verify(code);
   }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.CERTIFICATE_ADMIN_LIST)
+  adminList(@Payload() payload: { q?: string }) {
+    return this.certificateService.adminList(payload?.q);
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.CERTIFICATE_REVOKE)
+  revoke(@Payload() payload: { id: string; actorId: string; reason: string }) {
+    return this.certificateService.revoke(
+      payload.id,
+      payload.actorId,
+      payload.reason,
+    );
+  }
+
+  @MessagePattern(COURSE_SERVICE.ACTIONS.CERTIFICATE_REINSTATE)
+  reinstate(@Payload() payload: { id: string; actorId: string }) {
+    return this.certificateService.reinstate(payload.id, payload.actorId);
+  }
 }
