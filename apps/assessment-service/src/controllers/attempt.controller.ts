@@ -50,4 +50,9 @@ export class AttemptController implements IAttemptRpcController {
   findAnswers(@Payload() payload: { userId: string; attemptId: string }) {
     return this.attempts.findAnswers(payload.userId, payload.attemptId);
   }
+
+  @MessagePattern(ASSESSMENT_SERVICE.ACTIONS.ATTEMPT_REVIEW)
+  review(@Payload() payload: { userId: string; attemptId: string }) {
+    return this.attempts.review(payload.userId, payload.attemptId);
+  }
 }

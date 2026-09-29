@@ -11,6 +11,7 @@ import {
   StartAttemptResponseDTO,
   SubmissionResultResponseDTO,
   SubmitAttemptResponseDTO,
+  AttemptReviewResponseDTO,
 } from '../../dtos/assessment/assessment-responses.dto';
 import {
   ChallengeResponseDTO,
@@ -61,6 +62,7 @@ export interface IAttemptService {
     userId: string,
     attemptId: string,
   ): Promise<AttemptAnswerResponseDTO[]>;
+  review(userId: string, attemptId: string): Promise<AttemptReviewResponseDTO>;
 }
 
 export interface IAuthoringService {

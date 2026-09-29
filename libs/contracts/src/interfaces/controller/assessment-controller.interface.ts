@@ -11,6 +11,7 @@ import {
   StartAttemptResponseDTO,
   SubmissionResultResponseDTO,
   SubmitAttemptResponseDTO,
+  AttemptReviewResponseDTO,
 } from '../../dtos/assessment/assessment-responses.dto';
 import {
   ChallengeResponseDTO,
@@ -154,4 +155,8 @@ export interface IAttemptRpcController {
     userId: string;
     attemptId: string;
   }): Promise<AttemptAnswerResponseDTO[]>;
+  review(payload: {
+    userId: string;
+    attemptId: string;
+  }): Promise<AttemptReviewResponseDTO>;
 }
