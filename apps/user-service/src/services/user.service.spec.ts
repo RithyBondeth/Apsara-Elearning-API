@@ -132,3 +132,136 @@ describe('UserService.leaderboard', () => {
     expect(board.total).toBe(0);
   });
 });
+
+/**
+ * Admin account management. The guards exist so the admin panel can never
+ * lock every admin out: no self-demotion/suspension/deletion, and never
+ * below one active admin.
+ */
+function writeDb(selects: unknown[][], returned: unknown[] = [{ id: 'u2' }]) {
+  let si = 0;
+  const set = jest.fn();
+  const del = jest.fn();
+  const db = {
+    select: () => {
+      const idx = si++;
+      const node: Record<string, unknown> = {};
+      for (const m of ['from', 'where', 'orderBy', 'limit']) node[m] = () => node;
+      node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
+        Promise.resolve(selects[idx] ?? []).then(res, rej);
+      return node;
+    },
+    update: () => ({
+      set: (v: unknown) => {
+        set(v);
+        return { where: () => ({ returning: () => Promise.resolve(returned) }) };
+      },
+    }),
+    delete: () => {
+      del();
+      return { where: () => ({ returning: () => Promise.resolve(returned) }) };
+    },
+  };
+  return { db, set, del };
+}
+
+const BAD_REQUEST = { error: { statusCode: 400 } };
+const student = { id: 'u2', isAdmin: false, suspendedAt: null };
+const admin = (id: string, suspendedAt: Date | null = null) => ({ id, isAdmin: true, suspendedAt });
+
+describe('UserService.adminUpdate', () => {
+  it('throws 404 for an unknown user', async () => {
+    const { db } = writeDb([[]]);
+    await expect(
+      new UserService(db as never, notifications).adminUpdate('x', 'me', { isAdmin: true }),
+    ).rejects.toMatchObject({ error: { statusCode: 404 } });
+  });
+
+  it('promotes a learner to admin', async () => {
+    const { db, set } = writeDb([[student]]);
+    await new UserService(db as never, notifications).adminUpdate('u2', 'me', { isAdmin: true });
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ isAdmin: true }));
+  });
+
+  it('refuses to let an admin demote or suspend themselves', async () => {
+    const service = () => new UserService(writeDb([[admin('me')]]).db as never, notifications);
+    await expect(service().adminUpdate('me', 'me', { isAdmin: false })).rejects.toMatchObject(BAD_REQUEST);
+    await expect(service().adminUpdate('me', 'me', { suspended: true })).rejects.toMatchObject(BAD_REQUEST);
+  });
+
+  it('still lets an admin rename themselves', async () => {
+    const { db, set } = writeDb([[admin('me')]]);
+    await new UserService(db as never, notifications).adminUpdate('me', 'me', { firstName: '  Dara ' });
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ firstName: 'Dara' }));
+  });
+
+  it('refuses to demote the last active admin', async () => {
+    // Target lookup → active-admin list (only the target; the other is suspended).
+    const { db, set } = writeDb([[admin('a1')], [admin('a1')]]);
+    await expect(
+      new UserService(db as never, notifications).adminUpdate('a1', 'me', { isAdmin: false }),
+    ).rejects.toMatchObject(BAD_REQUEST);
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('demotes an admin while another active admin remains', async () => {
+    const { db, set } = writeDb([[admin('a1')], [admin('a1'), admin('me')]]);
+    await new UserService(db as never, notifications).adminUpdate('a1', 'me', { isAdmin: false });
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ isAdmin: false }));
+  });
+
+  it('suspending stamps suspendedAt and revokes the refresh token', async () => {
+    const { db, set } = writeDb([[student]]);
+    await new UserService(db as never, notifications).adminUpdate('u2', 'me', { suspended: true });
+    const changes = set.mock.calls[0][0];
+    expect(changes.suspendedAt).toBeInstanceOf(Date);
+    expect(changes).toMatchObject({ refreshToken: null, refreshTokenExpiresAt: null });
+  });
+
+  it('re-suspending keeps the original suspension time', async () => {
+    const since = new Date('2026-09-01T00:00:00Z');
+    const { db, set } = writeDb([[{ ...student, suspendedAt: since }]]);
+    await new UserService(db as never, notifications).adminUpdate('u2', 'me', { suspended: true });
+    expect(set.mock.calls[0][0]).not.toHaveProperty('suspendedAt');
+  });
+
+  it('reinstating clears suspendedAt', async () => {
+    const { db, set } = writeDb([[{ ...student, suspendedAt: new Date() }]]);
+    await new UserService(db as never, notifications).adminUpdate('u2', 'me', { suspended: false });
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ suspendedAt: null }));
+  });
+
+  it('stores a blank name as null', async () => {
+    const { db, set } = writeDb([[student]]);
+    await new UserService(db as never, notifications).adminUpdate('u2', 'me', { lastName: '   ' });
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ lastName: null }));
+  });
+});
+
+describe('UserService.remove', () => {
+  it('refuses to let an admin delete their own account', async () => {
+    const { db, del } = writeDb([[admin('me')], [admin('me'), admin('a2')]]);
+    await expect(new UserService(db as never, notifications).remove('me', 'me')).rejects.toMatchObject(BAD_REQUEST);
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it('refuses to delete the last active admin', async () => {
+    const { db, del } = writeDb([[admin('a1')], [admin('a1')]]);
+    await expect(new UserService(db as never, notifications).remove('a1', 'me')).rejects.toMatchObject(BAD_REQUEST);
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it('deletes a learner', async () => {
+    const { db, del } = writeDb([[student]]);
+    const res = await new UserService(db as never, notifications).remove('u2', 'me');
+    expect(res.id).toBe('u2');
+    expect(del).toHaveBeenCalled();
+  });
+
+  it('throws 404 for an unknown user', async () => {
+    const { db } = writeDb([[]]);
+    await expect(new UserService(db as never, notifications).remove('x', 'me')).rejects.toMatchObject({
+      error: { statusCode: 404 },
+    });
+  });
+});

@@ -1,11 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, asc, desc, eq, gt, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNull, lte, sql } from 'drizzle-orm';
 import { user } from '@app/database/schemas/user/user.schema';
 import { badges } from '@app/database/schemas/user/badge.schema';
 import { userBadges } from '@app/database/schemas/user/user-badge.schema';
 import {
   AddXpResponseDTO,
+  AdminUpdateUserRequestDTO,
   AVATAR_PRESETS,
   BadgeResponseDTO,
   DeleteResponseDTO,
@@ -33,6 +34,7 @@ const publicColumns = {
   streak: user.streak,
   xp: user.xp,
   isAdmin: user.isAdmin,
+  suspendedAt: user.suspendedAt,
   email: user.email,
   isEmailVerified: user.isEmailVerified,
   phone: user.phone,
@@ -114,7 +116,89 @@ export class UserService implements IUserService {
     return new UserResponseDTO(updated);
   }
 
-  async remove(id: string): Promise<DeleteResponseDTO> {
+  /**
+   * An admin changing another account: role, suspension, or name.
+   *
+   * Two guards keep the admin panel from locking everyone out: an admin can't
+   * demote or suspend themselves, and the last active admin can't be demoted
+   * or suspended by anyone.
+   *
+   * Role changes reach the user's session on their next token refresh (at
+   * most one access-token lifetime), because refresh re-reads `isAdmin`.
+   * Suspending also revokes the stored refresh token, and auth-service
+   * refuses login/refresh while `suspendedAt` is set.
+   */
+  async adminUpdate(
+    id: string,
+    actorId: string,
+    dto: AdminUpdateUserRequestDTO,
+  ): Promise<UserResponseDTO> {
+    const [target] = await this.db
+      .select({
+        id: user.id,
+        isAdmin: user.isAdmin,
+        suspendedAt: user.suspendedAt,
+      })
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1);
+    if (!target) throw new RpcNotFoundException('User not found');
+
+    const demoting = dto.isAdmin === false && target.isAdmin;
+    const suspending = dto.suspended === true && !target.suspendedAt;
+    if (id === actorId && (demoting || suspending)) {
+      throw new RpcBadRequestException(
+        "You can't remove your own admin access or suspend yourself",
+      );
+    }
+    if (target.isAdmin && !target.suspendedAt && (demoting || suspending)) {
+      await this.assertAnotherActiveAdmin(id);
+    }
+
+    const changes: Partial<typeof user.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+    if (dto.isAdmin !== undefined) changes.isAdmin = dto.isAdmin;
+    if (dto.suspended === false) changes.suspendedAt = null;
+    if (suspending) {
+      changes.suspendedAt = new Date();
+      changes.refreshToken = null;
+      changes.refreshTokenExpiresAt = null;
+    }
+    if (dto.firstName !== undefined)
+      changes.firstName = dto.firstName.trim() || null;
+    if (dto.lastName !== undefined)
+      changes.lastName = dto.lastName.trim() || null;
+
+    const [updated] = await this.db
+      .update(user)
+      .set(changes)
+      .where(eq(user.id, id))
+      .returning(publicColumns);
+    if (!updated) throw new RpcNotFoundException('User not found');
+
+    this.logger.log(
+      `Admin ${actorId} updated user ${id}: ${JSON.stringify(dto)}`,
+    );
+    return new UserResponseDTO(updated);
+  }
+
+  async remove(id: string, actorId?: string): Promise<DeleteResponseDTO> {
+    if (actorId && id === actorId) {
+      throw new RpcBadRequestException(
+        "You can't delete your own account here",
+      );
+    }
+    const [target] = await this.db
+      .select({ isAdmin: user.isAdmin, suspendedAt: user.suspendedAt })
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1);
+    if (!target) throw new RpcNotFoundException('User not found');
+    if (target.isAdmin && !target.suspendedAt) {
+      await this.assertAnotherActiveAdmin(id);
+    }
+
     const [deleted] = await this.db
       .delete(user)
       .where(eq(user.id, id))
@@ -122,6 +206,21 @@ export class UserService implements IUserService {
     if (!deleted) throw new RpcNotFoundException('User not found');
     this.logger.log(`User deleted: ${id}`);
     return new DeleteResponseDTO({ message: 'User deleted successfully', id });
+  }
+
+  /**
+   * Refuses a change that would leave no active (unsuspended) admin.
+   * Check-then-write, so two admins demoting each other at the same instant
+   * could still race past it; acceptable for a small admin team.
+   */
+  private async assertAnotherActiveAdmin(exceptId: string): Promise<void> {
+    const admins = await this.db
+      .select({ id: user.id })
+      .from(user)
+      .where(and(eq(user.isAdmin, true), isNull(user.suspendedAt)));
+    if (!admins.some((a) => a.id !== exceptId)) {
+      throw new RpcBadRequestException('At least one active admin is required');
+    }
   }
 
   async addXp(id: string, amount: number): Promise<AddXpResponseDTO> {

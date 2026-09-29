@@ -1,6 +1,7 @@
 import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
+  AdminUpdateUserRequestDTO,
   USER_SERVICE,
   UpdateUserRequestDTO,
   TAvatarPreset,
@@ -44,9 +45,28 @@ export class UserController implements IUserRpcController {
     return this.userService.updateAvatar(payload.id, payload.avatar);
   }
 
+  @MessagePattern(USER_SERVICE.ACTIONS.ADMIN_UPDATE)
+  adminUpdate(
+    @Payload()
+    payload: {
+      id: string;
+      actorId: string;
+      dto: AdminUpdateUserRequestDTO;
+    },
+  ) {
+    return this.userService.adminUpdate(
+      payload.id,
+      payload.actorId,
+      payload.dto,
+    );
+  }
+
   @MessagePattern(USER_SERVICE.ACTIONS.DELETE)
-  remove(@Payload() payload: string | { id: string }) {
-    return this.userService.remove(idOf(payload));
+  remove(@Payload() payload: string | { id: string; actorId?: string }) {
+    return this.userService.remove(
+      idOf(payload),
+      typeof payload === 'string' ? undefined : payload.actorId,
+    );
   }
 
   @MessagePattern(USER_SERVICE.ACTIONS.ADD_XP)
