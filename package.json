@@ -36,6 +36,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
+    "test:int": "jest --config test/jest-int.config.js --runInBand",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "dev": "bash scripts/dev.sh",
@@ -48,6 +49,7 @@
     "db:push": "drizzle-kit push --config=libs/database/src/config/drizzle.config.ts",
     "db:migrate": "node scripts/apply-migrations.mjs",
     "db:setup": "node scripts/setup-db.mjs",
+    "db:check-migrations": "node scripts/check-migrations.mjs",
     "db:studio": "drizzle-kit studio --config=libs/database/src/config/drizzle.config.ts"
   },
   "dependencies": {

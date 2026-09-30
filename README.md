@@ -376,16 +376,41 @@ Applied migrations are recorded, with checksums, in
 | `npm run db:migrate` | Existing databases (and production): apply pending migrations. Refuses an empty database and points to `db:setup`. |
 | `npm run db:baseline` | A database you created yourself with `db:push`: record every migration as applied without running it. |
 | `npm run db:push` / `db:studio` | Drizzle schema push / Drizzle Studio. |
+| `npm run db:check-migrations` | Proves this branch's migrations turn `main`'s schema into exactly the declared one (see below). Needs `TEST_DATABASE_URL`; `-- --base <ref>` to compare against something other than `origin/main`. |
 
 **Adding a schema change:** edit the schema file *and* add a migration in
 `migrations/` that produces the same result (same names). If a migration adds
 an index or constraint that the schema files don't declare, a fresh
-`db:setup` database will silently lack it.
+`db:setup` database will silently lack it. `db:check-migrations` catches
+exactly this, and CI runs it on every PR: it builds `main`'s schema, applies
+this branch's migrations, builds this branch's schema from scratch, and fails
+listing every column, constraint or index the two disagree on. It also fails
+if an already-merged migration was edited (checksum).
 
 ## Tooling
 
 ```bash
 npm run build:all   # build every app
 npm run lint        # eslint --fix
-npm run test        # jest
+npm run test        # unit tests (jest, fully mocked — no database needed)
+npm run test:int    # integration tests against a real Postgres
 ```
+
+### Integration tests
+
+`*.int-spec.ts` files run the services' real SQL — entitlement time windows,
+the last-active-admin guard, leaderboard membership, the account-deletion
+purge and its foreign keys, certificate search/revocation — which the unit
+tests' query mocks can't evaluate. Each run creates a throwaway database,
+builds the current schema in it with `db:setup`, and drops it afterwards.
+
+```bash
+# Any Postgres 16 the tests may create/drop databases on; nothing else is touched.
+# With `npm run docker:up`, that's the compose database's superuser:
+TEST_DATABASE_URL=postgres://apsara:apsara123@localhost:5432/postgres npm run test:int
+TEST_DATABASE_URL=… npm run db:check-migrations
+```
+
+Without Docker, a Homebrew Postgres works too. CI runs both in the `database` job against a `postgres:16`
+service. Suites share helpers in `test/db/test-db.ts` (`resetDb`,
+`createUser`, `createCourse`, `createPlan`) and start from empty tables.
