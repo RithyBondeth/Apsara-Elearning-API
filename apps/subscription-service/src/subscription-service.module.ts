@@ -21,6 +21,7 @@ import { PaymentGatewayService } from './payment/payment-gateway.service';
 import { StripePaymentProvider } from './payment/stripe.provider';
 import { PaymentProviderRegistry } from './payment/payment-provider.registry';
 import { EntitlementAdminService } from './services/entitlement-admin.service';
+import { PaymentAdminService } from './services/payment-admin.service';
 
 @Module({
   imports: [ConfigurationModule, LoggerModule, DatabaseModule, HealthModule],
@@ -34,6 +35,7 @@ import { EntitlementAdminService } from './services/entitlement-admin.service';
     SubscriptionService,
     EntitlementService,
     EntitlementAdminService,
+    PaymentAdminService,
     { provide: I_PLAN_SERVICE, useExisting: PlanService },
     { provide: I_PAYMENT_SERVICE, useExisting: PaymentService },
     { provide: I_SUBSCRIPTION_SERVICE, useExisting: SubscriptionService },
