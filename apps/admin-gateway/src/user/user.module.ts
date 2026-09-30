@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { USER_SERVICE } from '@app/contracts/constants/services/user-service.constant';
 import { UserController } from './controllers/user.controller';
 import { BadgeController } from './controllers/badge.controller';
+import { AnnouncementController } from './controllers/announcement.controller';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { BadgeController } from './controllers/badge.controller';
       },
     ]),
   ],
-  controllers: [UserController, BadgeController],
+  controllers: [UserController, BadgeController, AnnouncementController],
 })
 export class UserModule {}
