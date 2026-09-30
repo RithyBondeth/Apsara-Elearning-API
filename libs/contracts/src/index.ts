@@ -69,6 +69,7 @@ export * from './dtos/ai/usage.dto';
 export * from './dtos/subscription/plan.dto';
 export * from './dtos/subscription/subscribe.dto';
 export * from './dtos/subscription/payment.dto';
+export * from './dtos/subscription/admin-payment.dto';
 export * from './dtos/subscription/subscription.dto';
 export * from './dtos/subscription/subscription-responses.dto';
 export * from './dtos/subscription/entitlement.dto';

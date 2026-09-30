@@ -21,6 +21,8 @@ import {
   CreateEntitlementGrantRequestDTO,
 } from '@app/contracts';
 import { idOf, splitUpdate } from '@app/utils';
+import { AdminPaymentQueryDTO } from '@app/contracts';
+import { PaymentAdminService } from '../services/payment-admin.service';
 
 @Controller()
 export class SubscriptionController implements ISubscriptionRpcController {
@@ -31,6 +33,7 @@ export class SubscriptionController implements ISubscriptionRpcController {
     @Inject(I_PAYMENT_SERVICE) private readonly payments: IPaymentService,
     @Inject(I_ENTITLEMENT_ADMIN_SERVICE)
     private readonly entitlementAdmin: IEntitlementAdminService,
+    private readonly paymentAdmin: PaymentAdminService,
   ) {}
 
   // ---- Plans ----
@@ -149,6 +152,16 @@ export class SubscriptionController implements ISubscriptionRpcController {
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_FIND_ONE)
   findPayment(@Payload() payload: string | { id: string }) {
     return this.payments.findOne(idOf(payload));
+  }
+
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_ADMIN_LIST)
+  adminListPayments(@Payload() payload: AdminPaymentQueryDTO) {
+    return this.paymentAdmin.list(payload ?? {});
+  }
+
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_ADMIN_FIND_ONE)
+  adminFindPayment(@Payload() payload: { id: string }) {
+    return this.paymentAdmin.findOne(payload.id);
   }
 
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_WEBHOOK)
