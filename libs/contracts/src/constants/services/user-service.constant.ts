@@ -22,6 +22,11 @@ export const USER_SERVICE = {
     NOTIFICATION_MARK_READ: 'user.notification.mark_read',
     NOTIFICATION_MARK_ALL_READ: 'user.notification.mark_all_read',
 
+    // Announcements (admin broadcasts)
+    ANNOUNCEMENT_PREVIEW: 'user.announcement.preview',
+    ANNOUNCEMENT_SEND: 'user.announcement.send',
+    ANNOUNCEMENT_FIND_ALL: 'user.announcement.find_all',
+
     // Badges
     BADGE_FIND_ALL: 'user.badge.find_all',
     BADGE_FIND_ONE: 'user.badge.find_one',

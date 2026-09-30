@@ -28,6 +28,7 @@ export const NOTIFICATION_TYPES = [
   'certificate_revoked',
   'subscription_updated',
   'rating_requested',
+  'announcement',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

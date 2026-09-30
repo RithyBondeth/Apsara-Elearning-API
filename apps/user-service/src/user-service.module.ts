@@ -15,9 +15,11 @@ import {
 import { UserController } from './controllers/user.controller';
 import { BadgeController } from './controllers/badge.controller';
 import { NotificationController } from './controllers/notification.controller';
+import { AnnouncementController } from './controllers/announcement.controller';
 import { UserService } from './services/user.service';
 import { BadgeService } from './services/badge.service';
 import { NotificationService } from './services/notification.service';
+import { AnnouncementService } from './services/announcement.service';
 import { AccountPurgeService } from './services/account-purge.service';
 import { UserHealthController } from './health/health.controller';
 
@@ -39,6 +41,7 @@ import { UserHealthController } from './health/health.controller';
     UserController,
     BadgeController,
     NotificationController,
+    AnnouncementController,
     UserHealthController,
   ],
   providers: [
@@ -47,6 +50,7 @@ import { UserHealthController } from './health/health.controller';
     { provide: I_NOTIFICATION_SERVICE, useClass: NotificationService },
     NotificationService,
     AccountPurgeService,
+    AnnouncementService,
   ],
 })
 export class UserServiceModule {}
