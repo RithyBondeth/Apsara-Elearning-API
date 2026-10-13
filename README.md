@@ -1,416 +1,162 @@
-# Apsara Elearning API — Apsara AI
+<div align="center">
 
-Backend for **Apsara Elearning / Apsara AI**, a bilingual (English + Khmer) e-learning
-platform for Cambodia covering **Grade 1–12 across every subject** and **university
-courses per major**. It's a **NestJS microservices monorepo**: HTTP gateways talk to
-backend services over **RabbitMQ**, with **Drizzle ORM** on **PostgreSQL** (Docker).
+# Apsara Elearning — API
 
-## Content structure
+**The microservices backend for Apsara Elearning, a bilingual AI-powered learning platform for Cambodian students.**
 
-Every course is placed on one of two tracks via its `programType`:
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)
 
-```
-k12         Grade level (1–12)  ×  Subject   ──►  course ──► module ──► lesson ──► quiz / challenge
-university  Faculty ──► Major               ──►  course ──► module ──► lesson ──► quiz / challenge
-```
+</div>
 
-- **`subjects`** — Mathematics, Khmer, English, Physics… (bilingual `name` / `nameKm`).
-- **`gradeLevels`** — Grade 1–12, each tagged with a Cambodian education `stage`
-  (`primary` 1–6, `lower_secondary` 7–9, `upper_secondary` 10–12).
-- **`faculties` → `majors`** — the university track.
+---
 
-Below courses, the module → lesson → assessment stack is shared by both tracks.
+## Overview
+
+Apsara Elearning (Apsara AI) is a bilingual English and Khmer e-learning platform for Cambodia. It covers **Grades 1–12 across every subject** and **university courses for each major**, and includes a Khmer-speaking AI tutor.
+
+This repository is the backend. It is a **NestJS microservices monorepo**: two HTTP gateways talk to backend services over **RabbitMQ**, and all services share **PostgreSQL** through **Drizzle ORM**.
+
+## Features
+
+- **Two learning tracks.** The K-12 track runs grade level × subject, and the university track runs faculty → major. Both lead into courses → modules → lessons → quizzes and challenges.
+- **Auto-graded quizzes** with six question types: multiple choice, true/false, fill-in-the-blank, short answer, numeric, and matching. Answer keys never leave the server.
+- **Coding challenges** executed and graded through Judge0.
+- **Apsara AI tutor,** with switchable providers (Anthropic Claude, OpenAI, DeepSeek, and Gemini), lesson-aware context, and usage and credit tracking.
+- **Gamification:** XP, streaks, auto-awarded badges, and a privacy-safe leaderboard.
+- **Enrollment and progress tracking,** certificates, course ratings and reviews, and in-app notifications.
+- **Subscriptions:** plans, Stripe Checkout, billing portal, webhooks, and entitlements.
+- **Security:** JWT access, refresh and action tokens, an admin guard, email verification, and password reset.
+- **Admin gateway** for authoring the structure, courses, lessons, quizzes, challenges, users, badges, and plans.
+- **Swagger docs** for both gateways.
+
+## Tech Stack
+
+| Area | Technology |
+| --- | --- |
+| Framework | NestJS (monorepo with microservices) |
+| Language | TypeScript |
+| Messaging | RabbitMQ |
+| Database | PostgreSQL, Drizzle ORM |
+| AI | Anthropic Claude, OpenAI, DeepSeek, Google Gemini |
+| Payments | Stripe |
+| Code execution | Judge0 |
+| Email | Resend |
+| Infrastructure | Docker Compose, GitHub Actions |
 
 ## Architecture
 
-```
+```text
             HTTP                         RabbitMQ (request/response)
 client ──► api-gateway   (:1111) ──┐
 client ──► admin-gateway (:2222) ──┤──► auth-service
                                    │──► user-service
                                    │──► course-service
                                    │──► assessment-service
-                                   └──► ai-service
-                           (all services share PostgreSQL via Drizzle)
+                                   │──► ai-service
+                                   └──► subscription-service
+                          (all services share PostgreSQL via Drizzle)
 ```
 
-| App | Type | Responsibility |
-|-----|------|----------------|
-| `api-gateway` | HTTP (public) | Auth, profile, structure + course reads, enrollment, progress, quizzes, challenges, AI tutor |
-| `admin-gateway` | HTTP (admin-only) | Authoring: structure, courses/modules/lessons, quizzes, challenges, users, badges |
-| `auth-service` | RMQ consumer | Register, login, tokens, email verification, password reset |
-| `user-service` | RMQ consumer | Profile, XP, streaks, badges |
-| `course-service` | RMQ consumer | Subjects, grade levels, faculties, majors, courses, modules, lessons, enrollment, progress |
-| `assessment-service` | RMQ consumer | Quizzes (auto-graded, multi-type) + coding challenges (Judge0) |
-| `ai-service` | RMQ consumer | "Apsara AI" tutor (Anthropic Claude) |
-| `subscription-service` | RMQ consumer | Plans, subscriptions, Stripe checkout, webhooks, and payments |
+| App | Responsibility |
+| --- | --- |
+| `api-gateway` | Public HTTP API: auth, profile, courses, enrollment, progress, quizzes, challenges, AI tutor |
+| `admin-gateway` | Admin-only authoring API |
+| `auth-service` | Registration, login, tokens, email verification, password reset |
+| `user-service` | Profile, XP, streaks, badges, leaderboard, notifications |
+| `course-service` | Subjects, grade levels, faculties, majors, courses, modules, lessons, enrollment |
+| `assessment-service` | Quizzes and Judge0 coding challenges |
+| `ai-service` | Apsara AI tutor |
+| `subscription-service` | Plans, Stripe Checkout, webhooks, payments, entitlements |
 
-Shared libraries: `@app/common` (config, JWT, guards, email, logger, RabbitMQ,
-RPC exceptions), `@app/contracts` (message patterns + DTOs), `@app/database`
-(Drizzle schemas + PostgreSQL connection).
+## Getting Started
 
-## Prerequisites
+### Prerequisites
 
-- **Node.js** ≥ 20 and **npm**
-- **Docker** (for PostgreSQL + RabbitMQ via `docker-compose.yml`)
+- Node.js 20 or newer, and npm
+- Docker (for PostgreSQL and RabbitMQ)
 
-## Setup
+### Installation
 
 ```bash
+git clone https://github.com/RithyBondeth/Apsara-Elearning-API.git
+cd Apsara-Elearning-API
 npm install
-cp .env.example .env   # set the three JWT_*_SECRET values (32+ chars each)
-npm run docker:up      # PostgreSQL + RabbitMQ
-npm run db:setup       # new database: create schema; existing: apply migrations
-npm run seed           # optional: demo users, courses and reviews (never in production)
+cp .env.example .env     # set the three JWT_*_SECRET values (32+ characters each)
+npm run docker:up        # PostgreSQL + RabbitMQ
+npm run db:setup         # create the schema or apply migrations
+npm run seed             # optional demo data (local only)
+npm run dev              # all services in watch mode
 ```
 
-Only the JWT secrets need real values locally. Email, AI, Judge0 and Stripe
-keys can stay blank: emails (including verification codes and reset tokens)
-are printed to the service logs, the AI tutor and code grading run in mock
-mode, and checkout is unavailable.
+Locally, only the JWT secrets need real values. Without keys, emails are printed to the logs, the AI tutor and code grading run in mock mode, and checkout is disabled.
 
-To add or refresh only the non-destructive local pricing catalog, run
-`npm run seed:plans`. Stripe Price IDs are read from
-`STRIPE_MONTHLY_PRICE_ID` and `STRIPE_YEARLY_PRICE_ID` when provided.
+### API Documentation
 
-## Running
+- Public API: [http://localhost:1111/api/v1/internal/docs](http://localhost:1111/api/v1/internal/docs)
+- Admin API: [http://localhost:2222/admin/docs](http://localhost:2222/admin/docs)
 
-**One command (watch mode):**
+### Environment Variables
 
-```bash
-npm run dev            # starts RabbitMQ + all services with hot reload
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACTION_SECRET` | Token-signing secrets |
+| `RABBITMQ_URL` and `*_QUEUE` | Broker URL and one queue per service |
+| `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `GEMINI_API_KEY` | AI tutor providers |
+| `JUDGE0_URL`, `JUDGE0_TOKEN` | Code execution |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Transactional email |
+| `STRIPE_*` | Subscription billing |
+
+See [`.env.example`](.env.example) for the full list.
+
+### Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Prepare the database and start every service with hot reload |
+| `npm run start:all` | Start all services in watch mode |
+| `npm run build:all` | Build every app |
+| `npm run start:prod:all` | Run the production builds |
+| `npm run db:migrate` | Apply pending migrations |
+| `npm run seed` | Seed demo users, courses, and reviews |
+
+## Project Structure
+
+```text
+Apsara-Elearning-API/
+├── apps/
+│   ├── api-gateway/            # Public HTTP gateway
+│   ├── admin-gateway/          # Admin HTTP gateway
+│   ├── auth-service/
+│   ├── user-service/
+│   ├── course-service/
+│   ├── assessment-service/
+│   ├── ai-service/
+│   └── subscription-service/
+├── libs/
+│   ├── common/                 # Config, JWT, guards, email, logger, RabbitMQ helpers
+│   ├── contracts/              # Message patterns and DTOs
+│   ├── database/               # Drizzle schemas and connection
+│   └── utils/                  # Shared utilities
+├── scripts/                    # Dev, production, seed, and migration scripts
+├── migrations/                 # SQL migrations
+└── docker-compose.yml
 ```
 
-`npm run dev` prepares the database with `db:setup` and the production script
-applies pending migrations with `db:migrate` before starting services. Applied files are recorded in
-`apsara_migrations.applied_migrations`; an edited historical migration is
-rejected so deployed schema history cannot silently drift.
+## Related Repositories
 
-**Manually:**
+- [Apsara-Elearning-Web](https://github.com/RithyBondeth/Apsara-Elearning-Web): the Next.js student and admin web app
 
-```bash
-npm run docker:up      # RabbitMQ
-npm run start:all      # all services (watch)
-# or individually: npm run start:dev:api, start:dev:auth, …
-```
+## Author
 
-**Production (built):**
+**Rithy Bondeth** — Full Stack Developer & AI Engineer
 
-```bash
-npm run build:all
-npm run start:prod:all # boots dist builds + RabbitMQ, tears down on Ctrl-C
-```
-
-### Swagger
-
-- Public API: <http://localhost:1111/api/v1/internal/docs>
-- Admin API: <http://localhost:2222/admin/docs>
-
-The full, interactive endpoint list lives in Swagger — the tables below are a map.
-
-## Demo data
-
-`npm run seed` is idempotent and creates:
-
-| Account | Email | Password |
-|---------|-------|----------|
-| Admin | `admin@apsara-elearning.com` | `Admin@123` |
-| Student | `student@apsara-elearning.com` | `Student@123` |
-
-**Reference data** (upserted, safe to re-run): Grades 1–12 with Khmer names, nine
-subjects (Mathematics, Khmer, English, Physics, Chemistry, Biology, History,
-Geography, IT), and a Faculty of Engineering → Computer Science major.
-
-**Demo content**: a published "Intro to JavaScript" course placed on the **k12**
-track at **Grade 10 / Information Technology**, with a module, two lessons, a quiz
-(one multiple-choice + one auto-graded `numeric` question), a coding challenge, and
-a "First Steps" badge.
-
-## Auth & roles
-
-- Stateless **JWT** access tokens (+ refresh tokens). The access token carries `isAdmin`.
-- `JwtAuthGuard` — any authenticated user (`401` if missing/invalid).
-- `AdminGuard` — requires `isAdmin` (`401` no token, `403` non-admin). Applied
-  globally on the admin-gateway and on public-gateway course/category mutations.
-- Send `Authorization: Bearer <accessToken>` on protected routes (marked 🔒 below).
-
-## Endpoints
-
-### api-gateway (`/api/v1/internal`, port 1111)
-
-| Group | Routes |
-|-------|--------|
-| **Auth** | `POST /auth/register` · `login` · `refresh` · `verify-email` · `resend-verification` · `forgot-password` · `reset-password` · 🔒`logout` · 🔒`change-password` |
-| **User** 🔒 | `GET/PATCH /user/me` · `PATCH /user/me/avatar` · `GET /user/me/badges` |
-| **Leaderboard** 🔒 | `GET /leaderboard[?limit=]` — top learners by XP plus the caller's own standing |
-| **Notifications** 🔒 | `GET /notification[?limit=&unreadOnly=]` · `PATCH /notification/read-all` · `PATCH /notification/:id/read` |
-| **Ratings** | `GET /course/:courseId/ratings[?limit=]` · 🔒`GET /course/:courseId/rating/me` · 🔒`PUT/DELETE /course/:courseId/rating` |
-| **Courses** | reads: `GET /course`, `/course/published`, `/course/:id`, `/course/slug/:slug`, `/course/subject/:subjectId`, `/course/grade/:gradeLevelId`, `/course/major/:majorId` · 🔒admin: `POST/PUT/DELETE /course`, `PATCH /course/:id/publish\|unpublish` |
-| **Subjects** | `GET /subject`, `/subject/:id`, `/subject/slug/:slug` · 🔒admin mutations |
-| **Structure** (read-only) | `GET /grade-level[/:id]` · `GET /faculty[/:id]`, `/faculty/slug/:slug` · `GET /major[?facultyId=][/:id]`, `/major/slug/:slug` |
-| **Modules / Lessons** | `GET /module?courseId=`, `/module/:id` · `GET /lesson?moduleId=`, `/lesson/slug/:slug`, `/lesson/:id` |
-| **Enrollment** 🔒 | `POST/DELETE /enrollment/:courseId` · `GET /enrollment` · `GET /enrollment/continue[?limit=]` · `GET /enrollment/check/:courseId` |
-| **Progress** 🔒 | `POST /lesson-progress/lesson/:lessonId` · `GET /lesson-progress` · `POST /lesson-progress/course/:courseId/recalculate` |
-| **Quiz** 🔒 | `GET /quiz/lesson/:lessonId` · `POST /quiz/:quizId/start` · `POST /quiz/attempt/:attemptId/submit` · `GET /quiz/attempts` · `GET /quiz/attempt/:id[/answers]` |
-| **Challenge** 🔒 | `GET /challenge/lesson/:lessonId` · `GET /challenge/:id[/test-cases]` · `POST /challenge/:id/submit` · `GET /challenge/submissions` · `GET /challenge/submission/:id` |
-| **Apsara AI** 🔒 | `POST/GET /ai/conversations` · `GET/DELETE /ai/conversations/:id` · `POST/GET /ai/conversations/:id/messages` · `GET /ai/usage[?limit=]` · `GET /ai/credits` |
-| **Subscription** | public: `GET /subscription/plans[/:id]`, `POST /subscription/webhook` · 🔒: `POST /subscription/checkout`, `POST /subscription/billing-portal`, `GET /subscription/me\|check\|history\|payments\|entitlements`, `DELETE /subscription/:id` |
-
-### admin-gateway (`/admin`, port 2222) — all routes require an **admin** token
-
-| Group | Routes |
-|-------|--------|
-| **Structure** | full CRUD under `/subjects`, `/grade-levels`, `/faculties`, `/majors` (`/majors?facultyId=` to filter) |
-| **Courses** | full CRUD under `/courses` |
-| **Modules** | `/courses/:courseId/modules` (POST, GET) · `PATCH /…/modules/reorder` · `PATCH/DELETE /…/modules/:id` |
-| **Lessons** | `/modules/:moduleId/lessons` (POST, GET, GET `:id`) · `PATCH /…/lessons/reorder` · `PATCH/DELETE /…/lessons/:id` |
-| **Users / Badges** | `GET /users`, `GET/DELETE /users/:id` · `/badges` CRUD · `POST /badges/:id/award/:userId` |
-| **Plans / Payments** | `/plans` CRUD (including entitlement, trial, and grace settings) · `POST /payments` (manual record) |
-| **Entitlements** | `GET /entitlements/users/:userId` · `GET/POST /entitlements/users/:userId/grants` · `DELETE /entitlements/grants/:id` |
-| **Quiz authoring** | `/lessons/:lessonId/quizzes`, `/quizzes/:id`, `/quizzes/:quizId/questions`, `PATCH /questions/reorder`, `/questions/:id`, `/questions/:questionId/options`, `/options/:id` |
-| **Challenge authoring** | `/lessons/:lessonId/challenges`, `/challenges/:id`, `/challenges/:challengeId/test-cases`, `/test-cases/:id` |
-
-## Exercises
-
-A quiz holds typed questions, each auto-graded by its own strategy. `points`
-weights a question (default `1`); the attempt score is
-`round(earnedPoints / totalPoints * 100)` and passes at **70%**.
-
-| `type` | Student sends | `correctAnswer` spec | Graded by |
-|--------|---------------|----------------------|-----------|
-| `multiple_choice` | `selectedOptionId` | — (uses `quiz_options.isCorrect`) | option match |
-| `true_false` | `{ value: true }` | `{ value: true }` *(or two options)* | boolean match |
-| `fill_blank` | `{ text: "const" }` | `{ accepted: ["const"], caseSensitive?: false }` | normalized text match |
-| `short_answer` | `{ text: "…" }` | `{ accepted: [...] }` — omit to require manual review | normalized text match |
-| `numeric` | `{ value: 1.5 }` | `{ value: 1.5, tolerance?: 0.01 }` | absolute tolerance |
-| `matching` | `{ pairs: [{left,right}] }` | `{ pairs: [{left,right}] }` | all pairs, order-independent |
-
-Text matching trims, collapses internal whitespace, and is case-insensitive
-unless `caseSensitive` is set. A question that cannot be auto-graded (e.g. a
-`short_answer` with no `accepted` list) is stored with `requiresReview = true`
-and scores 0 pending a human — it is never silently marked wrong.
-
-Answer keys never leave the server: `POST /quiz/:quizId/start` strips
-`isCorrect` and `correctAnswer`, and returns matching questions as a `prompt`
-of left items plus a **shuffled** pool of right items.
-
-Coding challenges (Judge0) remain a separate, CS-only exercise type.
-
-## Gamification
-
-Completing a lesson grants **10 XP**; passing a quiz grants its `xpReward`
-(default **25**); solving a coding challenge grants its `xpReward` (default
-**50**) — each on first completion only. Crossing a badge's `xpRequired`
-auto-awards it.
-
-`GET /leaderboard` ranks learners by that XP (competition ranking, so ties share
-a rank) and always includes the caller's own standing, even when they fall below
-the returned page. Admins are excluded — they are staff, not competitors. Rows
-carry a first name plus last initial and never an email: the board is visible to
-other learners, and this platform teaches Grade 1–12.
-
-## Course ratings
-
-Learners rate a course 1–5 with an optional written review. One row per learner
-per course, so rating again replaces the previous one — an average cannot be
-inflated by a single account. Rating requires an **enrollment** (not
-completion): someone who never opened the course is not a signal, but a learner
-partway through has a real opinion.
-
-`GET /course/:courseId/ratings` is public and returns `average`, `count`, a star
-`distribution`, and the most recent written reviews. **`average` is `null`, not
-`0`, when nothing has been rated**, so a client cannot render an unrated course
-as a zero-star one. Ratings left without text still count toward the average but
-are not listed.
-
-Reviews carry a first name plus last initial and never an email — the same rule
-the leaderboard follows, because a course page is public and this platform
-teaches Grade 1–12.
-
-The 1–5 bound is a database check constraint as well as a DTO rule: the RPC
-action is callable by any service, and an out-of-range value would silently skew
-every average for that course.
-
-Apply `migrations/20260924_add_course_ratings.sql`.
-
-## Notifications
-
-The platform raises an in-app notification when something worth telling a
-learner about happens. Rows live in `notifications` and carry a `type`, a title
-and body, and a `data` payload the client uses to deep-link (a `badgeId`, a
-`courseId`, a certificate code).
-
-`GET /notification` returns the feed newest first plus `unreadCount` — counted
-across everything unread, not just the returned page, because it drives the bell
-badge. Reads and writes are scoped by the JWT's user as well as the row id, so a
-guessed id cannot touch another learner's notifications. `readAt` is a nullable
-timestamp rather than a boolean, and marking an already-read row is a no-op that
-preserves the first read time.
-
-Raised on **badge awarded** (in-process in user-service), **quiz passed** and
-**challenge solved** (assessment-service), and **course completed** +
-**certificate issued** (course-service). Each fires behind the same first-time
-gate as its XP award, so a retake or a re-marked lesson does not re-announce
-anything; course completion and the certificate are gated on the enrollment
-*transitioning* to complete, because `certificates.issue` is idempotent and
-returns any existing certificate.
-
-Services emit with `notifyUser` from `@app/common`, which — unlike `rpcCall` —
-never throws: the learner has already earned the thing being announced, so a
-broker hiccup must not roll it back.
-
-`subscription_updated` is defined but not yet emitted; it fires from a Stripe
-webhook path that retries, so it needs to hang off the
-already-processed-event check to avoid duplicate notifications.
-
-Apply `migrations/20260923_add_notifications.sql`.
-
-## Environment
-
-| Variable | Required | Notes |
-|----------|----------|-------|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` / `JWT_ACTION_SECRET` | ✅ | distinct token-signing secrets of at least 32 characters |
-| `JWT_ACCESS_EXPIRES` / `JWT_REFRESH_EXPIRES` | ✅ | e.g. `15m` / `7d` |
-| `JWT_ISSUER` / `JWT_AUDIENCE` | — | token issuer/audience constraints |
-| `BCRYPT_SALT` | — | default `12` |
-| `RABBITMQ_URL` + `*_QUEUE` | ✅ | broker URL + one queue name per service |
-| `API_GATEWAY_PORT` / `ADMIN_GATEWAY_PORT` | — | default `1111` / `2222` |
-| `RESEND_API_KEY` | prod | transactional email; **logged instead of sent when blank** (not allowed in production) |
-| `EMAIL_FROM` | ✅ | sender address |
-| `AI_PROVIDER` | — | default provider: `anthropic`, `openai`, `deepseek`, or `gemini`; default `anthropic` |
-| `AI_MODEL` / `AI_MAX_TOKENS` | — | optional global model override / max output tokens |
-| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | — | enables Claude; **mock replies without key** |
-| `OPENAI_API_KEY` / `OPENAI_MODEL` | — | enables OpenAI-compatible GPT chat |
-| `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | — | enables DeepSeek chat |
-| `GEMINI_API_KEY` / `GEMINI_MODEL` | — | enables Gemini chat |
-| `JUDGE0_URL` / `JUDGE0_TOKEN` | — | enables real code execution; **mock grading without it** |
-| `CORS_ORIGINS` | production | comma-separated exact allowed origins; required in production |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | subscription production | Stripe server key and endpoint signing secret; never expose these to the browser |
-| `WEB_APP_URL` | subscription production | HTTPS web-client origin used for Checkout and portal return URLs |
-| `REDIS_URL` | — | distributed rate limiting across replicas; in-memory if unset |
-
-> **Mock modes:** without the selected provider API key the AI tutor returns canned replies,
-> and without `JUDGE0_URL` code grading uses a placeholder (a test passes when its
-> expected output appears in the source). Both become real once the key/URL is set.
-
-## Named entitlements
-
-Access is resolved server-side using `courses:premium`, `ai:tutor`, and
-`certificates`. Plans map to any combination of these capabilities. An active
-paid period, an active Stripe trial, or a configured failed-payment grace period
-activates the plan's capabilities; expiration removes them automatically.
-
-Administrators can create time-bounded `allow` or `deny` grants. An active deny
-overrides both administrative allows and plan access, then an allow overrides a
-plan decision. Revoking a grant preserves its audit record. The browser hydrates
-`GET /subscription/entitlements` into a non-persisted Zustand store for UI
-decisions only; course and AI services always enforce access independently.
-
-Set a course's `requiredEntitlement` to `courses:premium` (the legacy
-`requiresSubscription` field is retained for compatibility). Creating a new AI
-conversation or sending an AI message requires `ai:tutor`.
-
-Apply `migrations/20260728_add_named_entitlements.sql` after the Stripe webhook
-migrations. It maps every existing plan to all three capabilities to preserve
-current behavior; edit each plan afterward to narrow its capability set.
-
-## Course authorization
-
-Published courses are public by default. Set `requiredEntitlement` on a course
-to require the named capability for its lesson content, quizzes,
-challenges, enrollment, and progress updates. Public course/module endpoints
-never expose unpublished content, and premium lesson lists return metadata with
-`locked: true` while omitting lesson content and video URLs.
-
-Apply `migrations/20260728_add_course_entitlements.sql` before deploying this
-feature. Existing courses remain free because the new column defaults to false.
-
-## Stripe billing
-
-Apply `migrations/20260728_add_stripe_billing.sql`, then set each paid plan's
-`stripePriceId` to its recurring Stripe Price ID. The web client creates hosted
-Checkout Sessions through `POST /subscription/checkout`; it never activates a
-subscription itself. Access is provisioned only after a signed Stripe webhook
-updates the local subscription.
-
-Configure a Stripe webhook endpoint at
-`POST /api/v1/internal/subscription/webhook` for these events:
-
-- `checkout.session.completed`
-- `checkout.session.async_payment_succeeded`
-- `checkout.session.async_payment_failed`
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
-- `invoice.paid`
-- `invoice.payment_failed`
-- `refund.created`
-- `refund.updated`
-- `refund.failed`
-
-Webhook event IDs and invoice IDs are stored uniquely. Each event moves through
-`processing`, `processed`, or `failed`; failed and stale-processing deliveries
-can be claimed by a retry, while concurrent duplicates receive a non-2xx
-response so Stripe retries them. Refund IDs are also unique, partial and full
-refund totals are reconciled to the original payment, and a full refund of the
-current paid period revokes access. Cancellation is scheduled in Stripe at the
-end of the paid billing period, and the customer portal handles payment-method
-and invoice management.
-
-Apply `migrations/20260728_harden_stripe_webhooks.sql` after the base Stripe
-billing migration.
-
-## Database
-
-Schema lives in `libs/database/src/schemas/**` and is always the full, current
-schema. `migrations/*.sql` are the incremental changes applied to existing
-databases; each is also reflected in the schema files (same table, index and
-constraint names), so a freshly pushed database already contains them.
-Applied migrations are recorded, with checksums, in
-`apsara_migrations.applied_migrations`.
-
-| Command | Use it for |
-|---------|------------|
-| `npm run db:setup` | **Any local database.** Empty → `drizzle-kit push` + record every migration as applied. Existing → same as `db:migrate`. Push only runs on an empty database, so it cannot drop data. |
-| `npm run db:migrate` | Existing databases (and production): apply pending migrations. Refuses an empty database and points to `db:setup`. |
-| `npm run db:baseline` | A database you created yourself with `db:push`: record every migration as applied without running it. |
-| `npm run db:push` / `db:studio` | Drizzle schema push / Drizzle Studio. |
-| `npm run db:check-migrations` | Proves this branch's migrations turn `main`'s schema into exactly the declared one (see below). Needs `TEST_DATABASE_URL`; `-- --base <ref>` to compare against something other than `origin/main`. |
-
-**Adding a schema change:** edit the schema file *and* add a migration in
-`migrations/` that produces the same result (same names). If a migration adds
-an index or constraint that the schema files don't declare, a fresh
-`db:setup` database will silently lack it. `db:check-migrations` catches
-exactly this, and CI runs it on every PR: it builds `main`'s schema, applies
-this branch's migrations, builds this branch's schema from scratch, and fails
-listing every column, constraint or index the two disagree on. It also fails
-if an already-merged migration was edited (checksum).
-
-## Tooling
-
-```bash
-npm run build:all   # build every app
-npm run lint        # eslint --fix
-npm run test        # unit tests (jest, fully mocked — no database needed)
-npm run test:int    # integration tests against a real Postgres
-```
-
-### Integration tests
-
-`*.int-spec.ts` files run the services' real SQL — entitlement time windows,
-the last-active-admin guard, leaderboard membership, the account-deletion
-purge and its foreign keys, certificate search/revocation — which the unit
-tests' query mocks can't evaluate. Each run creates a throwaway database,
-builds the current schema in it with `db:setup`, and drops it afterwards.
-
-```bash
-# Any Postgres 16 the tests may create/drop databases on; nothing else is touched.
-# With `npm run docker:up`, that's the compose database's superuser:
-TEST_DATABASE_URL=postgres://apsara:apsara123@localhost:5432/postgres npm run test:int
-TEST_DATABASE_URL=… npm run db:check-migrations
-```
-
-Without Docker, a Homebrew Postgres works too. CI runs both in the `database` job against a `postgres:16`
-service. Suites share helpers in `test/db/test-db.ts` (`resetDb`,
-`createUser`, `createCourse`, `createPlan`) and start from empty tables.
+[![Portfolio](https://img.shields.io/badge/Portfolio-0A0A0A?style=for-the-badge&logo=vercel&logoColor=white)](https://bondeth.dev)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/RithyBondeth)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/rithy-bondeth-484073282/)
