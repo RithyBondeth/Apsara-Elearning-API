@@ -1,0 +1,25 @@
+name: release-source
+
+# main only takes release PRs from develop (feature → develop → main).
+# Branch protection requires this job, so a PR from any other branch, or
+# from a fork, can't be merged into main.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited]
+
+jobs:
+  develop-only:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require develop as the source branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "::error::PRs into main must come from $BASE_REPO:develop (got $HEAD_REPO:$HEAD_REF). Open this PR against develop instead."
+            exit 1
+          fi
+          echo "Source is develop."
