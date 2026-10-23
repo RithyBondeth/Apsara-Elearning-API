@@ -3,6 +3,7 @@ import { RabbitmqModule } from '@app/common';
 import { ASSESSMENT_SERVICE } from '@app/contracts';
 import { AssessmentController } from './controllers/assessment.controller';
 import { ChallengeController } from './controllers/challenge.controller';
+import { GradingController } from './controllers/grading.controller';
 
 @Module({
   imports: [
@@ -10,6 +11,6 @@ import { ChallengeController } from './controllers/challenge.controller';
       { name: ASSESSMENT_SERVICE.NAME, queueKey: 'rabbitmq.assessmentQueue' },
     ]),
   ],
-  controllers: [AssessmentController, ChallengeController],
+  controllers: [AssessmentController, ChallengeController, GradingController],
 })
 export class AssessmentModule {}

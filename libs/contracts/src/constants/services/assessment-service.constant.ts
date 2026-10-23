@@ -33,6 +33,10 @@ export const ASSESSMENT_SERVICE = {
     // Quiz Attempt Answers
     ATTEMPT_ANSWER_FIND_ALL: 'assessment.attempt_answer.find_all', // by attemptId
 
+    // Manual grading (admin)
+    GRADING_LIST: 'assessment.grading.list',
+    GRADING_GRADE: 'assessment.grading.grade',
+
     // Coding Challenges
     CHALLENGE_CREATE: 'assessment.challenge.create',
     CHALLENGE_FIND_ALL: 'assessment.challenge.find_all', // by lessonId

@@ -93,6 +93,36 @@ export class PaymentGatewayService implements OnModuleInit {
     });
   }
 
+  /** Immediate cancellation: no proration, no further invoices. */
+  cancelNow(subscriptionId: string) {
+    return this.stripe().subscriptions.cancel(subscriptionId);
+  }
+
+  /**
+   * Refunds a PaymentIntent (preferred) or a charge. The idempotency key makes
+   * Stripe return the same refund for a repeated request instead of paying out
+   * again.
+   */
+  createRefund(input: {
+    paymentIntentId?: string;
+    chargeId?: string;
+    amount: number;
+    idempotencyKey: string;
+    metadata: Record<string, string>;
+  }): Promise<Stripe.Refund> {
+    return this.stripe().refunds.create(
+      {
+        ...(input.paymentIntentId
+          ? { payment_intent: input.paymentIntentId }
+          : { charge: input.chargeId }),
+        amount: input.amount,
+        reason: 'requested_by_customer',
+        metadata: input.metadata,
+      },
+      { idempotencyKey: input.idempotencyKey },
+    );
+  }
+
   constructWebhookEvent(rawBody: Buffer, signature: string): Stripe.Event {
     const secret = this.config.get<string>('stripe.webhookSecret');
     if (!secret) {

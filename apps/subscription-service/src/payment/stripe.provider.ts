@@ -6,6 +6,8 @@ import {
   ICheckoutInput,
   ICheckoutSession,
   IPaymentProvider,
+  IRefundInput,
+  IRefundResult,
   ISubscriptionSnapshot,
   PaymentProviderId,
 } from './payment-provider.interface';
@@ -65,6 +67,50 @@ export class StripePaymentProvider implements IPaymentProvider {
       // Stripe moved the period boundary onto the individual items; the
       // subscription ends when its last item does.
       currentPeriodEnd: this.periodEnd(subscription.items.data),
+    };
+  }
+
+  async cancelNow(
+    providerSubscriptionId: string,
+  ): Promise<ISubscriptionSnapshot> {
+    const subscription = await this.gateway.cancelNow(providerSubscriptionId);
+    return {
+      status: subscription.status,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodEnd: this.periodEnd(subscription.items.data),
+    };
+  }
+
+  async refund(input: IRefundInput): Promise<IRefundResult> {
+    let { paymentReference, chargeReference } = input;
+    // Invoices recorded before payment ids were persisted: ask Stripe which
+    // payment settled the invoice.
+    if (!paymentReference && !chargeReference && input.invoiceReference) {
+      const refs = await this.gateway.invoicePaymentReferences(
+        input.invoiceReference,
+      );
+      paymentReference = refs.paymentIntentId;
+      chargeReference = refs.chargeId;
+    }
+    if (!paymentReference && !chargeReference) {
+      throw new RpcBadRequestException(
+        'This payment has no Stripe payment to refund',
+      );
+    }
+    const refund = await this.gateway.createRefund({
+      paymentIntentId: paymentReference,
+      chargeId: chargeReference,
+      amount: input.amountMinor,
+      idempotencyKey: input.idempotencyKey,
+      metadata: input.metadata,
+    });
+    return {
+      reference: refund.id,
+      status: refund.status ?? 'unknown',
+      amountMinor: refund.amount,
+      currency: refund.currency.toUpperCase(),
+      reason: refund.reason ?? null,
+      failureReason: refund.failure_reason ?? null,
     };
   }
 

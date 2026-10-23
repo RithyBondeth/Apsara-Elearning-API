@@ -74,7 +74,9 @@ export class MessageService implements IMessageService {
     const credits = await this.usage.checkCredits(userId);
     if (!credits.hasCredits) {
       throw new RpcTooManyRequestsException(
-        'You have used your Apsara AI allowance for the last 30 days. Please try again later.',
+        credits.exhausted === 'replies'
+          ? `You have used all ${credits.repliesLimit} Apsara AI replies for this billing period.`
+          : 'You have used your Apsara AI allowance for the last 30 days. Please try again later.',
       );
     }
 

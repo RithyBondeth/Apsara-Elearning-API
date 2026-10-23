@@ -164,6 +164,22 @@ export class SubscriptionController implements ISubscriptionRpcController {
     return this.paymentAdmin.findOne(payload.id);
   }
 
+  @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_ADMIN_REFUND)
+  adminRefundPayment(
+    @Payload()
+    payload: {
+      adminId: string;
+      id: string;
+      amount?: number;
+      reason: string;
+    },
+  ) {
+    return this.paymentAdmin.refund(payload.adminId, payload.id, {
+      amount: payload.amount,
+      reason: payload.reason,
+    });
+  }
+
   @MessagePattern(SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_WEBHOOK)
   webhook(@Payload() payload: { rawBody: string; signature: string }) {
     return this.payments.webhook(payload);

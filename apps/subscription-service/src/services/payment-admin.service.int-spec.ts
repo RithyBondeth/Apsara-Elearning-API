@@ -16,7 +16,13 @@ import { PaymentAdminService } from './payment-admin.service';
  * status/refund filters and search — all SQL, so run against real rows.
  */
 const { sql, db } = openTestDb();
-const service = new PaymentAdminService(db as never);
+// Listing and detail never touch the provider or the broker.
+const service = new PaymentAdminService(
+  db as never,
+  {} as never,
+  {} as never,
+  {} as never,
+);
 afterAll(() => sql.end({ timeout: 1 }));
 
 const ids: Record<string, string> = {};

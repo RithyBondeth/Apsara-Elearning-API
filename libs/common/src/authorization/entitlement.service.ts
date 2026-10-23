@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, gt, isNull, lte, or } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, lte, or, SQL } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
   DRIZZLE,
@@ -9,8 +9,19 @@ import {
 } from '@app/contracts';
 import { planEntitlements } from '@app/database/schemas/subscription/plan-entitlement.schema';
 import { subscriptions } from '@app/database/schemas/subscription/subscription.schema';
+import { plans } from '@app/database/schemas/subscription/plan.schema';
 import { userEntitlementGrants } from '@app/database/schemas/subscription/user-entitlement-grant.schema';
 import { RpcForbiddenException } from '../filters/rpc-exceptions';
+
+/** The live subscription behind a plan-granted entitlement. */
+export interface ActivePlanGrant {
+  planId: string;
+  /** Tutor replies per billing period; 0 means no per-reply limit. */
+  aiCredits: number;
+  /** Start of the current billing period, when the provider reported one. */
+  periodStart: Date | null;
+  periodEnd: Date | null;
+}
 
 @Injectable()
 export class EntitlementService {
@@ -28,6 +39,59 @@ export class EntitlementService {
 
   async resolveAll(userId: string): Promise<ResolvedEntitlementDTO[]> {
     return Promise.all(ENTITLEMENTS.map((key) => this.resolveOne(userId, key)));
+  }
+
+  /**
+   * The subscription that currently grants `entitlement` through its plan,
+   * using exactly the validity window `has()` uses — or null when access
+   * comes from an admin grant or not at all.
+   */
+  async activePlanGrant(
+    userId: string,
+    entitlement: EntitlementKey,
+  ): Promise<ActivePlanGrant | null> {
+    const [row] = await this.db
+      .select({
+        planId: subscriptions.planId,
+        aiCredits: plans.aiCredits,
+        periodStart: subscriptions.currentPeriodStart,
+        periodEnd: subscriptions.currentPeriodEnd,
+      })
+      .from(subscriptions)
+      .innerJoin(
+        planEntitlements,
+        eq(subscriptions.planId, planEntitlements.planId),
+      )
+      .innerJoin(plans, eq(subscriptions.planId, plans.id))
+      .where(this.planGrantWindow(userId, entitlement, new Date()))
+      .orderBy(desc(subscriptions.currentPeriodEnd))
+      .limit(1);
+    return row ?? null;
+  }
+
+  /** A subscription whose plan includes `entitlement` and is live right now. */
+  private planGrantWindow(
+    userId: string,
+    entitlement: EntitlementKey,
+    now: Date,
+  ): SQL {
+    return and(
+      eq(subscriptions.userId, userId),
+      eq(subscriptions.active, true),
+      eq(planEntitlements.entitlement, entitlement),
+      or(isNull(subscriptions.startsAt), lte(subscriptions.startsAt, now)),
+      or(
+        gt(subscriptions.graceEndsAt, now),
+        and(
+          eq(subscriptions.status, 'trialing'),
+          gt(subscriptions.trialEndsAt, now),
+        ),
+        and(
+          eq(subscriptions.status, 'active'),
+          or(isNull(subscriptions.expiresAt), gt(subscriptions.expiresAt, now)),
+        ),
+      ),
+    )!;
   }
 
   private async resolveOne(
@@ -86,28 +150,7 @@ export class EntitlementService {
         planEntitlements,
         eq(subscriptions.planId, planEntitlements.planId),
       )
-      .where(
-        and(
-          eq(subscriptions.userId, userId),
-          eq(subscriptions.active, true),
-          eq(planEntitlements.entitlement, entitlement),
-          or(isNull(subscriptions.startsAt), lte(subscriptions.startsAt, now)),
-          or(
-            gt(subscriptions.graceEndsAt, now),
-            and(
-              eq(subscriptions.status, 'trialing'),
-              gt(subscriptions.trialEndsAt, now),
-            ),
-            and(
-              eq(subscriptions.status, 'active'),
-              or(
-                isNull(subscriptions.expiresAt),
-                gt(subscriptions.expiresAt, now),
-              ),
-            ),
-          ),
-        ),
-      )
+      .where(this.planGrantWindow(userId, entitlement, now))
       .limit(1);
     if (plan) {
       const validUntil =

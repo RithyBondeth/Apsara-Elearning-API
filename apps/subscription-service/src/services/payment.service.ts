@@ -260,23 +260,58 @@ export class PaymentService implements IPaymentService {
       );
     }
 
+    await this.recordRefund(payment, {
+      providerRefundId: refund.id,
+      amount: refund.amount / 100,
+      currency: refund.currency,
+      status: refund.status ?? 'unknown',
+      reason: refund.reason,
+      failureReason: refund.failure_reason,
+    });
+  }
+
+  /**
+   * Stores (or updates) one refund and recomputes the payment's refunded
+   * total and status. Shared by the Stripe webhook and refunds issued from
+   * the admin console, so both paths keep the ledger the same way. A full
+   * refund deactivates the subscription it paid for — unless a newer paid
+   * period has started since. Returns the payment's new refund status.
+   */
+  async recordRefund(
+    payment: typeof payments.$inferSelect,
+    refund: {
+      providerRefundId: string;
+      /** Major units (dollars). */
+      amount: number;
+      currency: string;
+      status: string;
+      reason?: string | null;
+      failureReason?: string | null;
+      requestedBy?: string;
+      note?: string;
+    },
+  ): Promise<string> {
     await this.db
       .insert(paymentRefunds)
       .values({
         paymentId: payment.id,
-        providerRefundId: refund.id,
-        amount: (refund.amount / 100).toFixed(2),
+        providerRefundId: refund.providerRefundId,
+        amount: refund.amount.toFixed(2),
         currency: refund.currency.toUpperCase(),
-        status: refund.status ?? 'unknown',
-        reason: refund.reason,
-        failureReason: refund.failure_reason,
+        status: refund.status,
+        reason: refund.reason ?? null,
+        failureReason: refund.failureReason ?? null,
+        requestedBy: refund.requestedBy ?? null,
+        note: refund.note ?? null,
       })
       .onConflictDoUpdate({
         target: paymentRefunds.providerRefundId,
+        // requestedBy/note are left alone: the webhook echo of an admin
+        // refund must not erase who asked for it.
         set: {
-          status: refund.status ?? 'unknown',
-          reason: refund.reason,
-          failureReason: refund.failure_reason,
+          status: refund.status,
+          reason: refund.reason ?? null,
+          failureReason: refund.failureReason ?? null,
           updatedAt: new Date(),
         },
       });
@@ -300,7 +335,7 @@ export class PaymentService implements IPaymentService {
         ? 'refunded'
         : refundedAmount > 0
           ? 'partially_refunded'
-          : (refund.status ?? 'unknown');
+          : refund.status;
 
     await this.db
       .update(payments)
@@ -330,6 +365,7 @@ export class PaymentService implements IPaymentService {
           ),
         );
     }
+    return refundStatus;
   }
 
   private async claimEvent(event: Stripe.Event): Promise<boolean> {

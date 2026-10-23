@@ -28,6 +28,7 @@ export const SUBSCRIPTION_SERVICE = {
     PAYMENT_FIND_ONE: 'subscription.payment.find_one',
     PAYMENT_ADMIN_LIST: 'subscription.payment.admin_list', // admin search
     PAYMENT_ADMIN_FIND_ONE: 'subscription.payment.admin_find_one', // + refunds
+    PAYMENT_ADMIN_REFUND: 'subscription.payment.admin_refund',
     PAYMENT_WEBHOOK: 'subscription.payment.webhook', // gateway callback
   },
 };
