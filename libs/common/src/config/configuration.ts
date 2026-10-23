@@ -58,6 +58,17 @@ export default () => ({
     provider: process.env.AI_PROVIDER ?? 'anthropic',
     model: process.env.AI_MODEL ?? process.env.ANTHROPIC_MODEL,
     maxTokens: parseInt(process.env.AI_MAX_TOKENS ?? '4096', 10),
+    // Tokens one learner may spend in any rolling 30-day window.
+    monthlyTokenLimit: parseInt(
+      process.env.AI_MONTHLY_TOKEN_LIMIT ?? '1000000',
+      10,
+    ),
+    // Per provider call. The gateway waits a little longer than this, so a
+    // slow reply fails here with a clear error instead of a gateway 504.
+    requestTimeoutMs: parseInt(
+      process.env.AI_REQUEST_TIMEOUT_MS ?? '60000',
+      10,
+    ),
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     anthropicModel: process.env.ANTHROPIC_MODEL,
     openaiApiKey: process.env.OPENAI_API_KEY,

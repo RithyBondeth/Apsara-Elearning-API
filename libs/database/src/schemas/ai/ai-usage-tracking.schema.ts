@@ -1,18 +1,26 @@
-import { integer, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
 import { id } from '../common/id.schema';
 import { timestamps } from '../common/timestap.schema';
 import { user } from '../user/user.schema';
 
-export const aiUsageTracking = pgTable('ai_usage_tracking', {
-  ...id,
-  userId: uuid('user_id')
-    .references(() => user.id, { onDelete: 'cascade' })
-    .notNull(),
-  feature: varchar('feature'),
-  promptTokens: integer('prompt_tokens'),
-  completionTokens: integer('completion_tokens'),
-  totalTokens: integer('total_tokens'),
-  provider: varchar('provider', { length: 50 }),
-  model: varchar('model', { length: 100 }),
-  ...timestamps,
-});
+export const aiUsageTracking = pgTable(
+  'ai_usage_tracking',
+  {
+    ...id,
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    feature: varchar('feature'),
+    promptTokens: integer('prompt_tokens'),
+    completionTokens: integer('completion_tokens'),
+    totalTokens: integer('total_tokens'),
+    provider: varchar('provider', { length: 50 }),
+    model: varchar('model', { length: 100 }),
+    ...timestamps,
+  },
+  // Matches migrations/20261023_add_ai_usage_window_index.sql: every tutor
+  // reply sums one learner's usage over a trailing window first.
+  (t) => [
+    index('ai_usage_tracking_user_id_created_at_idx').on(t.userId, t.createdAt),
+  ],
+);

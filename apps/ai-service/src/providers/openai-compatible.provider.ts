@@ -7,6 +7,8 @@ import {
   AiChatOptions,
   AiProvider,
   AiProviderName,
+  AiProviderTimeoutError,
+  isAbortTimeout,
 } from './ai-provider.interface';
 
 type ChatCompletionMessage = {
@@ -31,6 +33,8 @@ export interface OpenAiCompatibleProviderOptions {
   baseUrl: string;
   defaultModel: string;
   maxTokens: number;
+  /** Abort the HTTP call after this long (see ai.requestTimeoutMs). */
+  timeoutMs: number;
 }
 
 export class OpenAiCompatibleProvider implements AiProvider {
@@ -40,6 +44,7 @@ export class OpenAiCompatibleProvider implements AiProvider {
   private readonly apiKey?: string;
   private readonly baseUrl: string;
   private readonly maxTokens: number;
+  private readonly timeoutMs: number;
 
   constructor(options: OpenAiCompatibleProviderOptions) {
     this.provider = options.provider;
@@ -47,6 +52,7 @@ export class OpenAiCompatibleProvider implements AiProvider {
     this.baseUrl = options.baseUrl.replace(/\/$/, '');
     this.defaultModel = options.defaultModel;
     this.maxTokens = options.maxTokens;
+    this.timeoutMs = options.timeoutMs;
     this.logger = new Logger(`${this.provider}Provider`);
   }
 
@@ -72,20 +78,29 @@ export class OpenAiCompatibleProvider implements AiProvider {
       })),
     ];
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens: this.maxTokens,
-      }),
-    });
-
-    const data = (await response.json()) as ChatCompletionResponse;
+    let response: Response;
+    let data: ChatCompletionResponse;
+    try {
+      // The signal also covers reading the body, so both sit inside the try.
+      response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: this.maxTokens,
+        }),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+      data = (await response.json()) as ChatCompletionResponse;
+    } catch (error) {
+      if (isAbortTimeout(error))
+        throw new AiProviderTimeoutError(this.provider);
+      throw error;
+    }
     if (!response.ok) {
       throw new Error(
         `${this.provider} chat completion failed: ${

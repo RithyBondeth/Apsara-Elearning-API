@@ -1,6 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { I_CONVERSATION_SERVICE } from '@app/contracts';
-import type { IConversationService, IMessageService } from '@app/contracts';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
+import { I_CONVERSATION_SERVICE, I_USAGE_SERVICE } from '@app/contracts';
+import type {
+  IConversationService,
+  IMessageService,
+  IUsageService,
+} from '@app/contracts';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import { aiMessages } from '@app/database/schemas/ai/ai-message.schema';
@@ -11,14 +15,26 @@ import {
   DRIZZLE,
   SendMessageResponseDTO,
 } from '@app/contracts';
-import { IChatTurn } from '@app/contracts/interfaces/ai/ai-service.interface';
 import {
-  AiGatewayChatOptions,
-  AiGatewayService,
-} from '../providers/ai-gateway.service';
+  IChatResult,
+  IChatTurn,
+} from '@app/contracts/interfaces/ai/ai-service.interface';
+import { AiGatewayService } from '../providers/ai-gateway.service';
 import { buildSystemPrompt } from '../anthropic/system-prompt';
 import { LessonContextService } from './lesson-context.service';
-import { EntitlementService } from '@app/common';
+import {
+  EntitlementService,
+  RpcAppException,
+  RpcTooManyRequestsException,
+} from '@app/common';
+import { AiProviderTimeoutError } from '../providers/ai-provider.interface';
+
+/**
+ * Prior messages resent with each turn. Every turn bills the whole history as
+ * prompt tokens, so an unbounded history makes long conversations steadily
+ * more expensive per reply.
+ */
+export const MAX_HISTORY_MESSAGES = 20;
 
 @Injectable()
 export class MessageService implements IMessageService {
@@ -31,6 +47,7 @@ export class MessageService implements IMessageService {
     private readonly lessonContext: LessonContextService,
     @Inject(I_CONVERSATION_SERVICE)
     private readonly conversations: IConversationService,
+    @Inject(I_USAGE_SERVICE) private readonly usage: IUsageService,
   ) {}
 
   async findByConversation(
@@ -48,21 +65,23 @@ export class MessageService implements IMessageService {
     userId: string,
     conversationId: string,
     content: string,
-    options?: AiGatewayChatOptions,
   ): Promise<SendMessageResponseDTO> {
     await this.entitlements.assert(userId, 'ai:tutor');
     // Ownership check (throws 404 if not the user's conversation).
     await this.conversations.findOneOwned(userId, conversationId);
 
-    // Build history from prior turns + the new user message.
+    // Before persisting anything, so a refused turn leaves no orphan message.
+    const credits = await this.usage.checkCredits(userId);
+    if (!credits.hasCredits) {
+      throw new RpcTooManyRequestsException(
+        'You have used your Apsara AI allowance for the last 30 days. Please try again later.',
+      );
+    }
+
+    // Build history from recent prior turns + the new user message.
     const prior = await this.findByConversation(conversationId);
     const history: IChatTurn[] = [
-      ...prior
-        .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content ?? '',
-        })),
+      ...this.recentTurns(prior),
       { role: 'user', content },
     ];
 
@@ -73,11 +92,7 @@ export class MessageService implements IMessageService {
 
     // Ground the reply in whatever lesson the student is currently on.
     const context = await this.lessonContext.findCurrent(userId);
-    const result = await this.ai.chat(
-      buildSystemPrompt(context),
-      history,
-      options,
-    );
+    const result = await this.reply(buildSystemPrompt(context), history);
 
     // Persist the assistant reply.
     const [assistant] = await this.db
@@ -119,5 +134,42 @@ export class MessageService implements IMessageService {
       message: new AiMessageResponseDTO(assistant),
       mock: result.mock,
     });
+  }
+
+  /** The provider's reply, with a timeout reported as a 504 the learner can retry. */
+  private async reply(
+    system: string,
+    history: IChatTurn[],
+  ): Promise<IChatResult> {
+    try {
+      return await this.ai.chat(system, history);
+    } catch (error) {
+      if (error instanceof AiProviderTimeoutError) {
+        this.logger.warn(error.message);
+        throw new RpcAppException(
+          HttpStatus.GATEWAY_TIMEOUT,
+          'Apsara AI took too long to reply. Please try again.',
+          'Gateway Timeout',
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * The last MAX_HISTORY_MESSAGES user/assistant turns. A window that would
+   * open on an assistant reply drops it: providers expect the conversation to
+   * start with the user.
+   */
+  private recentTurns(prior: AiMessageResponseDTO[]): IChatTurn[] {
+    const turns = prior
+      .filter((m) => m.role === 'user' || m.role === 'assistant')
+      .slice(-MAX_HISTORY_MESSAGES)
+      .map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content ?? '',
+      }));
+    while (turns[0]?.role === 'assistant') turns.shift();
+    return turns;
   }
 }
