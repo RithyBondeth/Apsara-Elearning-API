@@ -126,6 +126,11 @@ See [`.env.example`](.env.example) for the full list.
 | `npm run db:migrate` | Apply pending migrations |
 | `npm run seed` | Seed demo users, courses, and reviews |
 
+### Deployment
+
+Production runs on Railway (Singapore) from the root `Dockerfile`, one service
+per app. Setup, variables and release notes: [docs/deploy-railway.md](docs/deploy-railway.md).
+
 ## Project Structure
 
 ```text

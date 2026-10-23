@@ -37,6 +37,17 @@ export class HealthController {
     @Inject(AI_SERVICE.NAME) private readonly aiClient: ClientProxy,
   ) {}
 
+  /**
+   * Liveness only: the process is up and serving HTTP. Deploy healthchecks
+   * use this, so a slow-starting worker can't hold back a gateway deploy —
+   * readiness of the whole system is the endpoint below.
+   */
+  @Get('live')
+  @ApiOperation({ summary: 'Gateway process is up (no service fan-out)' })
+  live(): { status: 'ok' } {
+    return { status: 'ok' };
+  }
+
   @Get()
   @HealthCheck()
   @ApiOperation({ summary: 'Aggregate health of all microservices' })
