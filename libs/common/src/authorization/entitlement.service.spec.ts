@@ -58,7 +58,15 @@ function scenarioDb(nonJoinRows: unknown[], planRows: unknown[]) {
     select: () => {
       let joined = false;
       const node: Record<string, unknown> = {};
-      for (const m of ['from', 'leftJoin', 'where', 'orderBy', 'groupBy', 'limit', 'offset']) {
+      for (const m of [
+        'from',
+        'leftJoin',
+        'where',
+        'orderBy',
+        'groupBy',
+        'limit',
+        'offset',
+      ]) {
         node[m] = () => node;
       }
       node.innerJoin = () => {
@@ -68,7 +76,8 @@ function scenarioDb(nonJoinRows: unknown[], planRows: unknown[]) {
       node.then = (
         resolve: (v: unknown) => unknown,
         reject: (r: unknown) => unknown,
-      ) => Promise.resolve(joined ? planRows : nonJoinRows).then(resolve, reject);
+      ) =>
+        Promise.resolve(joined ? planRows : nonJoinRows).then(resolve, reject);
       return node;
     },
   };
@@ -76,7 +85,9 @@ function scenarioDb(nonJoinRows: unknown[], planRows: unknown[]) {
 
 /** First resolved DTO, using the query-type-based db above. */
 async function resolveFirst(nonJoinRows: unknown[], planRows: unknown[]) {
-  const service = new EntitlementService(scenarioDb(nonJoinRows, planRows) as never);
+  const service = new EntitlementService(
+    scenarioDb(nonJoinRows, planRows) as never,
+  );
   const all = await service.resolveAll('u1');
   return all[0];
 }
@@ -133,7 +144,11 @@ describe('EntitlementService resolved detail', () => {
 
   it('reports source "none" when nothing grants access', async () => {
     const dto = await resolveFirst([], []);
-    expect(dto).toMatchObject({ granted: false, source: 'none', validUntil: null });
+    expect(dto).toMatchObject({
+      granted: false,
+      source: 'none',
+      validUntil: null,
+    });
   });
 });
 
@@ -142,8 +157,15 @@ describe('EntitlementService plan validUntil', () => {
 
   it('prefers an in-progress grace period', async () => {
     const graceEndsAt = new Date(Date.now() + 60_000);
-    const dto = await resolveFirst([], [{ expiresAt, graceEndsAt, trialEndsAt: null }]);
-    expect(dto).toMatchObject({ granted: true, source: 'plan', validUntil: graceEndsAt });
+    const dto = await resolveFirst(
+      [],
+      [{ expiresAt, graceEndsAt, trialEndsAt: null }],
+    );
+    expect(dto).toMatchObject({
+      granted: true,
+      source: 'plan',
+      validUntil: graceEndsAt,
+    });
   });
 
   it('falls back to an active trial when grace has passed', async () => {
@@ -156,7 +178,10 @@ describe('EntitlementService plan validUntil', () => {
   });
 
   it('uses the paid expiry when there is no grace or trial', async () => {
-    const dto = await resolveFirst([], [{ expiresAt, graceEndsAt: null, trialEndsAt: null }]);
+    const dto = await resolveFirst(
+      [],
+      [{ expiresAt, graceEndsAt: null, trialEndsAt: null }],
+    );
     expect(dto.validUntil).toEqual(expiresAt);
   });
 });
@@ -185,7 +210,9 @@ describe('EntitlementService.resolveAll', () => {
     const all = await service.resolveAll('u1');
 
     expect(all).toHaveLength(ENTITLEMENTS.length);
-    expect(all.map((e) => e.entitlement).sort()).toEqual([...ENTITLEMENTS].sort());
+    expect(all.map((e) => e.entitlement).sort()).toEqual(
+      [...ENTITLEMENTS].sort(),
+    );
     expect(all.every((e) => e.granted === false)).toBe(true);
   });
 });

@@ -3,9 +3,16 @@ import { AiServiceModule } from './ai-service.module';
 import { MicroserviceOptions } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
-import { RabbitmqService } from '@app/common';
+import {
+  RabbitmqService,
+  initErrorTracking,
+  ReportingRpcExceptionFilter,
+} from '@app/common';
 
 async function bootstrap() {
+  // First, so failures during startup are reported too.
+  initErrorTracking('ai-service');
+
   const appContext =
     await NestFactory.createApplicationContext(AiServiceModule);
   const configService = appContext.get(ConfigService);
@@ -24,6 +31,9 @@ async function bootstrap() {
       ...rmqOptions,
     },
   );
+
+  // Report unexpected handler errors (not deliberate RpcExceptions).
+  app.useGlobalFilters(new ReportingRpcExceptionFilter());
 
   const logger = app.get(Logger);
   app.useLogger(logger);

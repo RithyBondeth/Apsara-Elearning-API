@@ -33,13 +33,19 @@ export class LeaderboardEntryDTO {
     Object.assign(this, partial);
   }
 
-  @ApiProperty({ example: 1, description: 'Competition rank; ties share a rank' })
+  @ApiProperty({
+    example: 1,
+    description: 'Competition rank; ties share a rank',
+  })
   rank: number;
 
   @ApiProperty({ example: '6f1e7e2a-0c2a-4c1e-9f0a-1b2c3d4e5f6a' })
   userId: string;
 
-  @ApiProperty({ example: 'Sok D.', description: 'First name plus last initial' })
+  @ApiProperty({
+    example: 'Sok D.',
+    description: 'First name plus last initial',
+  })
   displayName: string;
 
   @ApiPropertyOptional({ example: 'rocket', description: 'Avatar preset key' })
@@ -51,7 +57,10 @@ export class LeaderboardEntryDTO {
   @ApiProperty({ example: 7 })
   streak: number;
 
-  @ApiProperty({ example: false, description: 'True for the requesting learner' })
+  @ApiProperty({
+    example: false,
+    description: 'True for the requesting learner',
+  })
   isViewer: boolean;
 }
 

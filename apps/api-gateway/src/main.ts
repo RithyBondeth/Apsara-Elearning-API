@@ -9,9 +9,13 @@ import {
   RpcToHttpExceptionFilter,
   setupSwagger,
   UuidParamPipe,
+  initErrorTracking,
 } from '@app/common';
 
 async function bootstrap() {
+  // First, so failures during startup are reported too.
+  initErrorTracking('api-gateway');
+
   // Create application context to get configService
   const app = await NestFactory.create<NestExpressApplication>(
     ApiGatewayModule,
