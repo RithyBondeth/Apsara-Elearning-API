@@ -67,6 +67,7 @@ e.g. `openssl rand -base64 48`.
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | tutor (optional; mock replies without a key) |
 | `AI_MONTHLY_TOKEN_LIMIT`, `AI_REQUEST_TIMEOUT_MS` | optional; defaults `1000000`, `60000` |
 | `JUDGE0_URL`, `JUDGE0_TOKEN` | coding challenges (optional; mock grading without them) |
+| `SENTRY_DSN` | error tracking: the DSN of a Sentry **Node.js** project (optional; nothing is reported without it). Only unexpected errors are sent — not 4xx answers — and no personal data |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | **required** — subscription-service won't start in production without them. Stripe doesn't serve Cambodia; until a local payment rail exists, use **test-mode** keys (`sk_test_…`, `whsec_…`). |
 
 ## 3. The eight services

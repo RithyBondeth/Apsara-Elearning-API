@@ -9,9 +9,13 @@ import {
   RpcToHttpExceptionFilter,
   setupSwagger,
   UuidParamPipe,
+  initErrorTracking,
 } from '@app/common';
 
 async function bootstrap() {
+  // First, so failures during startup are reported too.
+  initErrorTracking('admin-gateway');
+
   const app = await NestFactory.create<NestExpressApplication>(
     AdminGatewayModule,
     { bufferLogs: true },

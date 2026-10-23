@@ -1,11 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { CourseServiceModule } from './course-service.module';
 import { ConfigService } from '@nestjs/config';
-import { RabbitmqService } from '@app/common';
+import {
+  RabbitmqService,
+  initErrorTracking,
+  ReportingRpcExceptionFilter,
+} from '@app/common';
 import { MicroserviceOptions } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
+  // First, so failures during startup are reported too.
+  initErrorTracking('course-service');
+
   // Create application context to get configService
   const appContext =
     await NestFactory.createApplicationContext(CourseServiceModule);
@@ -28,6 +35,9 @@ async function bootstrap() {
       ...rmqOptions,
     },
   );
+
+  // Report unexpected handler errors (not deliberate RpcExceptions).
+  app.useGlobalFilters(new ReportingRpcExceptionFilter());
 
   // Set up logging
   const logger = app.get(Logger);
