@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { quizzes } from '@app/database/schemas/course/quizzes/quiz.schema';
 import { quizQuestions } from '@app/database/schemas/course/quizzes/quiz-question.schema';
 import { quizOptions } from '@app/database/schemas/course/quizzes/quiz-option.schema';
@@ -32,6 +32,9 @@ import {
 import { gradeAnswer, GradableQuestion } from './graders';
 
 const PASS_THRESHOLD = 70;
+
+/** Anything that can run a select: the database or an open transaction. */
+type Reader = Pick<PostgresJsDatabase<any>, 'select'>;
 
 /** One graded answer, as recorded on submit and replayed in a review. */
 interface GivenAnswer {
@@ -142,7 +145,9 @@ export class AttemptService implements IAttemptService {
     const questionIds = questions.map((q) => q.id);
 
     // Grade each submitted answer (one per question, first write wins).
+    // Nothing is written until the attempt is claimed below.
     const seen = new Set<string>();
+    const answerRows: (typeof quizAttemptAnswers.$inferInsert)[] = [];
     const answerByQuestion = new Map<string, GivenAnswer>();
     let correct = 0;
     let earnedPoints = 0;
@@ -171,7 +176,7 @@ export class AttemptService implements IAttemptService {
         requiresReview: result.requiresReview,
       });
 
-      await this.db.insert(quizAttemptAnswers).values({
+      answerRows.push({
         attemptId,
         questionId: ans.questionId,
         selectedOptionId: ans.selectedOptionId ?? null,
@@ -189,24 +194,45 @@ export class AttemptService implements IAttemptService {
       totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
     const passed = score >= PASS_THRESHOLD;
 
-    const [updated] = await this.db
-      .update(quizAttempts)
-      .set({
-        score,
-        correctAnswers: correct,
-        totalQuestions: total,
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(quizAttempts.id, attemptId))
-      .returning();
+    // The completedAt check above is only a fast path: a double-click sends
+    // two submits that both pass it. The claim below is the real guard — only
+    // the request whose UPDATE still finds completed_at NULL records answers.
+    // The advisory lock serialises one learner's submits of one quiz, so the
+    // first-pass check also sees a pass committed by a parallel attempt.
+    const { updated, firstPass } = await this.db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`quiz-submit:${userId}:${attempt.quizId}`}, 0))`,
+      );
+      const [claimed] = await tx
+        .update(quizAttempts)
+        .set({
+          score,
+          correctAnswers: correct,
+          totalQuestions: total,
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(eq(quizAttempts.id, attemptId), isNull(quizAttempts.completedAt)),
+        )
+        .returning();
+      if (!claimed) {
+        throw new RpcBadRequestException('Attempt has already been submitted');
+      }
+      if (answerRows.length > 0) {
+        await tx.insert(quizAttemptAnswers).values(answerRows);
+      }
+      return {
+        updated: claimed,
+        firstPass:
+          passed &&
+          !(await this.hasPassedBefore(tx, userId, attempt.quizId, attemptId)),
+      };
+    });
 
     // Award XP only the first time the user passes this quiz.
     let xpAwarded = 0;
-    if (
-      passed &&
-      !(await this.hasPassedBefore(userId, attempt.quizId, attemptId))
-    ) {
+    if (firstPass) {
       xpAwarded = await this.grantXp(userId, quiz.xpReward ?? 0);
 
       // Same gate as the XP: a retake that passes again is not news.
@@ -525,11 +551,12 @@ export class AttemptService implements IAttemptService {
   }
 
   private async hasPassedBefore(
+    db: Reader,
     userId: string,
     quizId: string,
     exceptAttemptId: string,
   ) {
-    const prior = await this.db
+    const prior = await db
       .select({ id: quizAttempts.id, score: quizAttempts.score })
       .from(quizAttempts)
       .where(
