@@ -8,7 +8,7 @@ import { lastValueFrom } from 'rxjs';
 import * as Sentry from '@sentry/node';
 import { RpcNotFoundException } from '../filters/rpc-exceptions';
 import { RpcToHttpExceptionFilter } from '../filters/rpc-to-http.filter';
-import { initErrorTracking, reportError } from './error-tracking';
+import { initErrorTracking, reportError, scrubEvent } from './error-tracking';
 import { ReportingRpcExceptionFilter } from './reporting-rpc-exception.filter';
 
 jest.mock('@sentry/node', () => ({
@@ -134,6 +134,33 @@ describe('error tracking with a DSN', () => {
       );
 
       expect(capture).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('scrubEvent', () => {
+  it('strips credentials, bodies, query strings and user data', () => {
+    const scrubbed = scrubEvent({
+      type: undefined,
+      user: { ip_address: '203.0.113.7' },
+      request: {
+        url: 'https://api.example.com/auth/reset?token=SECRET',
+        query_string: 'token=SECRET',
+        cookies: { session: 'SECRET' },
+        data: { password: 'SECRET' },
+        headers: {
+          Authorization: 'Bearer SECRET',
+          'x-apsara-proxy-secret': 'SECRET',
+          'x-apsara-client-ip': '203.0.113.7',
+          'user-agent': 'node',
+        },
+      },
+    });
+
+    expect(JSON.stringify(scrubbed)).not.toMatch(/SECRET|203\.0\.113\.7/);
+    expect(scrubbed.request).toEqual({
+      url: 'https://api.example.com/auth/reset',
+      headers: { 'user-agent': 'node' },
     });
   });
 });
