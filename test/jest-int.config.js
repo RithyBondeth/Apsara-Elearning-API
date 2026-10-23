@@ -9,6 +9,8 @@ module.exports = {
   ...unit,
   rootDir: '..',
   testRegex: '.*\\.int-spec\\.ts$',
+  // test/ holds suites for the scripts/ tooling, which isn't under apps/ or libs/.
+  roots: [...unit.roots, '<rootDir>/test/'],
   globalSetup: '<rootDir>/test/db/global-setup.ts',
   globalTeardown: '<rootDir>/test/db/global-teardown.ts',
   maxWorkers: 1,

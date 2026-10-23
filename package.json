@@ -43,6 +43,7 @@
     "start:prod:all": "bash scripts/prod.sh",
     "seed": "node scripts/seed.mjs",
     "seed:plans": "node scripts/seed-plans.mjs",
+    "seed:content": "node scripts/seed-content.mjs",
     "validate:katex": "node scripts/validate-katex.mjs",
     "db:baseline": "node scripts/baseline-migrations.mjs",
     "db:generate": "drizzle-kit generate --config=libs/database/src/config/drizzle.config.ts",

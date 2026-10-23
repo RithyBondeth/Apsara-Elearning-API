@@ -111,10 +111,19 @@ schema; the others can follow.
 
   Never run `npm run seed` against production — it creates demo accounts (it
   refuses when `NODE_ENV=production`).
-- **Course content:** the Grade 12 curricula in `scripts/content/` are currently
-  loaded only by that dev seed, so a new production database starts with no
-  courses. A content-only import for production isn't built yet; until it is,
-  courses have to be authored in the admin panel.
+- **Course content:** import the Grade 12 courses (Mathematics Advanced and
+  Basic, Biology, Chemistry) the same way:
+
+  ```bash
+  DATABASE_URL='<public postgres url>' NODE_ENV=production npm run seed:content
+  ```
+
+  Add `-- --draft` to import them unpublished and publish from the admin panel
+  after a review. It creates no users or reviews, and it's safe to rerun: a
+  course whose slug already exists is skipped, never rewritten, so admin edits
+  and learners' progress are kept. Each course is imported in one transaction,
+  so a failed run leaves nothing half-imported. To change an imported course,
+  edit it in the admin panel.
 - **First admin:** register on the site, verify the email, then in Postgres
   (Data tab or psql): `UPDATE users SET is_admin = true WHERE email = '…';`
 - **Stripe webhook:** endpoint `https://<api domain>/api/v1/internal/subscription/webhook`
