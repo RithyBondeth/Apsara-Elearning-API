@@ -49,6 +49,9 @@ function fakeDb(
         where: () => ({ returning: () => Promise.resolve(updates[ui++] ?? []) }),
       }),
     }),
+    // The submit claim runs in a transaction; the stand-in runs it inline.
+    execute: () => Promise.resolve([]),
+    transaction: <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => fn(db),
   };
   return { db, insertedValues };
 }
@@ -228,7 +231,8 @@ describe('AttemptService.submit scoring and XP', () => {
 
     expect(res.correctAnswers).toBe(1);
     expect(res.score).toBe(100);
-    expect(insertedValues).toHaveLength(1); // only one answer row written
+    // One batch insert holding one answer row.
+    expect(insertedValues).toEqual([[expect.objectContaining({ questionId: 'qq1' })]]);
   });
 
   it('does not re-award XP when the user already passed this quiz before', async () => {
@@ -281,6 +285,27 @@ describe('AttemptService.submit scoring and XP', () => {
     expect(res.needsReview).toBe(1);
     expect(res.correctAnswers).toBe(0);
     expect(res.passed).toBe(false);
+  });
+});
+
+describe('AttemptService.submit claim', () => {
+  it('refuses a submit that loses the race, writing no answers or XP', async () => {
+    // Passed the completedAt fast path, but a parallel submit claimed it first:
+    // the conditional UPDATE returns no row.
+    const attempt = [{ id: 'a1', userId: 'u1', quizId: 'q1', totalQuestions: 1, completedAt: null }];
+    const quiz = [{ id: 'q1', lessonId: 'l1', xpReward: 25 }];
+    const { db, insertedValues } = fakeDb({
+      selects: [attempt, quiz, [numericQ('qq1', 5)], []],
+      updates: [[]],
+    });
+    const uc = userClient();
+    const service = new AttemptService(db as never, uc as never, entitlements);
+
+    await expect(
+      service.submit('u1', 'a1', [{ questionId: 'qq1', answerData: { value: 5 } }] as never),
+    ).rejects.toMatchObject({ error: { statusCode: 400 } });
+    expect(insertedValues).toHaveLength(0);
+    expect(uc.send).not.toHaveBeenCalled();
   });
 });
 

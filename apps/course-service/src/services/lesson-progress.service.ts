@@ -32,6 +32,9 @@ const XP_PER_LESSON = 10;
 /** Upper bound on the completion days read back when recomputing a streak. */
 const MAX_STREAK_DAYS = 400;
 
+/** Anything that can run a select: the database or an open transaction. */
+type Reader = Pick<PostgresJsDatabase<any>, 'select'>;
+
 @Injectable()
 export class LessonProgressService implements ILessonProgressService {
   private readonly logger = new Logger(LessonProgressService.name);
@@ -53,16 +56,23 @@ export class LessonProgressService implements ILessonProgressService {
     // Marking a lesson in an already-finished course must not re-announce it.
     const wasCompleted = priorEnrollment.completed === true;
 
-    const alreadyCompleted = await this.isCompleted(userId, lessonId);
-
+    // Read-then-write under a per-learner, per-lesson lock: two clicks of
+    // "complete" otherwise both read "not completed" and both award the XP.
     const now = new Date();
-    await this.db
-      .insert(lessonProgress)
-      .values({ userId, lessonId, completed: true, completedAt: now })
-      .onConflictDoUpdate({
-        target: [lessonProgress.userId, lessonProgress.lessonId],
-        set: { completed: true, completedAt: now, updatedAt: now },
-      });
+    const alreadyCompleted = await this.db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`lesson-complete:${userId}:${lessonId}`}, 0))`,
+      );
+      const done = await this.isCompleted(tx, userId, lessonId);
+      await tx
+        .insert(lessonProgress)
+        .values({ userId, lessonId, completed: true, completedAt: now })
+        .onConflictDoUpdate({
+          target: [lessonProgress.userId, lessonProgress.lessonId],
+          set: { completed: true, completedAt: now, updatedAt: now },
+        });
+      return done;
+    });
 
     const enrollment = await this.recalculate(userId, courseId);
 
@@ -108,8 +118,8 @@ export class LessonProgressService implements ILessonProgressService {
     });
   }
 
-  private async isCompleted(userId: string, lessonId: string) {
-    const [row] = await this.db
+  private async isCompleted(db: Reader, userId: string, lessonId: string) {
+    const [row] = await db
       .select({ completed: lessonProgress.completed })
       .from(lessonProgress)
       .where(
