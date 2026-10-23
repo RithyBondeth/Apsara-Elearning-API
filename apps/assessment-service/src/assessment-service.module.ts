@@ -19,10 +19,12 @@ import { USER_SERVICE } from '@app/contracts';
 import { AuthoringController } from './controllers/authoring.controller';
 import { AttemptController } from './controllers/attempt.controller';
 import { ChallengeController } from './controllers/challenge.controller';
+import { GradingController } from './controllers/grading.controller';
 import { AuthoringService } from './services/authoring.service';
 import { AttemptService } from './services/attempt.service';
 import { ChallengeService } from './services/challenge.service';
 import { SubmissionService } from './services/submission.service';
+import { GradingService } from './services/grading.service';
 import { CodeExecutionService } from './execution/code-execution.service';
 
 @Module({
@@ -40,6 +42,7 @@ import { CodeExecutionService } from './execution/code-execution.service';
     AuthoringController,
     AttemptController,
     ChallengeController,
+    GradingController,
     AssessmentHealthController,
   ],
   providers: [
@@ -54,6 +57,7 @@ import { CodeExecutionService } from './execution/code-execution.service';
     SubmissionService,
     { provide: I_SUBMISSION_SERVICE, useExisting: SubmissionService },
     CodeExecutionService,
+    GradingService,
   ],
 })
 export class AssessmentServiceModule {}

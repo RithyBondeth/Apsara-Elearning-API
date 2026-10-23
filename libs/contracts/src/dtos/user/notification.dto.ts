@@ -22,6 +22,7 @@ import type { DtoInit } from '../../types/dto-init';
 export const NOTIFICATION_TYPES = [
   'badge_awarded',
   'quiz_passed',
+  'quiz_graded',
   'challenge_solved',
   'course_completed',
   'certificate_issued',

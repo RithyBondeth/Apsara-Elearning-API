@@ -1,8 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom, timeout } from 'rxjs';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { quizzes } from '@app/database/schemas/course/quizzes/quiz.schema';
 import { quizQuestions } from '@app/database/schemas/course/quizzes/quiz-question.schema';
 import { quizOptions } from '@app/database/schemas/course/quizzes/quiz-option.schema';
@@ -30,18 +29,22 @@ import {
   RpcNotFoundException,
 } from '@app/common';
 import { gradeAnswer, GradableQuestion } from './graders';
-
-const PASS_THRESHOLD = 70;
-
-/** Anything that can run a select: the database or an open transaction. */
-type Reader = Pick<PostgresJsDatabase<any>, 'select'>;
+import {
+  PASS_THRESHOLD,
+  grantXp,
+  hasPassedBefore,
+  lockLearnerQuiz,
+} from './quiz-outcome';
 
 /** One graded answer, as recorded on submit and replayed in a review. */
 interface GivenAnswer {
   selectedOptionId: string | null;
   answerData: Record<string, unknown> | null;
   isCorrect: boolean;
+  /** Still waiting for a human to grade it. */
   requiresReview: boolean;
+  pointsAwarded: number;
+  reviewFeedback: string | null;
 }
 
 @Injectable()
@@ -174,6 +177,8 @@ export class AttemptService implements IAttemptService {
         answerData: ans.answerData ?? null,
         isCorrect: result.isCorrect,
         requiresReview: result.requiresReview,
+        pointsAwarded: result.pointsAwarded,
+        reviewFeedback: null,
       });
 
       answerRows.push({
@@ -200,9 +205,7 @@ export class AttemptService implements IAttemptService {
     // The advisory lock serialises one learner's submits of one quiz, so the
     // first-pass check also sees a pass committed by a parallel attempt.
     const { updated, firstPass } = await this.db.transaction(async (tx) => {
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtextextended(${`quiz-submit:${userId}:${attempt.quizId}`}, 0))`,
-      );
+      await lockLearnerQuiz(tx, userId, attempt.quizId);
       const [claimed] = await tx
         .update(quizAttempts)
         .set({
@@ -210,6 +213,9 @@ export class AttemptService implements IAttemptService {
           correctAnswers: correct,
           totalQuestions: total,
           completedAt: new Date(),
+          // A pass is considered for first-pass XP right here; grading
+          // later must not consider it again.
+          passRewarded: passed,
           updatedAt: new Date(),
         })
         .where(
@@ -226,14 +232,19 @@ export class AttemptService implements IAttemptService {
         updated: claimed,
         firstPass:
           passed &&
-          !(await this.hasPassedBefore(tx, userId, attempt.quizId, attemptId)),
+          !(await hasPassedBefore(tx, userId, attempt.quizId, attemptId)),
       };
     });
 
     // Award XP only the first time the user passes this quiz.
     let xpAwarded = 0;
     if (firstPass) {
-      xpAwarded = await this.grantXp(userId, quiz.xpReward ?? 0);
+      xpAwarded = await grantXp(
+        this.userClient,
+        this.logger,
+        userId,
+        quiz.xpReward ?? 0,
+      );
 
       // Same gate as the XP: a retake that passes again is not news.
       await notifyUser(
@@ -405,14 +416,19 @@ export class AttemptService implements IAttemptService {
     let needsReview = 0;
     for (const ans of answers) {
       if (answerByQuestion.has(ans.questionId)) continue;
+      // Waiting for a grader until reviewedAt is set; afterwards the
+      // reviewer's points and feedback are the answer's result.
+      const pending = (ans.requiresReview ?? false) && !ans.reviewedAt;
       answerByQuestion.set(ans.questionId, {
         selectedOptionId: ans.selectedOptionId ?? null,
         answerData: (ans.answerData as Record<string, unknown> | null) ?? null,
         isCorrect: ans.isCorrect ?? false,
-        requiresReview: ans.requiresReview ?? false,
+        requiresReview: pending,
+        pointsAwarded: ans.pointsAwarded ?? 0,
+        reviewFeedback: ans.reviewFeedback ?? null,
       });
       earnedPoints += ans.pointsAwarded ?? 0;
-      if (ans.requiresReview) needsReview++;
+      if (pending) needsReview++;
     }
 
     const score = attempt.score ?? 0;
@@ -520,6 +536,8 @@ export class AttemptService implements IAttemptService {
             : null,
           isCorrect: given?.isCorrect ?? false,
           requiresReview: given?.requiresReview ?? false,
+          pointsAwarded: given?.pointsAwarded ?? 0,
+          reviewFeedback: given?.reviewFeedback ?? null,
         };
       });
   }
@@ -548,43 +566,5 @@ export class AttemptService implements IAttemptService {
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
     return copy;
-  }
-
-  private async hasPassedBefore(
-    db: Reader,
-    userId: string,
-    quizId: string,
-    exceptAttemptId: string,
-  ) {
-    const prior = await db
-      .select({ id: quizAttempts.id, score: quizAttempts.score })
-      .from(quizAttempts)
-      .where(
-        and(
-          eq(quizAttempts.userId, userId),
-          eq(quizAttempts.quizId, quizId),
-          isNotNull(quizAttempts.completedAt),
-        ),
-      );
-    return prior.some(
-      (a) => a.id !== exceptAttemptId && (a.score ?? 0) >= PASS_THRESHOLD,
-    );
-  }
-
-  private async grantXp(userId: string, amount: number): Promise<number> {
-    if (amount <= 0) return 0;
-    try {
-      await firstValueFrom(
-        this.userClient
-          .send(USER_SERVICE.ACTIONS.ADD_XP, { userId, amount })
-          .pipe(timeout(5000)),
-      );
-      return amount;
-    } catch (error) {
-      this.logger.error(
-        `Failed to award quiz XP to ${userId}: ${error instanceof Error ? error.message : error}`,
-      );
-      return 0;
-    }
   }
 }
