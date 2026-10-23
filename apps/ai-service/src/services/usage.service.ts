@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
 import { aiUsageTracking } from '@app/database/schemas/ai/ai-usage-tracking.schema';
 import {
   AiUsageResponseDTO,
@@ -10,6 +10,7 @@ import {
   DRIZZLE,
   IUsageService,
 } from '@app/contracts';
+import { EntitlementService } from '@app/common';
 
 /** The allowance counts tokens spent over this many trailing days. */
 export const USAGE_WINDOW_DAYS = 30;
@@ -23,6 +24,7 @@ export class UsageService implements IUsageService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
     configService: ConfigService,
+    private readonly entitlements: EntitlementService,
   ) {
     this.tokenLimit =
       configService.get<number>('ai.monthlyTokenLimit') ?? DEFAULT_TOKEN_LIMIT;
@@ -55,14 +57,20 @@ export class UsageService implements IUsageService {
   }
 
   /**
-   * Tokens spent in the trailing window against the per-learner limit.
+   * The learner's two allowances, checked before every reply:
    *
-   * A rolling window rather than a lifetime total: a lifetime sum would lock a
-   * paying learner out for good once they hit it. Checked before each reply,
-   * so one reply can overshoot the limit by at most its own size.
+   * - Replies: what their plan's `ai_credits` allows per billing period (one
+   *   credit = one tutor reply), counted from the start of the current period
+   *   so it resets at each renewal. Access granted by an admin, or a plan with
+   *   0 credits, has no per-reply limit.
+   * - Tokens: a rolling 30-day cap for everyone — the abuse backstop. A
+   *   lifetime sum would lock a paying learner out for good.
+   *
+   * Checked before each reply, so one reply can overshoot by its own size.
    */
   async checkCredits(userId: string): Promise<CreditsResponseDTO> {
-    const since = new Date(Date.now() - USAGE_WINDOW_DAYS * 24 * 60 * 60_000);
+    const now = Date.now();
+    const windowStart = new Date(now - USAGE_WINDOW_DAYS * 24 * 60 * 60_000);
     const [row] = await this.db
       .select({
         used: sql<number>`coalesce(sum(${aiUsageTracking.totalTokens}), 0)::int`,
@@ -71,15 +79,41 @@ export class UsageService implements IUsageService {
       .where(
         and(
           eq(aiUsageTracking.userId, userId),
-          gte(aiUsageTracking.createdAt, since),
+          gte(aiUsageTracking.createdAt, windowStart),
         ),
       );
     const used = row?.used ?? 0;
+    const tokensLeft = used < this.tokenLimit;
+
+    const grant = await this.entitlements.activePlanGrant(userId, 'ai:tutor');
+    const repliesLimit = grant && grant.aiCredits > 0 ? grant.aiCredits : null;
+    // Without a provider-reported period (e.g. a hand-made subscription),
+    // fall back to the same rolling window as the token cap.
+    const periodStart = grant?.periodStart ?? windowStart;
+    const [replies] = await this.db
+      .select({ n: count() })
+      .from(aiUsageTracking)
+      .where(
+        and(
+          eq(aiUsageTracking.userId, userId),
+          eq(aiUsageTracking.feature, 'chat'),
+          gte(aiUsageTracking.createdAt, periodStart),
+        ),
+      );
+    const repliesUsed = Number(replies?.n ?? 0);
+    const repliesLeft = repliesLimit === null || repliesUsed < repliesLimit;
+
     return new CreditsResponseDTO({
       used,
       limit: this.tokenLimit,
       remaining: Math.max(0, this.tokenLimit - used),
-      hasCredits: used < this.tokenLimit,
+      hasCredits: tokensLeft && repliesLeft,
+      repliesUsed,
+      repliesLimit,
+      repliesRemaining:
+        repliesLimit === null ? null : Math.max(0, repliesLimit - repliesUsed),
+      periodEndsAt: repliesLimit === null ? null : (grant?.periodEnd ?? null),
+      exhausted: !repliesLeft ? 'replies' : !tokensLeft ? 'tokens' : null,
     });
   }
 }

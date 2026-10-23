@@ -11,6 +11,9 @@ const TOKEN_LIMIT = 1_000_000;
 /** No AI_MONTHLY_TOKEN_LIMIT set: the service falls back to its default. */
 const defaultConfig = { get: () => undefined } as never;
 
+/** No plan behind the tutor access: no per-reply limit (see the int-spec). */
+const noPlan = { activePlanGrant: () => Promise.resolve(null) } as never;
+
 function fakeDb(selects: unknown[][]) {
   let si = 0;
   const db = {
@@ -49,9 +52,10 @@ describe('UsageService.checkCredits', () => {
     const credits = await new UsageService(
       db as never,
       defaultConfig,
+      noPlan,
     ).checkCredits('u1');
 
-    expect(credits).toEqual({
+    expect(credits).toMatchObject({
       used: 150,
       limit: TOKEN_LIMIT,
       remaining: TOKEN_LIMIT - 150,
@@ -64,6 +68,7 @@ describe('UsageService.checkCredits', () => {
     const credits = await new UsageService(
       db as never,
       defaultConfig,
+      noPlan,
     ).checkCredits('u1');
     expect(credits).toMatchObject({
       used: 0,
@@ -77,6 +82,7 @@ describe('UsageService.checkCredits', () => {
     const credits = await new UsageService(
       db as never,
       defaultConfig,
+      noPlan,
     ).checkCredits('u1');
     expect(credits.remaining).toBe(0);
     expect(credits.hasCredits).toBe(false);
@@ -87,6 +93,7 @@ describe('UsageService.checkCredits', () => {
     const credits = await new UsageService(
       db as never,
       defaultConfig,
+      noPlan,
     ).checkCredits('u1');
     expect(credits).toMatchObject({ remaining: 0, hasCredits: false });
   });
@@ -100,11 +107,13 @@ describe('UsageService allowance configuration', () => {
         key === 'ai.monthlyTokenLimit' ? 5_000 : undefined,
     } as never;
 
-    const credits = await new UsageService(db as never, config).checkCredits(
-      'u1',
-    );
+    const credits = await new UsageService(
+      db as never,
+      config,
+      noPlan,
+    ).checkCredits('u1');
 
-    expect(credits).toEqual({
+    expect(credits).toMatchObject({
       used: 4_000,
       limit: 5_000,
       remaining: 1_000,
@@ -124,6 +133,7 @@ describe('UsageService.findByUser', () => {
     const summary = await new UsageService(
       db as never,
       defaultConfig,
+      noPlan,
     ).findByUser('u1', 20);
 
     expect(summary).toMatchObject({
@@ -138,7 +148,10 @@ describe('UsageService.findByUser', () => {
     const { db } = fakeDb([[usageRow()], [{ used: 150 }]]);
 
     const [record] = (
-      await new UsageService(db as never, defaultConfig).findByUser('u1', 20)
+      await new UsageService(db as never, defaultConfig, noPlan).findByUser(
+        'u1',
+        20,
+      )
     ).recent;
 
     expect(record).toMatchObject({
@@ -159,6 +172,7 @@ describe('UsageService.findByUser', () => {
     const summary = await new UsageService(
       db as never,
       defaultConfig,
+      noPlan,
     ).findByUser('u1', 20);
     expect(summary.recent).toEqual([]);
     expect(summary.used).toBe(0);
