@@ -147,7 +147,9 @@ describe('AttemptService.start', () => {
     );
 
     const res = await service.start('u1', 'q1');
-    const q = res.questions[0] as Record<string, unknown>;
+    const q = res.questions[0] as unknown as Record<string, unknown> & {
+      options: Record<string, unknown>[];
+    };
 
     expect(q).not.toHaveProperty('correctAnswer');
     expect(q.options).toEqual([{ id: 'o1', answer: 'A' }]);

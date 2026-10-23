@@ -69,7 +69,7 @@ describe('CodeExecutionService Judge0 mode', () => {
 
   const okStatus = (id: number) => ({
     ok: true,
-    json: async () => ({ status: { id } }),
+    json: () => Promise.resolve({ status: { id } }),
   });
 
   afterEach(() => {

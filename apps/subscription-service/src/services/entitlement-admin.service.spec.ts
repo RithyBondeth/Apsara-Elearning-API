@@ -36,10 +36,17 @@ function fakeDb(
     selectRows?: unknown[];
   } = {},
 ) {
-  const valuesSpy = jest.fn(() => ({
+  // Typed with the row argument so tests can read what was written.
+  const valuesSpy = jest.fn<
+    { returning: () => Promise<unknown[]> },
+    [Record<string, unknown>]
+  >(() => ({
     returning: () => Promise.resolve(opts.created ?? []),
   }));
-  const setSpy = jest.fn(() => ({
+  const setSpy = jest.fn<
+    { where: () => { returning: () => Promise<unknown[]> } },
+    [Record<string, unknown>]
+  >(() => ({
     where: () => ({ returning: () => Promise.resolve(opts.revoked ?? []) }),
   }));
   const db = {
@@ -80,7 +87,7 @@ describe('EntitlementAdminService.grant', () => {
       reason: 'courtesy',
     });
 
-    const payload = valuesSpy.mock.calls[0][0] as Record<string, unknown>;
+    const payload = valuesSpy.mock.calls[0][0];
     expect(payload.effect).toBe('allow');
     expect(payload.grantedBy).toBe('admin1');
     expect(payload.expiresAt).toBeNull();
@@ -99,9 +106,7 @@ describe('EntitlementAdminService.grant', () => {
       reason: 'abuse hold',
     });
 
-    expect((valuesSpy.mock.calls[0][0] as { effect: string }).effect).toBe(
-      'deny',
-    );
+    expect(valuesSpy.mock.calls[0][0].effect).toBe('deny');
     expect(dto.effect).toBe('deny');
   });
 });
@@ -117,9 +122,7 @@ describe('EntitlementAdminService.revoke', () => {
 
     expect(dto.id).toBe('g1');
     // Revocation stamps a timestamp rather than deleting the row (audit trail).
-    expect(
-      (setSpy.mock.calls[0][0] as { revokedAt: Date }).revokedAt,
-    ).toBeInstanceOf(Date);
+    expect(setSpy.mock.calls[0][0].revokedAt).toBeInstanceOf(Date);
   });
 
   it('throws 404 when no active grant matches (already revoked or missing)', async () => {

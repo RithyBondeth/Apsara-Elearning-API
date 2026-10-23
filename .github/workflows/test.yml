@@ -14,13 +14,17 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # matches the Dockerfile
           cache: npm
 
       # Unit tests are fully mocked (no Postgres/RabbitMQ); test/setup-env.ts
       # supplies the env the config schema requires.
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint:check
       - run: npm test
+      # The same production build the Docker image runs.
+      - run: npm run build:all
 
   # What the mocked unit tests can't see: migrations, and SQL run for real.
   database:
@@ -47,7 +51,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # matches the Dockerfile
           cache: npm
 
       - run: npm ci

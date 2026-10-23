@@ -45,8 +45,8 @@ function email(overrides: Record<string, jest.Mock> = {}) {
  * Drizzle stand-in: `existing` is what the pre-insert lookup returns; the
  * insert resolves unless `insertError` is set (to simulate a DB race/failure).
  */
-function fakeDb(opts: { existing?: unknown[]; insertError?: unknown } = {}) {
-  const valuesSpy = jest.fn((v: unknown) =>
+function fakeDb(opts: { existing?: unknown[]; insertError?: Error } = {}) {
+  const valuesSpy = jest.fn<Promise<undefined>, [unknown]>(() =>
     opts.insertError
       ? Promise.reject(opts.insertError)
       : Promise.resolve(undefined),
