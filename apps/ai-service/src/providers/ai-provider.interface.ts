@@ -5,6 +5,18 @@ import {
 
 export type AiProviderName = 'anthropic' | 'openai' | 'deepseek' | 'gemini';
 
+/** A provider call ran past ai.requestTimeoutMs. */
+export class AiProviderTimeoutError extends Error {
+  constructor(provider: AiProviderName) {
+    super(`${provider} did not reply in time`);
+    this.name = 'AiProviderTimeoutError';
+  }
+}
+
+/** Thrown by `AbortSignal.timeout` when it fires. */
+export const isAbortTimeout = (error: unknown): boolean =>
+  error instanceof Error && error.name === 'TimeoutError';
+
 export interface AiChatOptions {
   model?: string;
 }

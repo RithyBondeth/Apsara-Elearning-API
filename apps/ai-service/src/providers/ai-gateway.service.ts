@@ -10,11 +10,6 @@ import { GeminiProvider } from './gemini.provider';
 import { OpenAiProvider } from './openai.provider';
 import { AiProvider, AiProviderName } from './ai-provider.interface';
 
-export interface AiGatewayChatOptions {
-  provider?: AiProviderName;
-  model?: string;
-}
-
 @Injectable()
 export class AiGatewayService {
   private readonly logger = new Logger(AiGatewayService.name);
@@ -47,15 +42,9 @@ export class AiGatewayService {
       });
   }
 
-  async chat(
-    system: string,
-    history: IChatTurn[],
-    options?: AiGatewayChatOptions,
-  ): Promise<IChatResult> {
-    const providerName = options?.provider ?? this.defaultProvider;
-    const provider = this.providers[providerName];
-
-    return provider.chat(system, history, { model: options?.model });
+  /** Always the configured provider and its configured model. */
+  async chat(system: string, history: IChatTurn[]): Promise<IChatResult> {
+    return this.providers[this.defaultProvider].chat(system, history);
   }
 
   private normalizeProvider(provider: string): AiProviderName {

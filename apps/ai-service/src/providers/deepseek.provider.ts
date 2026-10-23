@@ -16,6 +16,7 @@ export class DeepSeekProvider extends OpenAiCompatibleProvider {
         configService.get<string>('ai.model') ??
         'deepseek-chat',
       maxTokens: configService.get<number>('ai.maxTokens') ?? 4096,
+      timeoutMs: configService.get<number>('ai.requestTimeoutMs') ?? 60_000,
     });
   }
 }

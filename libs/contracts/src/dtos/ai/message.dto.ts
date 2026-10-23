@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { DtoInit } from '../../types/dto-init';
-import {
-  IsIn,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class SendMessageRequestDTO {
   @ApiProperty({ example: 'How do I write a for loop in JavaScript?' })
@@ -15,21 +9,8 @@ export class SendMessageRequestDTO {
   @MaxLength(8000)
   content!: string;
 
-  @ApiProperty({
-    required: false,
-    example: 'anthropic',
-    enum: ['anthropic', 'openai', 'deepseek', 'gemini'],
-  })
-  @IsOptional()
-  @IsString()
-  @IsIn(['anthropic', 'openai', 'deepseek', 'gemini'])
-  provider?: 'anthropic' | 'openai' | 'deepseek' | 'gemini';
-
-  @ApiProperty({ required: false, example: 'claude-opus-4-8' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  model?: string;
+  // No provider/model fields: the server's AI_PROVIDER / *_MODEL settings
+  // decide, so a learner can't route their turns to a pricier model.
 }
 
 export class AiMessageResponseDTO {

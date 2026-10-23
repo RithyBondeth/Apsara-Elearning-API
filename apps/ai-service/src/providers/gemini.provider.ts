@@ -4,7 +4,12 @@ import {
   IChatResult,
   IChatTurn,
 } from '@app/contracts/interfaces/ai/ai-service.interface';
-import { AiChatOptions, AiProvider } from './ai-provider.interface';
+import {
+  AiChatOptions,
+  AiProvider,
+  AiProviderTimeoutError,
+  isAbortTimeout,
+} from './ai-provider.interface';
 
 type GeminiResponse = {
   candidates?: Array<{
@@ -28,6 +33,7 @@ export class GeminiProvider implements AiProvider {
   private readonly apiKey?: string;
   private readonly baseUrl: string;
   private readonly maxTokens: number;
+  private readonly timeoutMs: number;
 
   constructor(configService: ConfigService) {
     this.apiKey = configService.get<string>('ai.geminiApiKey');
@@ -39,6 +45,7 @@ export class GeminiProvider implements AiProvider {
       configService.get<string>('ai.model') ??
       'gemini-2.0-flash';
     this.maxTokens = configService.get<number>('ai.maxTokens') ?? 4096;
+    this.timeoutMs = configService.get<number>('ai.requestTimeoutMs') ?? 60_000;
   }
 
   get enabled(): boolean {
@@ -63,24 +70,33 @@ export class GeminiProvider implements AiProvider {
       this.apiKey
     }`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: system }],
-        },
-        contents: history.map((message) => ({
-          role: message.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: message.content }],
-        })),
-        generationConfig: {
-          maxOutputTokens: this.maxTokens,
-        },
-      }),
-    });
-
-    const data = (await response.json()) as GeminiResponse;
+    let response: Response;
+    let data: GeminiResponse;
+    try {
+      // The signal also covers reading the body, so both sit inside the try.
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: system }],
+          },
+          contents: history.map((message) => ({
+            role: message.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: message.content }],
+          })),
+          generationConfig: {
+            maxOutputTokens: this.maxTokens,
+          },
+        }),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+      data = (await response.json()) as GeminiResponse;
+    } catch (error) {
+      if (isAbortTimeout(error))
+        throw new AiProviderTimeoutError(this.provider);
+      throw error;
+    }
     if (!response.ok) {
       throw new Error(
         `gemini generateContent failed: ${

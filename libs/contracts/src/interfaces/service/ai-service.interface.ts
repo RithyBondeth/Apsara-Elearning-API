@@ -19,12 +19,6 @@ export const I_CONVERSATION_SERVICE = 'IConversationService';
 export const I_MESSAGE_SERVICE = 'IMessageService';
 export const I_USAGE_SERVICE = 'IUsageService';
 
-/** Provider/model overrides for a chat turn. */
-export interface IChatOptions {
-  provider?: 'anthropic' | 'openai' | 'deepseek' | 'gemini';
-  model?: string;
-}
-
 export interface IConversationService {
   create(
     userId: string,
@@ -41,14 +35,10 @@ export interface IMessageService {
     userId: string,
     conversationId: string,
     content: string,
-    options?: IChatOptions,
   ): Promise<SendMessageResponseDTO>;
 }
 
 export interface IUsageService {
-  findByUser(
-    userId: string,
-    limit: number,
-  ): Promise<AiUsageSummaryResponseDTO>;
+  findByUser(userId: string, limit: number): Promise<AiUsageSummaryResponseDTO>;
   checkCredits(userId: string): Promise<CreditsResponseDTO>;
 }

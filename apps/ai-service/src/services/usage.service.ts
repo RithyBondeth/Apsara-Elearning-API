@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { aiUsageTracking } from '@app/database/schemas/ai/ai-usage-tracking.schema';
 import {
   AiUsageResponseDTO,
@@ -10,12 +11,22 @@ import {
   IUsageService,
 } from '@app/contracts';
 
-/** Simple per-user token allowance (until a real plan/credits system exists). */
-const TOKEN_LIMIT = 1_000_000;
+/** The allowance counts tokens spent over this many trailing days. */
+export const USAGE_WINDOW_DAYS = 30;
+
+const DEFAULT_TOKEN_LIMIT = 1_000_000;
 
 @Injectable()
 export class UsageService implements IUsageService {
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>) {}
+  private readonly tokenLimit: number;
+
+  constructor(
+    @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<any>,
+    configService: ConfigService,
+  ) {
+    this.tokenLimit =
+      configService.get<number>('ai.monthlyTokenLimit') ?? DEFAULT_TOKEN_LIMIT;
+  }
 
   /**
    * The learner's allowance plus their most recent calls.
@@ -43,19 +54,32 @@ export class UsageService implements IUsageService {
     });
   }
 
+  /**
+   * Tokens spent in the trailing window against the per-learner limit.
+   *
+   * A rolling window rather than a lifetime total: a lifetime sum would lock a
+   * paying learner out for good once they hit it. Checked before each reply,
+   * so one reply can overshoot the limit by at most its own size.
+   */
   async checkCredits(userId: string): Promise<CreditsResponseDTO> {
+    const since = new Date(Date.now() - USAGE_WINDOW_DAYS * 24 * 60 * 60_000);
     const [row] = await this.db
       .select({
         used: sql<number>`coalesce(sum(${aiUsageTracking.totalTokens}), 0)::int`,
       })
       .from(aiUsageTracking)
-      .where(eq(aiUsageTracking.userId, userId));
+      .where(
+        and(
+          eq(aiUsageTracking.userId, userId),
+          gte(aiUsageTracking.createdAt, since),
+        ),
+      );
     const used = row?.used ?? 0;
     return new CreditsResponseDTO({
       used,
-      limit: TOKEN_LIMIT,
-      remaining: Math.max(0, TOKEN_LIMIT - used),
-      hasCredits: used < TOKEN_LIMIT,
+      limit: this.tokenLimit,
+      remaining: Math.max(0, this.tokenLimit - used),
+      hasCredits: used < this.tokenLimit,
     });
   }
 }

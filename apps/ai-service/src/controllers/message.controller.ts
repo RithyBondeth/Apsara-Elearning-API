@@ -24,18 +24,12 @@ export class MessageController implements IMessageRpcController {
       userId: string;
       conversationId: string;
       content: string;
-      provider?: 'anthropic' | 'openai' | 'deepseek' | 'gemini';
-      model?: string;
     },
   ) {
     return this.messagesService.send(
       payload.userId,
       payload.conversationId,
       payload.content,
-      {
-        provider: payload.provider,
-        model: payload.model,
-      },
     );
   }
 

@@ -11,6 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   AI_SERVICE,
@@ -34,14 +35,28 @@ import {
 } from '@nestjs/swagger';
 import { rpcCall } from '@app/common';
 
+/**
+ * Headroom over ai-service's own provider timeout, for the database work
+ * around the call. The provider call times out first, so a slow model surfaces
+ * as that error instead of a gateway 504 while the reply is still being saved.
+ */
+const AI_REPLY_MARGIN_MS = 15_000;
+
 @ApiTags('Apsara AI')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('ai')
 export class AiController implements IAiHttpController {
+  private readonly replyTimeoutMs: number;
+
   constructor(
     @Inject(AI_SERVICE.NAME) private readonly aiClient: ClientProxy,
-  ) {}
+    configService: ConfigService,
+  ) {
+    this.replyTimeoutMs =
+      (configService.get<number>('ai.requestTimeoutMs') ?? 60_000) +
+      AI_REPLY_MARGIN_MS;
+  }
 
   @Post('conversations')
   @ApiOperation({ summary: 'Create a new AI conversation' })
@@ -148,9 +163,8 @@ export class AiController implements IAiHttpController {
         userId,
         conversationId,
         content: dto.content,
-        provider: dto.provider,
-        model: dto.model,
       },
+      this.replyTimeoutMs,
     );
   }
 
