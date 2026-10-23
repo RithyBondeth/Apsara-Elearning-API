@@ -168,6 +168,11 @@ function markCompleteDb(opts: {
         where: () => ({ returning: () => Promise.resolve(opts.updated ?? [{ id: 'e1', completed: false }]) }),
       }),
     }),
+    // The completion read-then-upsert runs in a transaction; run it inline.
+    execute: () => Promise.resolve([]),
+    transaction<T>(this: unknown, fn: (tx: unknown) => Promise<T>): Promise<T> {
+      return fn(this);
+    },
   };
 }
 
