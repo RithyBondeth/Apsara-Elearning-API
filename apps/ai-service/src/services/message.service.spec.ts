@@ -110,6 +110,29 @@ describe('MessageService.send allowance', () => {
   });
 });
 
+describe('MessageService.send reply allowance', () => {
+  it('says which allowance ran out when the plan’s replies are used', async () => {
+    const { service, chat } = build([]);
+    (
+      service as unknown as { usage: { checkCredits: jest.Mock } }
+    ).usage.checkCredits.mockResolvedValue({
+      ...credits(false),
+      repliesLimit: 200,
+      repliesRemaining: 0,
+      exhausted: 'replies',
+    });
+
+    await expect(service.send('u1', 'c1', 'hello')).rejects.toMatchObject({
+      error: {
+        statusCode: 429,
+        message:
+          'You have used all 200 Apsara AI replies for this billing period.',
+      },
+    });
+    expect(chat).not.toHaveBeenCalled();
+  });
+});
+
 describe('MessageService.send provider choice', () => {
   it('passes only the prompt and history — no client provider or model', async () => {
     const { service, chat } = build([]);

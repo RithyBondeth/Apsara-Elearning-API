@@ -78,6 +78,36 @@ export class AiUsageSummaryResponseDTO {
   hasCredits: boolean;
 
   @ApiProperty({
+    example: 12,
+    description: 'Tutor replies in the current billing period',
+  })
+  repliesUsed: number;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    example: 200,
+    description:
+      "Replies the learner's plan allows per billing period; null = no per-reply limit",
+  })
+  repliesLimit: number | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 188 })
+  repliesRemaining: number | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'When the reply allowance resets (end of the billing period)',
+  })
+  periodEndsAt: Date | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    enum: ['replies', 'tokens'],
+    description: 'Which allowance is used up, when hasCredits is false',
+  })
+  exhausted: 'replies' | 'tokens' | null;
+
+  @ApiProperty({
     type: [AiUsageResponseDTO],
     description: 'Most recent calls first, bounded by `limit`',
   })
@@ -100,4 +130,34 @@ export class CreditsResponseDTO {
 
   @ApiProperty({ example: true })
   hasCredits: boolean;
+
+  @ApiProperty({
+    example: 12,
+    description: 'Tutor replies in the current billing period',
+  })
+  repliesUsed: number;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    example: 200,
+    description:
+      "Replies the learner's plan allows per billing period; null = no per-reply limit",
+  })
+  repliesLimit: number | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 188 })
+  repliesRemaining: number | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'When the reply allowance resets (end of the billing period)',
+  })
+  periodEndsAt: Date | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    enum: ['replies', 'tokens'],
+    description: 'Which allowance is used up, when hasCredits is false',
+  })
+  exhausted: 'replies' | 'tokens' | null;
 }
