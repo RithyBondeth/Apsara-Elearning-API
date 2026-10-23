@@ -125,6 +125,7 @@ See [`.env.example`](.env.example) for the full list.
 | `npm run start:prod:all` | Run the production builds |
 | `npm run db:migrate` | Apply pending migrations |
 | `npm run seed` | Seed demo users, courses, and reviews |
+| `npm run seed:content` | Import the Grade 12 courses only — safe in production, skips courses that exist |
 
 ### Deployment
 
