@@ -1,20 +1,7 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import {
-  ContactSupportRequestDTO,
-  MessageResponseDTO,
-} from '@app/contracts';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ContactSupportRequestDTO, MessageResponseDTO } from '@app/contracts';
 import { SupportService } from './support.service';
 
 const CONTACT_LIMIT = { default: { limit: 3, ttl: 10 * 60_000 } };

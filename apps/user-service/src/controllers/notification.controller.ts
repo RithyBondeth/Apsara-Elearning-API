@@ -27,7 +27,12 @@ export class NotificationController implements INotificationRpcController {
 
   @MessagePattern(USER_SERVICE.ACTIONS.NOTIFICATION_FIND_BY_USER)
   findByUser(
-    @Payload() payload: { userId: string; limit?: number; unreadOnly?: boolean },
+    @Payload()
+    payload: {
+      userId: string;
+      limit?: number;
+      unreadOnly?: boolean;
+    },
   ) {
     // Validated at the gateway, but the action is callable over RPC — clamp.
     const requested = Number(payload.limit ?? NOTIFICATIONS_DEFAULT_LIMIT);

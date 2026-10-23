@@ -261,10 +261,7 @@ export interface IRatingHttpController {
     courseId: string,
     query: RatingQueryDTO,
   ): Promise<RatingSummaryResponseDTO>;
-  findMine(
-    userId: string,
-    courseId: string,
-  ): Promise<RatingResponseDTO | null>;
+  findMine(userId: string, courseId: string): Promise<RatingResponseDTO | null>;
   upsert(
     userId: string,
     courseId: string,

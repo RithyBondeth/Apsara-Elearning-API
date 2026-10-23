@@ -1,4 +1,11 @@
-import { Controller, Get, HttpStatus, Inject, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   ILeaderboardHttpController,
