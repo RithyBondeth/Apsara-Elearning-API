@@ -14,7 +14,7 @@ import {
   DRIZZLE,
   SUBSCRIPTION_SERVICE,
 } from '@app/contracts';
-import { rpcCall } from '@app/common';
+import { reportError, rpcCall } from '@app/common';
 
 const PURGE_INTERVAL_MS = 60 * 60 * 1000;
 const FIRST_RUN_DELAY_MS = 60 * 1000;
@@ -86,6 +86,8 @@ export class AccountPurgeService
           );
         } catch (error) {
           skipped++;
+          // Deferred every hour until it works — someone should look.
+          reportError(error, { job: 'account-purge', step: 'stop-renewals' });
           this.logger.warn(
             `Not purging ${id} yet — couldn't confirm renewals stopped: ${error instanceof Error ? error.message : error}`,
           );
@@ -105,6 +107,7 @@ export class AccountPurgeService
         );
       }
     } catch (error) {
+      reportError(error, { job: 'account-purge' });
       this.logger.error(
         `Account purge failed: ${error instanceof Error ? error.message : error}`,
       );

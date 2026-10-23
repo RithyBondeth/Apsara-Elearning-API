@@ -13,3 +13,4 @@ export * from './pipes';
 export * from './health';
 export * from './authorization';
 export * from './swagger/swagger.config';
+export * from './observability';
