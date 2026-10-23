@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Inject,
   Param,
@@ -14,12 +15,14 @@ import {
   AdminPaymentDetailDTO,
   AdminPaymentDTO,
   AdminPaymentQueryDTO,
+  AdminRefundRequestDTO,
+  AdminRefundResponseDTO,
   CreatePaymentRequestDTO,
   IAdminPaymentController,
   PaymentResponseDTO,
   SUBSCRIPTION_SERVICE,
 } from '@app/contracts';
-import { rpcCall } from '@app/common';
+import { CurrentUser, rpcCall } from '@app/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -63,6 +66,32 @@ export class PaymentController implements IAdminPaymentController {
       this.client,
       SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_ADMIN_FIND_ONE,
       { id },
+    );
+  }
+
+  @Post(':id/refund')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Refund part or all of a payment; a full refund of the current period also ends the subscription',
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminRefundResponseDTO })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Not a successful provider payment, already fully refunded, or amount out of range',
+  })
+  refund(
+    @CurrentUser('id') adminId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: AdminRefundRequestDTO,
+  ): Promise<AdminRefundResponseDTO> {
+    return rpcCall<AdminRefundResponseDTO>(
+      this.client,
+      SUBSCRIPTION_SERVICE.ACTIONS.PAYMENT_ADMIN_REFUND,
+      { adminId, id, amount: body.amount, reason: body.reason },
+      // Two provider calls (refund, maybe cancel) plus bookkeeping.
+      30_000,
     );
   }
 

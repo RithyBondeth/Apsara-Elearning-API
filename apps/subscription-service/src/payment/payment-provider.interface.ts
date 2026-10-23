@@ -8,7 +8,7 @@
  * is talking to.
  *
  * Scope note: this covers the *outbound* operations — starting a checkout,
- * opening a billing portal, cancelling. Inbound webhook ingestion stays
+ * opening a billing portal, cancelling, refunding. Inbound webhook ingestion stays
  * provider-specific (see PaymentService), because event shapes and signature
  * schemes have nothing in common between providers and pretending otherwise
  * would buy an abstraction nobody can implement.
@@ -48,6 +48,31 @@ export interface ISubscriptionSnapshot {
   currentPeriodEnd: Date | null;
 }
 
+/**
+ * Which money to give back. References are the provider-side ids stored on
+ * the payment row; a rail uses whichever it can resolve.
+ */
+export interface IRefundInput {
+  paymentReference?: string;
+  chargeReference?: string;
+  invoiceReference?: string;
+  /** In the currency's minor unit (cents). */
+  amountMinor: number;
+  /** Same key → same refund: a retried or double-clicked request can't pay out twice. */
+  idempotencyKey: string;
+  metadata: Record<string, string>;
+}
+
+export interface IRefundResult {
+  reference: string;
+  /** Provider vocabulary, stored verbatim (Stripe: pending, succeeded, failed…). */
+  status: string;
+  amountMinor: number;
+  currency: string;
+  reason: string | null;
+  failureReason: string | null;
+}
+
 export interface IPaymentProvider {
   readonly id: PaymentProviderId;
 
@@ -67,4 +92,9 @@ export interface IPaymentProvider {
   cancelAtPeriodEnd(
     providerSubscriptionId: string,
   ): Promise<ISubscriptionSnapshot>;
+
+  /** Ends the subscription now, with no further billing. */
+  cancelNow(providerSubscriptionId: string): Promise<ISubscriptionSnapshot>;
+
+  refund(input: IRefundInput): Promise<IRefundResult>;
 }

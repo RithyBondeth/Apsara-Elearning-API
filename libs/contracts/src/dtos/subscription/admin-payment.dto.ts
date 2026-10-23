@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 import type { DtoInit } from '../../types/dto-init';
 
 export const ADMIN_PAYMENT_FILTERS = [
@@ -77,6 +86,16 @@ export class AdminPaymentRefundDTO {
   @ApiPropertyOptional({ nullable: true }) reason: string | null;
   @ApiPropertyOptional({ nullable: true }) failureReason: string | null;
   @ApiProperty() providerRefundId: string;
+  @ApiPropertyOptional({
+    nullable: true,
+    description: "The admin's note, for refunds issued from the console",
+  })
+  note: string | null;
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Who issued it from the console (null if made in Stripe)',
+  })
+  requestedByName: string | null;
   @ApiProperty() createdAt: Date;
 }
 
@@ -88,4 +107,46 @@ export class AdminPaymentDetailDTO extends AdminPaymentDTO {
 
   @ApiProperty({ type: [AdminPaymentRefundDTO] })
   refunds: AdminPaymentRefundDTO[];
+}
+
+/** Refund a payment from the admin console. */
+export class AdminRefundRequestDTO {
+  @ApiPropertyOptional({
+    example: 4.99,
+    description: 'Amount to refund; defaults to everything not yet refunded',
+  })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  amount?: number;
+
+  @ApiProperty({
+    example: 'Charged twice by mistake',
+    description: 'Why — recorded for audit',
+  })
+  @IsString()
+  @MinLength(5)
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class AdminRefundResponseDTO {
+  constructor(partial: DtoInit<AdminRefundResponseDTO> = {}) {
+    Object.assign(this, partial);
+  }
+
+  @ApiProperty({ type: AdminPaymentDetailDTO })
+  payment: AdminPaymentDetailDTO;
+
+  @ApiProperty({
+    example: 'succeeded',
+    description: "The provider's refund status",
+  })
+  refundStatus: string;
+
+  @ApiProperty({
+    description:
+      'True when this full refund also ended the subscription it paid for',
+  })
+  subscriptionCanceled: boolean;
 }
