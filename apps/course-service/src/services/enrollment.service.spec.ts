@@ -15,11 +15,20 @@ function fakeDb(selects: unknown[][]) {
     select: () => {
       const idx = si++;
       const node: Record<string, unknown> = {};
-      for (const m of ['from', 'innerJoin', 'leftJoin', 'where', 'orderBy', 'limit']) {
+      for (const m of [
+        'from',
+        'innerJoin',
+        'leftJoin',
+        'where',
+        'orderBy',
+        'limit',
+      ]) {
         node[m] = () => node;
       }
-      node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
-        Promise.resolve(selects[idx] ?? []).then(res, rej);
+      node.then = (
+        res: (v: unknown) => unknown,
+        rej: (r: unknown) => unknown,
+      ) => Promise.resolve(selects[idx] ?? []).then(res, rej);
       return node;
     },
   };
@@ -71,7 +80,11 @@ describe('EnrollmentService.continueLearning', () => {
   });
 
   it('starts at the first lesson when nothing is completed yet', async () => {
-    const { db } = fakeDb([[activeRow()], [lessonRow('l1'), lessonRow('l2')], []]);
+    const { db } = fakeDb([
+      [activeRow()],
+      [lessonRow('l1'), lessonRow('l2')],
+      [],
+    ]);
     const [card] = await service(db).continueLearning('u1', 3);
     expect(card.nextLesson?.id).toBe('l1');
     expect(card.completedLessons).toBe(0);

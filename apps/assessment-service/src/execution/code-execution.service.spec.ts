@@ -12,7 +12,10 @@ function config(values: Record<string, string | undefined> = {}) {
   return { get: (key: string) => values[key] } as unknown as ConfigService;
 }
 
-const tc = (expectedOutput: string, input: string | null = null): TestCaseIO => ({
+const tc = (
+  expectedOutput: string,
+  input: string | null = null,
+): TestCaseIO => ({
   input,
   expectedOutput,
 });
@@ -25,14 +28,24 @@ describe('CodeExecutionService mock mode', () => {
   });
 
   it('passes a case when its expected output appears in the source', async () => {
-    const res = await service.grade('javascript', 'console.log("42")', [tc('42')]);
-    expect(res).toMatchObject({ passed: 1, total: 1, allPassed: true, mock: true });
+    const res = await service.grade('javascript', 'console.log("42")', [
+      tc('42'),
+    ]);
+    expect(res).toMatchObject({
+      passed: 1,
+      total: 1,
+      allPassed: true,
+      mock: true,
+    });
     expect(res.executionTimeMs).toBe(0);
     expect(res.errorMessage).toBeNull();
   });
 
   it('counts only the matching cases and is not all-passed', async () => {
-    const res = await service.grade('javascript', 'return "foo"', [tc('foo'), tc('bar')]);
+    const res = await service.grade('javascript', 'return "foo"', [
+      tc('foo'),
+      tc('bar'),
+    ]);
     expect(res.passed).toBe(1);
     expect(res.total).toBe(2);
     expect(res.allPassed).toBe(false);
@@ -56,7 +69,7 @@ describe('CodeExecutionService Judge0 mode', () => {
 
   const okStatus = (id: number) => ({
     ok: true,
-    json: async () => ({ status: { id } }),
+    json: () => Promise.resolve({ status: { id } }),
   });
 
   afterEach(() => {
@@ -69,8 +82,16 @@ describe('CodeExecutionService Judge0 mode', () => {
 
   it('marks all cases passed when Judge0 accepts each (status 3)', async () => {
     jest.spyOn(global, 'fetch').mockResolvedValue(okStatus(3) as never);
-    const res = await withJudge0().grade('python', 'print(x)', [tc('1'), tc('2')]);
-    expect(res).toMatchObject({ passed: 2, total: 2, allPassed: true, mock: false });
+    const res = await withJudge0().grade('python', 'print(x)', [
+      tc('1'),
+      tc('2'),
+    ]);
+    expect(res).toMatchObject({
+      passed: 2,
+      total: 2,
+      allPassed: true,
+      mock: false,
+    });
   });
 
   it('does not pass a case whose status is not Accepted', async () => {
@@ -88,8 +109,13 @@ describe('CodeExecutionService Judge0 mode', () => {
   });
 
   it('records a transport failure as an error and stops grading', async () => {
-    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: false, status: 502 } as never);
-    const res = await withJudge0().grade('python', 'print(x)', [tc('1'), tc('2')]);
+    jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue({ ok: false, status: 502 } as never);
+    const res = await withJudge0().grade('python', 'print(x)', [
+      tc('1'),
+      tc('2'),
+    ]);
     expect(res.passed).toBe(0);
     expect(res.allPassed).toBe(false);
     expect(res.errorMessage).toContain('502');

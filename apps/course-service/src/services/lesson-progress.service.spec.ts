@@ -20,17 +20,30 @@ function fakeDb(opts: { selects?: unknown[][]; updates?: unknown[][] } = {}) {
     select: () => {
       const idx = si++;
       const node: Record<string, unknown> = {};
-      for (const m of ['from', 'leftJoin', 'innerJoin', 'where', 'orderBy', 'limit']) {
+      for (const m of [
+        'from',
+        'leftJoin',
+        'innerJoin',
+        'where',
+        'orderBy',
+        'limit',
+      ]) {
         node[m] = () => node;
       }
-      node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
-        Promise.resolve(selects[idx] ?? []).then(res, rej);
+      node.then = (
+        res: (v: unknown) => unknown,
+        rej: (r: unknown) => unknown,
+      ) => Promise.resolve(selects[idx] ?? []).then(res, rej);
       return node;
     },
     update: () => ({
       set: (v: Record<string, unknown>) => {
         updateSet.push(v);
-        return { where: () => ({ returning: () => Promise.resolve(updates[ui++] ?? []) }) };
+        return {
+          where: () => ({
+            returning: () => Promise.resolve(updates[ui++] ?? []),
+          }),
+        };
       },
     }),
   };
@@ -50,7 +63,8 @@ function service(db: unknown) {
   );
 }
 
-const lessonIds = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `l${i}` }));
+const lessonIds = (n: number) =>
+  Array.from({ length: n }, (_, i) => ({ id: `l${i}` }));
 
 describe('LessonProgressService.recalculate', () => {
   it('computes a partial percentage and leaves the course incomplete', async () => {
@@ -105,7 +119,10 @@ describe('LessonProgressService.recalculate', () => {
   });
 
   it('throws 404 when the enrollment does not exist', async () => {
-    const { db } = fakeDb({ selects: [lessonIds(2), [{ id: 'p1' }]], updates: [[]] });
+    const { db } = fakeDb({
+      selects: [lessonIds(2), [{ id: 'p1' }]],
+      updates: [[]],
+    });
     await expect(service(db).recalculate('u1', 'c1')).rejects.toMatchObject({
       error: { statusCode: 404 },
     });
@@ -114,7 +131,9 @@ describe('LessonProgressService.recalculate', () => {
 
 describe('LessonProgressService.findByLesson', () => {
   it('returns the stored progress row when present', async () => {
-    const { db } = fakeDb({ selects: [[{ userId: 'u1', lessonId: 'l1', completed: true }]] });
+    const { db } = fakeDb({
+      selects: [[{ userId: 'u1', lessonId: 'l1', completed: true }]],
+    });
     const dto = await service(db).findByLesson('u1', 'l1');
     expect(dto.completed).toBe(true);
   });
@@ -122,14 +141,26 @@ describe('LessonProgressService.findByLesson', () => {
   it('defaults to not-completed when the learner has no row yet', async () => {
     const { db } = fakeDb({ selects: [[]] });
     const dto = await service(db).findByLesson('u1', 'l1');
-    expect(dto).toMatchObject({ userId: 'u1', lessonId: 'l1', completed: false });
+    expect(dto).toMatchObject({
+      userId: 'u1',
+      lessonId: 'l1',
+      completed: false,
+    });
   });
 });
 
 /** Chainable read node resolving to `resolve()` at await time. */
 function readNode(resolve: () => unknown) {
   const node: Record<string, unknown> = {};
-  for (const m of ['from', 'leftJoin', 'innerJoin', 'where', 'orderBy', 'limit']) node[m] = () => node;
+  for (const m of [
+    'from',
+    'leftJoin',
+    'innerJoin',
+    'where',
+    'orderBy',
+    'limit',
+  ])
+    node[m] = () => node;
   node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
     Promise.resolve(resolve()).then(res, rej);
   return node;
@@ -156,16 +187,23 @@ function markCompleteDb(opts: {
     opts.alreadyDone ?? [],
     opts.recalcLessons ?? [{ id: 'l1' }],
     opts.recalcCompleted ?? [{ id: 'p1' }],
-    opts.ratingLookup ?? [{ title: 'Grade 12 Chemistry', slug: 'chemistry', ratingId: null }],
+    opts.ratingLookup ?? [
+      { title: 'Grade 12 Chemistry', slug: 'chemistry', ratingId: null },
+    ],
   ];
   let si = 0;
   return {
     select: () => readNode(() => queue[si++] ?? []),
     selectDistinct: () => readNode(() => []),
-    insert: () => ({ values: () => ({ onConflictDoUpdate: () => Promise.resolve(undefined) }) }),
+    insert: () => ({
+      values: () => ({ onConflictDoUpdate: () => Promise.resolve(undefined) }),
+    }),
     update: () => ({
       set: () => ({
-        where: () => ({ returning: () => Promise.resolve(opts.updated ?? [{ id: 'e1', completed: false }]) }),
+        where: () => ({
+          returning: () =>
+            Promise.resolve(opts.updated ?? [{ id: 'e1', completed: false }]),
+        }),
       }),
     }),
     // The completion read-then-upsert runs in a transaction; run it inline.
@@ -200,12 +238,16 @@ describe('LessonProgressService.markComplete', () => {
 
   it('throws 404 when the lesson has no course', async () => {
     const { svc } = build(markCompleteDb({ courseRow: [] }));
-    await expect(svc.markComplete('u1', 'l1')).rejects.toMatchObject({ error: { statusCode: 404 } });
+    await expect(svc.markComplete('u1', 'l1')).rejects.toMatchObject({
+      error: { statusCode: 404 },
+    });
   });
 
   it('throws 400 when the learner is not enrolled', async () => {
     const { svc } = build(markCompleteDb({ enrollment: [] }));
-    await expect(svc.markComplete('u1', 'l1')).rejects.toMatchObject({ error: { statusCode: 400 } });
+    await expect(svc.markComplete('u1', 'l1')).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
   });
 
   it('awards lesson XP the first time and returns the lesson completed', async () => {
@@ -216,19 +258,25 @@ describe('LessonProgressService.markComplete', () => {
   });
 
   it('does not re-award XP when the lesson was already completed', async () => {
-    const { svc } = build(markCompleteDb({ alreadyDone: [{ completed: true }] }));
+    const { svc } = build(
+      markCompleteDb({ alreadyDone: [{ completed: true }] }),
+    );
     const res = await svc.markComplete('u1', 'l1');
     expect(res.xpAwarded).toBe(0);
   });
 
   it('issues the certificate when this completion finishes the course', async () => {
-    const { svc, certs } = build(markCompleteDb({ updated: [{ id: 'e1', completed: true }] }));
+    const { svc, certs } = build(
+      markCompleteDb({ updated: [{ id: 'e1', completed: true }] }),
+    );
     await svc.markComplete('u1', 'l1');
     expect(certs.issue).toHaveBeenCalledWith('u1', 'c1');
   });
 
   it('does not issue a certificate while the course is unfinished', async () => {
-    const { svc, certs } = build(markCompleteDb({ updated: [{ id: 'e1', completed: false }] }));
+    const { svc, certs } = build(
+      markCompleteDb({ updated: [{ id: 'e1', completed: false }] }),
+    );
     await svc.markComplete('u1', 'l1');
     expect(certs.issue).not.toHaveBeenCalled();
   });
@@ -270,7 +318,8 @@ describe('LessonProgressService.markComplete', () => {
     );
     await svc.markComplete('u1', 'l1');
     const request = uc.send.mock.calls.find(
-      ([, payload]) => (payload as { type: string }).type === 'rating_requested',
+      ([, payload]) =>
+        (payload as { type: string }).type === 'rating_requested',
     );
     expect(request?.[1]).toMatchObject({
       userId: 'u1',
@@ -283,7 +332,9 @@ describe('LessonProgressService.markComplete', () => {
     const { svc, raised } = build(
       markCompleteDb({
         updated: [{ id: 'e1', completed: true }],
-        ratingLookup: [{ title: 'Chemistry', slug: 'chemistry', ratingId: 'r1' }],
+        ratingLookup: [
+          { title: 'Chemistry', slug: 'chemistry', ratingId: 'r1' },
+        ],
       }),
     );
     await svc.markComplete('u1', 'l1');
@@ -303,7 +354,9 @@ describe('LessonProgressService.markComplete', () => {
 
   it('still completes the lesson when certificate issuance throws', async () => {
     const db = markCompleteDb({ updated: [{ id: 'e1', completed: true }] });
-    const certs = { issue: jest.fn().mockRejectedValue(new Error('no entitlement')) };
+    const certs = {
+      issue: jest.fn().mockRejectedValue(new Error('no entitlement')),
+    };
     const uc = { send: jest.fn().mockReturnValue(of({})) };
     const ents = { assertCanEnroll: jest.fn().mockResolvedValue(undefined) };
     const svc = new LessonProgressService(

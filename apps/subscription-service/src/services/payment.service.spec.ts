@@ -125,7 +125,7 @@ describe('PaymentService refunds', () => {
 });
 
 describe('PaymentService webhooks for deleted accounts', () => {
-  it("ignores a subscription whose user was deleted instead of recreating it", async () => {
+  it('ignores a subscription whose user was deleted instead of recreating it', async () => {
     // existing row → none; plan mapping → found; owner lookup → gone.
     const selects = [
       limitedQuery([]),

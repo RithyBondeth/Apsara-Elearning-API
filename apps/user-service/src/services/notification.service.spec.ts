@@ -7,11 +7,13 @@ import { NotificationService } from './notification.service';
  * the returned page, because it drives the bell badge.
  */
 
-function fakeDb(opts: {
-  selects?: unknown[][];
-  inserts?: unknown[][];
-  updates?: unknown[][];
-} = {}) {
+function fakeDb(
+  opts: {
+    selects?: unknown[][];
+    inserts?: unknown[][];
+    updates?: unknown[][];
+  } = {},
+) {
   const selects = opts.selects ?? [];
   const inserts = opts.inserts ?? [];
   const updates = opts.updates ?? [];
@@ -99,7 +101,9 @@ describe('NotificationService.create', () => {
 describe('NotificationService.findByUser', () => {
   it('returns the page plus the full unread count', async () => {
     // page, then the unread count
-    const { db } = fakeDb({ selects: [[row(), row({ id: 'n2' })], [{ count: 7 }]] });
+    const { db } = fakeDb({
+      selects: [[row(), row({ id: 'n2' })], [{ count: 7 }]],
+    });
 
     const list = await new NotificationService(db as never).findByUser(
       'u1',
@@ -114,14 +118,22 @@ describe('NotificationService.findByUser', () => {
 
   it('reports zero unread on an empty feed', async () => {
     const { db } = fakeDb({ selects: [[], []] });
-    const list = await new NotificationService(db as never).findByUser('u1', 20, false);
+    const list = await new NotificationService(db as never).findByUser(
+      'u1',
+      20,
+      false,
+    );
     expect(list.items).toEqual([]);
     expect(list.unreadCount).toBe(0);
   });
 
   it('applies a different filter when unreadOnly is set', async () => {
     const unread = fakeDb({ selects: [[row()], [{ count: 1 }]] });
-    await new NotificationService(unread.db as never).findByUser('u1', 20, true);
+    await new NotificationService(unread.db as never).findByUser(
+      'u1',
+      20,
+      true,
+    );
 
     const all = fakeDb({ selects: [[row()], [{ count: 1 }]] });
     await new NotificationService(all.db as never).findByUser('u1', 20, false);
@@ -133,9 +145,15 @@ describe('NotificationService.findByUser', () => {
 
 describe('NotificationService.markRead', () => {
   it('marks an unread notification and returns the new count', async () => {
-    const { db } = fakeDb({ updates: [[{ id: 'n1' }]], selects: [[{ count: 2 }]] });
+    const { db } = fakeDb({
+      updates: [[{ id: 'n1' }]],
+      selects: [[{ count: 2 }]],
+    });
 
-    const result = await new NotificationService(db as never).markRead('u1', 'n1');
+    const result = await new NotificationService(db as never).markRead(
+      'u1',
+      'n1',
+    );
 
     expect(result).toMatchObject({ updated: 1, unreadCount: 2 });
   });
@@ -147,7 +165,10 @@ describe('NotificationService.markRead', () => {
       selects: [[{ id: 'n1' }], [{ count: 0 }]],
     });
 
-    const result = await new NotificationService(db as never).markRead('u1', 'n1');
+    const result = await new NotificationService(db as never).markRead(
+      'u1',
+      'n1',
+    );
 
     expect(result.updated).toBe(0);
     expect(result.unreadCount).toBe(0);
@@ -165,7 +186,9 @@ describe('NotificationService.markRead', () => {
 
 describe('NotificationService.markAllRead', () => {
   it('reports how many were cleared and drops the count to zero', async () => {
-    const { db } = fakeDb({ updates: [[{ id: 'n1' }, { id: 'n2' }, { id: 'n3' }]] });
+    const { db } = fakeDb({
+      updates: [[{ id: 'n1' }, { id: 'n2' }, { id: 'n3' }]],
+    });
 
     const result = await new NotificationService(db as never).markAllRead('u1');
 

@@ -66,7 +66,10 @@ const UNAUTHORIZED = { error: { statusCode: 401 } };
 
 describe('TokenService.refresh', () => {
   it('rotates and returns a fresh token pair for a valid token', async () => {
-    const db = fakeDb({ selectRows: [verifiedUser()], rotatedRows: [{ id: 'u1' }] });
+    const db = fakeDb({
+      selectRows: [verifiedUser()],
+      rotatedRows: [{ id: 'u1' }],
+    });
     const service = new TokenService(db as never, jwt(), config);
 
     const result = await service.refresh(VALID);
@@ -88,7 +91,9 @@ describe('TokenService.refresh', () => {
       update: () => ({
         set: (v: unknown) => {
           setSpy(v);
-          return { where: () => ({ returning: () => Promise.resolve([{ id: 'u1' }]) }) };
+          return {
+            where: () => ({ returning: () => Promise.resolve([{ id: 'u1' }]) }),
+          };
         },
       }),
     };
@@ -104,7 +109,9 @@ describe('TokenService.refresh', () => {
     const db = fakeDb({ selectRows: [verifiedUser()] });
     const service = new TokenService(
       db as never,
-      jwt({ verifyRefreshToken: jest.fn().mockRejectedValue(new Error('bad')) }),
+      jwt({
+        verifyRefreshToken: jest.fn().mockRejectedValue(new Error('bad')),
+      }),
       config,
     );
     await expect(service.refresh('nope')).rejects.toMatchObject(UNAUTHORIZED);
@@ -118,7 +125,9 @@ describe('TokenService.refresh', () => {
 
   it('rejects when the stored digest does not match the presented token', async () => {
     const db = fakeDb({
-      selectRows: [verifiedUser({ refreshToken: hashRefreshToken('some-other-token') })],
+      selectRows: [
+        verifiedUser({ refreshToken: hashRefreshToken('some-other-token') }),
+      ],
     });
     const service = new TokenService(db as never, jwt(), config);
     await expect(service.refresh(VALID)).rejects.toMatchObject(UNAUTHORIZED);
@@ -126,14 +135,18 @@ describe('TokenService.refresh', () => {
 
   it('rejects an expired stored refresh token', async () => {
     const db = fakeDb({
-      selectRows: [verifiedUser({ refreshTokenExpiresAt: new Date(Date.now() - 1) })],
+      selectRows: [
+        verifiedUser({ refreshTokenExpiresAt: new Date(Date.now() - 1) }),
+      ],
     });
     const service = new TokenService(db as never, jwt(), config);
     await expect(service.refresh(VALID)).rejects.toMatchObject(UNAUTHORIZED);
   });
 
   it('rejects a user whose email is not verified', async () => {
-    const db = fakeDb({ selectRows: [verifiedUser({ isEmailVerified: false })] });
+    const db = fakeDb({
+      selectRows: [verifiedUser({ isEmailVerified: false })],
+    });
     const service = new TokenService(db as never, jwt(), config);
     await expect(service.refresh(VALID)).rejects.toMatchObject(UNAUTHORIZED);
   });
@@ -166,7 +179,9 @@ describe('TokenService.refresh', () => {
 
 describe('TokenService.logout', () => {
   it('clears the stored refresh token', async () => {
-    const setSpy = jest.fn().mockReturnValue({ where: () => Promise.resolve(undefined) });
+    const setSpy = jest
+      .fn()
+      .mockReturnValue({ where: () => Promise.resolve(undefined) });
     const db = { update: () => ({ set: setSpy }) };
     const service = new TokenService(db as never, jwt(), config);
 
@@ -180,10 +195,16 @@ describe('TokenService.logout', () => {
   });
 
   it('is idempotent and never throws on an invalid token', async () => {
-    const db = { update: () => ({ set: () => ({ where: () => Promise.resolve(undefined) }) }) };
+    const db = {
+      update: () => ({
+        set: () => ({ where: () => Promise.resolve(undefined) }),
+      }),
+    };
     const service = new TokenService(
       db as never,
-      jwt({ verifyRefreshToken: jest.fn().mockRejectedValue(new Error('bad')) }),
+      jwt({
+        verifyRefreshToken: jest.fn().mockRejectedValue(new Error('bad')),
+      }),
       config,
     );
     await expect(service.logout('garbage')).resolves.toMatchObject({
