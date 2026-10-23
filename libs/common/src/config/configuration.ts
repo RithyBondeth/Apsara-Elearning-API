@@ -3,8 +3,16 @@ export default () => ({
   nodeEnv: process.env.NODE_ENV,
 
   // Ports
-  apiGatewayPort: parseInt(process.env.API_GATEWAY_PORT ?? '1111', 10),
-  adminGatewayPort: parseInt(process.env.ADMIN_GATEWAY_PORT ?? '2222', 10),
+  // Hosts like Railway assign each service its port through PORT. Locally both
+  // gateways run in one shell, so they keep their own variables and defaults.
+  apiGatewayPort: parseInt(
+    process.env.API_GATEWAY_PORT ?? process.env.PORT ?? '1111',
+    10,
+  ),
+  adminGatewayPort: parseInt(
+    process.env.ADMIN_GATEWAY_PORT ?? process.env.PORT ?? '2222',
+    10,
+  ),
 
   // Database
   database: {
