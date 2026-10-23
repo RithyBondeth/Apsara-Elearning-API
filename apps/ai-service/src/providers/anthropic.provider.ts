@@ -5,7 +5,11 @@ import {
   IChatResult,
   IChatTurn,
 } from '@app/contracts/interfaces/ai/ai-service.interface';
-import { AiChatOptions, AiProvider } from './ai-provider.interface';
+import {
+  AiChatOptions,
+  AiProvider,
+  AiProviderTimeoutError,
+} from './ai-provider.interface';
 
 @Injectable()
 export class AnthropicProvider implements AiProvider {
@@ -21,7 +25,16 @@ export class AnthropicProvider implements AiProvider {
       this.configService.get<string>('ai.model') ??
       'claude-opus-4-8';
     this.maxTokens = this.configService.get<number>('ai.maxTokens') ?? 4096;
-    this.client = apiKey ? new Anthropic({ apiKey }) : null;
+    // No SDK retries: each would get the full timeout again, and the gateway
+    // only waits ai.requestTimeoutMs (+ margin) for the whole reply.
+    this.client = apiKey
+      ? new Anthropic({
+          apiKey,
+          timeout:
+            this.configService.get<number>('ai.requestTimeoutMs') ?? 60_000,
+          maxRetries: 0,
+        })
+      : null;
   }
 
   get enabled(): boolean {
@@ -49,12 +62,20 @@ export class AnthropicProvider implements AiProvider {
       };
     }
 
-    const response = await this.client.messages.create({
-      model,
-      max_tokens: this.maxTokens,
-      system,
-      messages: history.map((m) => ({ role: m.role, content: m.content })),
-    });
+    let response: Anthropic.Message;
+    try {
+      response = await this.client.messages.create({
+        model,
+        max_tokens: this.maxTokens,
+        system,
+        messages: history.map((m) => ({ role: m.role, content: m.content })),
+      });
+    } catch (error) {
+      if (error instanceof Anthropic.APIConnectionTimeoutError) {
+        throw new AiProviderTimeoutError(this.provider);
+      }
+      throw error;
+    }
 
     const text = response.content
       .filter((block) => block.type === 'text')

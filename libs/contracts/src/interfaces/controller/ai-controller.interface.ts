@@ -28,8 +28,6 @@ export interface IMessageRpcController {
     userId: string;
     conversationId: string;
     content: string;
-    provider?: 'anthropic' | 'openai' | 'deepseek' | 'gemini';
-    model?: string;
   }): Promise<SendMessageResponseDTO>;
   findMessages(payload: {
     userId: string;

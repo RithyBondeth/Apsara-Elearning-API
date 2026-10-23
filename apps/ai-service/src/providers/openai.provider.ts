@@ -16,6 +16,7 @@ export class OpenAiProvider extends OpenAiCompatibleProvider {
         configService.get<string>('ai.model') ??
         'gpt-4o-mini',
       maxTokens: configService.get<number>('ai.maxTokens') ?? 4096,
+      timeoutMs: configService.get<number>('ai.requestTimeoutMs') ?? 60_000,
     });
   }
 }

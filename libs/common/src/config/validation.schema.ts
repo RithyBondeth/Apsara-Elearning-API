@@ -60,6 +60,8 @@ export const validationSchema = Joi.object({
     .default('anthropic'),
   AI_MODEL: Joi.string().optional(),
   AI_MAX_TOKENS: Joi.number().default(4096),
+  AI_MONTHLY_TOKEN_LIMIT: Joi.number().integer().min(0).default(1000000),
+  AI_REQUEST_TIMEOUT_MS: Joi.number().integer().min(1000).default(60000),
   ANTHROPIC_API_KEY: Joi.string().allow('').optional(),
   ANTHROPIC_MODEL: Joi.string().optional(),
   OPENAI_API_KEY: Joi.string().allow('').optional(),
