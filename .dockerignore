@@ -1,0 +1,11 @@
+# Never ship local secrets or build output into the image.
+.env
+.env.*
+!.env.example
+node_modules
+dist
+coverage
+.git
+.github
+.claude
+*.log

@@ -23,6 +23,15 @@ async function bootstrap() {
   app.useLogger(logger);
   app.setGlobalPrefix('admin');
 
+  // Liveness for deploy healthchecks. Registered on Express directly because
+  // AdminGuard covers every Nest route here; this handler only says the
+  // process is up and reveals nothing else.
+  app
+    .getHttpAdapter()
+    .get('/admin/health/live', (_req, res: { json: (body: unknown) => void }) =>
+      res.json({ status: 'ok' }),
+    );
+
   // Swagger configuration — must be after setGlobalPrefix so paths are correct
   setupSwagger(app, {
     title: 'ADMIN GATEWAY',

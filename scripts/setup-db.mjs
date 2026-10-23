@@ -18,7 +18,9 @@ if (!process.env.DATABASE_URL) {
 function run(command, args) {
   const result = spawnSync(command, args, { cwd: root, stdio: 'inherit' });
   if (result.status !== 0) {
-    throw new Error(`${command} ${args.join(' ')} exited with ${result.status}`);
+    throw new Error(
+      `${command} ${args.join(' ')} exited with ${result.status}`,
+    );
   }
 }
 
@@ -45,9 +47,19 @@ async function main() {
     '--force',
   ]);
 
-  console.log('▶ Recording migrations as applied (already in the pushed schema)…');
+  console.log(
+    '▶ Recording migrations as applied (already in the pushed schema)…',
+  );
   const after = postgres(process.env.DATABASE_URL, { max: 1 });
   try {
+    // drizzle-kit can exit 0 without creating anything (e.g. its esbuild
+    // helper crashing). Recording migrations against an empty database would
+    // mark it migrated for good, so confirm the schema really exists first.
+    if (!(await hasBaseSchema(after))) {
+      throw new Error(
+        'drizzle-kit push finished but created no schema; nothing was recorded. Fix the push error above and rerun.',
+      );
+    }
     const added = await recordAllAsApplied(after);
     console.log(`\nDatabase ready (${added} migration(s) recorded).`);
   } finally {

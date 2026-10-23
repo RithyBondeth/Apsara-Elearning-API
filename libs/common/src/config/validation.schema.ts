@@ -6,9 +6,11 @@ export const validationSchema = Joi.object({
     .valid('development', 'production', 'test')
     .default('development'),
 
-  // Ports
-  API_GATEWAY_PORT: Joi.number().port().default(1111),
-  ADMIN_GATEWAY_PORT: Joi.number().port().default(2222),
+  // Ports — no Joi defaults: those would be written into process.env and hide
+  // the PORT fallback in configuration.ts.
+  API_GATEWAY_PORT: Joi.number().port().optional(),
+  ADMIN_GATEWAY_PORT: Joi.number().port().optional(),
+  PORT: Joi.number().port().optional(),
 
   // Database
   DATABASE_URL: Joi.string().required(),
