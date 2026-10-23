@@ -4,6 +4,7 @@ import {
   LoggerModule,
   HealthModule,
   EntitlementService,
+  RabbitmqModule,
 } from '@app/common';
 import { DatabaseModule } from '@app/database';
 import {
@@ -11,6 +12,7 @@ import {
   I_PLAN_SERVICE,
   I_SUBSCRIPTION_SERVICE,
   I_ENTITLEMENT_ADMIN_SERVICE,
+  USER_SERVICE,
 } from '@app/contracts';
 import { SubscriptionHealthController } from './health/health.controller';
 import { SubscriptionController } from './controllers/subscription.controller';
@@ -24,7 +26,16 @@ import { EntitlementAdminService } from './services/entitlement-admin.service';
 import { PaymentAdminService } from './services/payment-admin.service';
 
 @Module({
-  imports: [ConfigurationModule, LoggerModule, DatabaseModule, HealthModule],
+  imports: [
+    ConfigurationModule,
+    LoggerModule,
+    DatabaseModule,
+    HealthModule,
+    // Notifies learners when an admin refunds them.
+    RabbitmqModule.register([
+      { name: USER_SERVICE.NAME, queueKey: 'rabbitmq.userQueue' },
+    ]),
+  ],
   controllers: [SubscriptionController, SubscriptionHealthController],
   providers: [
     // Concrete classes stay injectable (services inject each other directly,
