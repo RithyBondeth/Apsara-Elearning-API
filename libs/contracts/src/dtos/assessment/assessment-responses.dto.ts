@@ -180,8 +180,19 @@ export class AttemptReviewItemDTO {
   @ApiProperty({ example: true })
   isCorrect: boolean;
 
+  /** True only while the answer is still waiting for a human to grade it. */
   @ApiProperty({ example: false })
   requiresReview: boolean;
+
+  /** Points given for this answer (auto-graded or by a reviewer). */
+  @ApiProperty({ example: 1 })
+  pointsAwarded: number;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description: "The reviewer's note on a manually graded answer",
+  })
+  reviewFeedback: string | null;
 }
 
 export class SubmitAttemptResponseDTO {

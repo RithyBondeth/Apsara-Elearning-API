@@ -63,6 +63,7 @@ export * from './dtos/assessment/challenge.dto';
 export * from './dtos/assessment/test-case.dto';
 export * from './dtos/assessment/submission.dto';
 export * from './dtos/assessment/assessment-responses.dto';
+export * from './dtos/assessment/grading.dto';
 export * from './dtos/ai/conversation.dto';
 export * from './dtos/ai/message.dto';
 export * from './dtos/ai/usage.dto';
