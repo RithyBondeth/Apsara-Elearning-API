@@ -28,7 +28,9 @@ function email(overrides: Record<string, jest.Mock> = {}) {
 function jwt(overrides: Record<string, jest.Mock> = {}) {
   return {
     generatePasswordResetToken: jest.fn().mockResolvedValue(RESET_TOKEN),
-    verifyPasswordResetToken: jest.fn().mockResolvedValue({ email: 'a@b.com', type: 'reset' }),
+    verifyPasswordResetToken: jest
+      .fn()
+      .mockResolvedValue({ email: 'a@b.com', type: 'reset' }),
     ...overrides,
   } as unknown as JwtService;
 }
@@ -40,7 +42,8 @@ function fakeDb(selectRows: unknown[]) {
     select: () => {
       const node: Record<string, unknown> = {};
       for (const m of ['from', 'where', 'limit']) node[m] = () => node;
-      node.then = (res: (v: unknown) => unknown) => Promise.resolve(selectRows).then(res);
+      node.then = (res: (v: unknown) => unknown) =>
+        Promise.resolve(selectRows).then(res);
       return node;
     },
     update: () => ({
@@ -61,10 +64,13 @@ describe('PasswordService.forgotPassword', () => {
     const mailer = email();
     const service = new PasswordService(db as never, jwt(), mailer, config());
 
-    const result = await service.forgotPassword({ email: 'a@b.com' } as never);
+    const result = await service.forgotPassword({ email: 'a@b.com' });
 
     expect(result.message).toMatch(generic);
-    expect(mailer.sendPasswordResetEmail).toHaveBeenCalledWith('a@b.com', RESET_TOKEN);
+    expect(mailer.sendPasswordResetEmail).toHaveBeenCalledWith(
+      'a@b.com',
+      RESET_TOKEN,
+    );
   });
 
   it('returns the same generic response and sends nothing for an unknown account', async () => {
@@ -72,7 +78,9 @@ describe('PasswordService.forgotPassword', () => {
     const mailer = email();
     const service = new PasswordService(db as never, jwt(), mailer, config());
 
-    const result = await service.forgotPassword({ email: 'ghost@b.com' } as never);
+    const result = await service.forgotPassword({
+      email: 'ghost@b.com',
+    });
 
     expect(result.message).toMatch(generic);
     expect(mailer.sendPasswordResetEmail).not.toHaveBeenCalled();
@@ -82,12 +90,14 @@ describe('PasswordService.forgotPassword', () => {
     // A provider outage must not become an account-existence oracle.
     const { db } = fakeDb([{ id: 'u1', email: 'a@b.com' }]);
     const mailer = email({
-      sendPasswordResetEmail: jest.fn().mockRejectedValue(new Error('smtp down')),
+      sendPasswordResetEmail: jest
+        .fn()
+        .mockRejectedValue(new Error('smtp down')),
     });
     const service = new PasswordService(db as never, jwt(), mailer, config());
 
     await expect(
-      service.forgotPassword({ email: 'a@b.com' } as never),
+      service.forgotPassword({ email: 'a@b.com' }),
     ).resolves.toMatchObject({ message: expect.stringMatching(generic) });
   });
 });
@@ -110,48 +120,69 @@ describe('PasswordService.resetPassword', () => {
     const result = await service.resetPassword({
       token: RESET_TOKEN,
       newPassword: 'brand-new-pass1',
-    } as never);
+    });
 
     expect(result.message).toMatch(/reset successfully/i);
     const payload = setSpy.mock.calls[0][0] as Record<string, unknown>;
     expect(payload.resetPasswordToken).toBeNull();
     expect(payload.refreshToken).toBeNull();
-    expect(await bcrypt.compare('brand-new-pass1', payload.password as string)).toBe(true);
+    expect(
+      await bcrypt.compare('brand-new-pass1', payload.password as string),
+    ).toBe(true);
   });
 
   it('rejects a token that fails signature verification (400)', async () => {
     const { db } = fakeDb([storedUser()]);
     const service = new PasswordService(
       db as never,
-      jwt({ verifyPasswordResetToken: jest.fn().mockRejectedValue(new Error('bad')) }),
+      jwt({
+        verifyPasswordResetToken: jest.fn().mockRejectedValue(new Error('bad')),
+      }),
       email(),
       config(),
     );
     await expect(
-      service.resetPassword({ token: 'x', newPassword: 'brand-new-pass1' } as never),
+      service.resetPassword({
+        token: 'x',
+        newPassword: 'brand-new-pass1',
+      }),
     ).rejects.toMatchObject({ error: { statusCode: 400 } });
   });
 
   it('rejects when the stored token digest does not match', async () => {
-    const { db } = fakeDb([storedUser({ resetPasswordToken: hashToken('different') })]);
+    const { db } = fakeDb([
+      storedUser({ resetPasswordToken: hashToken('different') }),
+    ]);
     const service = new PasswordService(db as never, jwt(), email(), config());
     await expect(
-      service.resetPassword({ token: RESET_TOKEN, newPassword: 'brand-new-pass1' } as never),
+      service.resetPassword({
+        token: RESET_TOKEN,
+        newPassword: 'brand-new-pass1',
+      }),
     ).rejects.toMatchObject({ error: { statusCode: 400 } });
   });
 
   it('rejects an expired reset token', async () => {
-    const { db } = fakeDb([storedUser({ resetPasswordTokenExpiresAt: new Date(Date.now() - 1) })]);
+    const { db } = fakeDb([
+      storedUser({ resetPasswordTokenExpiresAt: new Date(Date.now() - 1) }),
+    ]);
     const service = new PasswordService(db as never, jwt(), email(), config());
     await expect(
-      service.resetPassword({ token: RESET_TOKEN, newPassword: 'brand-new-pass1' } as never),
+      service.resetPassword({
+        token: RESET_TOKEN,
+        newPassword: 'brand-new-pass1',
+      }),
     ).rejects.toMatchObject({ error: { statusCode: 400 } });
   });
 });
 
 describe('PasswordService.changePassword', () => {
   async function userWithPassword(plain: string) {
-    return { id: 'u1', email: 'a@b.com', password: await bcrypt.hash(plain, SALT) };
+    return {
+      id: 'u1',
+      email: 'a@b.com',
+      password: await bcrypt.hash(plain, SALT),
+    };
   }
 
   it('rejects when the user does not exist (404)', async () => {
@@ -162,7 +193,7 @@ describe('PasswordService.changePassword', () => {
         userId: 'missing',
         currentPassword: 'x',
         newPassword: 'brand-new-pass1',
-      } as never),
+      }),
     ).rejects.toMatchObject({ error: { statusCode: 404 } });
   });
 
@@ -174,7 +205,7 @@ describe('PasswordService.changePassword', () => {
         userId: 'u1',
         currentPassword: 'wrong-guess',
         newPassword: 'brand-new-pass1',
-      } as never),
+      }),
     ).rejects.toMatchObject({ error: { statusCode: 401 } });
   });
 
@@ -186,11 +217,13 @@ describe('PasswordService.changePassword', () => {
       userId: 'u1',
       currentPassword: 'the-real-one',
       newPassword: 'brand-new-pass1',
-    } as never);
+    });
 
     expect(result.message).toMatch(/changed successfully/i);
     const payload = setSpy.mock.calls[0][0] as Record<string, unknown>;
     expect(payload.refreshToken).toBeNull();
-    expect(await bcrypt.compare('brand-new-pass1', payload.password as string)).toBe(true);
+    expect(
+      await bcrypt.compare('brand-new-pass1', payload.password as string),
+    ).toBe(true);
   });
 });

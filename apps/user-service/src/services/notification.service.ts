@@ -89,9 +89,7 @@ export class NotificationService implements INotificationService {
       const [own] = await this.db
         .select({ id: notifications.id })
         .from(notifications)
-        .where(
-          and(eq(notifications.id, id), eq(notifications.userId, userId)),
-        )
+        .where(and(eq(notifications.id, id), eq(notifications.userId, userId)))
         .limit(1);
       if (!own) throw new RpcNotFoundException('Notification not found');
     }

@@ -29,7 +29,13 @@ function grantRow(overrides: Record<string, unknown> = {}) {
 }
 
 /** Captures insert/update payloads and returns queued `returning()` rows. */
-function fakeDb(opts: { created?: unknown[]; revoked?: unknown[]; selectRows?: unknown[] } = {}) {
+function fakeDb(
+  opts: {
+    created?: unknown[];
+    revoked?: unknown[];
+    selectRows?: unknown[];
+  } = {},
+) {
   const valuesSpy = jest.fn(() => ({
     returning: () => Promise.resolve(opts.created ?? []),
   }));
@@ -82,7 +88,9 @@ describe('EntitlementAdminService.grant', () => {
   });
 
   it('passes an explicit deny effect through unchanged', async () => {
-    const { db, valuesSpy } = fakeDb({ created: [grantRow({ effect: 'deny' })] });
+    const { db, valuesSpy } = fakeDb({
+      created: [grantRow({ effect: 'deny' })],
+    });
     const service = new EntitlementAdminService(db as never, entitlements);
 
     const dto = await service.grant('u1', 'admin1', {
@@ -91,7 +99,9 @@ describe('EntitlementAdminService.grant', () => {
       reason: 'abuse hold',
     });
 
-    expect((valuesSpy.mock.calls[0][0] as { effect: string }).effect).toBe('deny');
+    expect((valuesSpy.mock.calls[0][0] as { effect: string }).effect).toBe(
+      'deny',
+    );
     expect(dto.effect).toBe('deny');
   });
 });
@@ -107,7 +117,9 @@ describe('EntitlementAdminService.revoke', () => {
 
     expect(dto.id).toBe('g1');
     // Revocation stamps a timestamp rather than deleting the row (audit trail).
-    expect((setSpy.mock.calls[0][0] as { revokedAt: Date }).revokedAt).toBeInstanceOf(Date);
+    expect(
+      (setSpy.mock.calls[0][0] as { revokedAt: Date }).revokedAt,
+    ).toBeInstanceOf(Date);
   });
 
   it('throws 404 when no active grant matches (already revoked or missing)', async () => {

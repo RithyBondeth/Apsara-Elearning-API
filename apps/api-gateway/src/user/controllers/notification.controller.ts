@@ -67,9 +67,7 @@ export class NotificationController implements INotificationHttpController {
     description: 'All notifications marked read',
     type: MarkReadResponseDTO,
   })
-  markAllRead(
-    @CurrentUser('id') userId: string,
-  ): Promise<MarkReadResponseDTO> {
+  markAllRead(@CurrentUser('id') userId: string): Promise<MarkReadResponseDTO> {
     return rpcCall<MarkReadResponseDTO>(
       this.userClient,
       USER_SERVICE.ACTIONS.NOTIFICATION_MARK_ALL_READ,

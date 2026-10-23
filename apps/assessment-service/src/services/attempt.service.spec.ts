@@ -13,7 +13,11 @@ import { AttemptService } from './attempt.service';
  * consumed in call order; `insertedValues` captures what was written.
  */
 function fakeDb(
-  opts: { selects?: unknown[][]; inserts?: unknown[][]; updates?: unknown[][] } = {},
+  opts: {
+    selects?: unknown[][];
+    inserts?: unknown[][];
+    updates?: unknown[][];
+  } = {},
 ) {
   const selects = opts.selects ?? [];
   const inserts = opts.inserts ?? [];
@@ -26,11 +30,22 @@ function fakeDb(
     select: () => {
       const idx = si++;
       const node: Record<string, unknown> = {};
-      for (const m of ['from', 'leftJoin', 'innerJoin', 'where', 'orderBy', 'groupBy', 'limit', 'offset']) {
+      for (const m of [
+        'from',
+        'leftJoin',
+        'innerJoin',
+        'where',
+        'orderBy',
+        'groupBy',
+        'limit',
+        'offset',
+      ]) {
         node[m] = () => node;
       }
-      node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
-        Promise.resolve(selects[idx] ?? []).then(res, rej);
+      node.then = (
+        res: (v: unknown) => unknown,
+        rej: (r: unknown) => unknown,
+      ) => Promise.resolve(selects[idx] ?? []).then(res, rej);
       return node;
     },
     insert: () => ({
@@ -46,7 +61,9 @@ function fakeDb(
     }),
     update: () => ({
       set: () => ({
-        where: () => ({ returning: () => Promise.resolve(updates[ui++] ?? []) }),
+        where: () => ({
+          returning: () => Promise.resolve(updates[ui++] ?? []),
+        }),
       }),
     }),
     // The submit claim runs in a transaction; the stand-in runs it inline.
@@ -62,7 +79,11 @@ const entitlements = {
 
 /** ClientProxy whose ADD_XP send succeeds (of) or fails (throwError). */
 function userClient(ok = true) {
-  return { send: jest.fn().mockReturnValue(ok ? of({}) : throwError(() => new Error('down'))) };
+  return {
+    send: jest
+      .fn()
+      .mockReturnValue(ok ? of({}) : throwError(() => new Error('down'))),
+  };
 }
 
 const numericQ = (id: string, value: number, points = 1, order = 0) => ({
@@ -80,24 +101,50 @@ beforeEach(() => jest.clearAllMocks());
 describe('AttemptService.start', () => {
   it('throws 404 when the quiz is missing', async () => {
     const { db } = fakeDb({ selects: [[]] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
-    await expect(service.start('u1', 'q1')).rejects.toMatchObject({ error: { statusCode: 404 } });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
+    await expect(service.start('u1', 'q1')).rejects.toMatchObject({
+      error: { statusCode: 404 },
+    });
   });
 
   it('throws 400 when the quiz has no questions', async () => {
     const { db } = fakeDb({ selects: [[{ id: 'q1', lessonId: 'l1' }], []] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
-    await expect(service.start('u1', 'q1')).rejects.toMatchObject({ error: { statusCode: 400 } });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
+    await expect(service.start('u1', 'q1')).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
   });
 
   it('returns the quiz with answer keys stripped', async () => {
     const quiz = { id: 'q1', lessonId: 'l1', title: 'Quiz' };
     const questions = [
-      { id: 'qq1', type: 'multiple_choice', question: 'Pick', points: 1, order: 0, correctAnswer: { secret: true } },
+      {
+        id: 'qq1',
+        type: 'multiple_choice',
+        question: 'Pick',
+        points: 1,
+        order: 0,
+        correctAnswer: { secret: true },
+      },
     ];
     const options = [{ id: 'o1', questionId: 'qq1', answer: 'A' }];
-    const { db } = fakeDb({ selects: [[quiz], questions, options], inserts: [[{ id: 'a1' }]] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    const { db } = fakeDb({
+      selects: [[quiz], questions, options],
+      inserts: [[{ id: 'a1' }]],
+    });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
 
     const res = await service.start('u1', 'q1');
     const q = res.questions[0] as Record<string, unknown>;
@@ -110,40 +157,76 @@ describe('AttemptService.start', () => {
 
 describe('AttemptService.submit guards', () => {
   const svc = (selects: unknown[][]) =>
-    new AttemptService(fakeDb({ selects }).db as never, userClient() as never, entitlements);
+    new AttemptService(
+      fakeDb({ selects }).db as never,
+      userClient() as never,
+      entitlements,
+    );
 
   it('throws 404 when the attempt is missing', async () => {
-    await expect(svc([[]]).submit('u1', 'a1', [])).rejects.toMatchObject({ error: { statusCode: 404 } });
+    await expect(svc([[]]).submit('u1', 'a1', [])).rejects.toMatchObject({
+      error: { statusCode: 404 },
+    });
   });
 
   it('throws 400 when the attempt belongs to another user', async () => {
-    const attempt = [{ id: 'a1', userId: 'someone-else', quizId: 'q1', completedAt: null }];
-    await expect(svc([attempt]).submit('u1', 'a1', [])).rejects.toMatchObject({ error: { statusCode: 400 } });
+    const attempt = [
+      { id: 'a1', userId: 'someone-else', quizId: 'q1', completedAt: null },
+    ];
+    await expect(svc([attempt]).submit('u1', 'a1', [])).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
   });
 
   it('throws 400 when the attempt is already submitted', async () => {
-    const attempt = [{ id: 'a1', userId: 'u1', quizId: 'q1', completedAt: new Date() }];
-    await expect(svc([attempt]).submit('u1', 'a1', [])).rejects.toMatchObject({ error: { statusCode: 400 } });
+    const attempt = [
+      { id: 'a1', userId: 'u1', quizId: 'q1', completedAt: new Date() },
+    ];
+    await expect(svc([attempt]).submit('u1', 'a1', [])).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
   });
 
   it('throws 404 when the quiz is missing', async () => {
-    const attempt = [{ id: 'a1', userId: 'u1', quizId: 'q1', completedAt: null }];
-    await expect(svc([attempt, []]).submit('u1', 'a1', [])).rejects.toMatchObject({ error: { statusCode: 404 } });
+    const attempt = [
+      { id: 'a1', userId: 'u1', quizId: 'q1', completedAt: null },
+    ];
+    await expect(
+      svc([attempt, []]).submit('u1', 'a1', []),
+    ).rejects.toMatchObject({ error: { statusCode: 404 } });
   });
 
   it('throws 400 for an answer whose question is not in the quiz', async () => {
-    const attempt = [{ id: 'a1', userId: 'u1', quizId: 'q1', totalQuestions: 1, completedAt: null }];
+    const attempt = [
+      {
+        id: 'a1',
+        userId: 'u1',
+        quizId: 'q1',
+        totalQuestions: 1,
+        completedAt: null,
+      },
+    ];
     const quiz = [{ id: 'q1', lessonId: 'l1', xpReward: 25 }];
     const questions = [numericQ('qq1', 5)];
     const service = svc([attempt, quiz, questions, []]);
     await expect(
-      service.submit('u1', 'a1', [{ questionId: 'ghost', answerData: { value: 5 } }] as never),
+      service.submit('u1', 'a1', [
+        { questionId: 'ghost', answerData: { value: 5 } },
+      ] as never),
     ).rejects.toMatchObject({ error: { statusCode: 400 } });
   });
 });
 
 describe('AttemptService.submit scoring and XP', () => {
-  const attempt = (n: number) => [{ id: 'a1', userId: 'u1', quizId: 'q1', totalQuestions: n, completedAt: null }];
+  const attempt = (n: number) => [
+    {
+      id: 'a1',
+      userId: 'u1',
+      quizId: 'q1',
+      totalQuestions: n,
+      completedAt: null,
+    },
+  ];
   const quiz = [{ id: 'q1', lessonId: 'l1', xpReward: 25 }];
 
   it('scores a fully-correct attempt at 100%, passes, and awards first-pass XP', async () => {
@@ -186,7 +269,11 @@ describe('AttemptService.submit scoring and XP', () => {
       selects: [attempt(2), quiz, questions, [], []],
       updates: [[{ id: 'a1', score: 75 }]],
     });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
 
     const res = await service.submit('u1', 'a1', [
       { questionId: 'qq1', answerData: { value: 5 } },
@@ -201,7 +288,10 @@ describe('AttemptService.submit scoring and XP', () => {
 
   it('fails below 70% and awards no XP', async () => {
     const questions = [numericQ('qq1', 5, 1, 0), numericQ('qq2', 10, 1, 1)];
-    const { db } = fakeDb({ selects: [attempt(2), quiz, questions, []], updates: [[{ id: 'a1' }]] });
+    const { db } = fakeDb({
+      selects: [attempt(2), quiz, questions, []],
+      updates: [[{ id: 'a1' }]],
+    });
     const uc = userClient();
     const service = new AttemptService(db as never, uc as never, entitlements);
 
@@ -222,7 +312,11 @@ describe('AttemptService.submit scoring and XP', () => {
       selects: [attempt(1), quiz, questions, [], []],
       updates: [[{ id: 'a1' }]],
     });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
 
     const res = await service.submit('u1', 'a1', [
       { questionId: 'qq1', answerData: { value: 5 } }, // first: correct
@@ -232,7 +326,9 @@ describe('AttemptService.submit scoring and XP', () => {
     expect(res.correctAnswers).toBe(1);
     expect(res.score).toBe(100);
     // One batch insert holding one answer row.
-    expect(insertedValues).toEqual([[expect.objectContaining({ questionId: 'qq1' })]]);
+    expect(insertedValues).toEqual([
+      [expect.objectContaining({ questionId: 'qq1' })],
+    ]);
   });
 
   it('does not re-award XP when the user already passed this quiz before', async () => {
@@ -260,7 +356,11 @@ describe('AttemptService.submit scoring and XP', () => {
       selects: [attempt(1), quiz, questions, [], []],
       updates: [[{ id: 'a1' }]],
     });
-    const service = new AttemptService(db as never, userClient(false) as never, entitlements);
+    const service = new AttemptService(
+      db as never,
+      userClient(false) as never,
+      entitlements,
+    );
 
     const res = await service.submit('u1', 'a1', [
       { questionId: 'qq1', answerData: { value: 5 } },
@@ -273,10 +373,25 @@ describe('AttemptService.submit scoring and XP', () => {
   it('flags an ungradeable answer for review instead of marking it wrong', async () => {
     // short_answer with no accepted list -> requiresReview, never silently 0.
     const questions = [
-      { id: 'qq1', type: 'short_answer', question: 'Explain', explanation: null, correctAnswer: {}, points: 1, order: 0 },
+      {
+        id: 'qq1',
+        type: 'short_answer',
+        question: 'Explain',
+        explanation: null,
+        correctAnswer: {},
+        points: 1,
+        order: 0,
+      },
     ];
-    const { db } = fakeDb({ selects: [attempt(1), quiz, questions, []], updates: [[{ id: 'a1' }]] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    const { db } = fakeDb({
+      selects: [attempt(1), quiz, questions, []],
+      updates: [[{ id: 'a1' }]],
+    });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
 
     const res = await service.submit('u1', 'a1', [
       { questionId: 'qq1', answerData: { text: 'anything' } },
@@ -292,7 +407,15 @@ describe('AttemptService.submit claim', () => {
   it('refuses a submit that loses the race, writing no answers or XP', async () => {
     // Passed the completedAt fast path, but a parallel submit claimed it first:
     // the conditional UPDATE returns no row.
-    const attempt = [{ id: 'a1', userId: 'u1', quizId: 'q1', totalQuestions: 1, completedAt: null }];
+    const attempt = [
+      {
+        id: 'a1',
+        userId: 'u1',
+        quizId: 'q1',
+        totalQuestions: 1,
+        completedAt: null,
+      },
+    ];
     const quiz = [{ id: 'q1', lessonId: 'l1', xpReward: 25 }];
     const { db, insertedValues } = fakeDb({
       selects: [attempt, quiz, [numericQ('qq1', 5)], []],
@@ -302,7 +425,9 @@ describe('AttemptService.submit claim', () => {
     const service = new AttemptService(db as never, uc as never, entitlements);
 
     await expect(
-      service.submit('u1', 'a1', [{ questionId: 'qq1', answerData: { value: 5 } }] as never),
+      service.submit('u1', 'a1', [
+        { questionId: 'qq1', answerData: { value: 5 } },
+      ] as never),
     ).rejects.toMatchObject({ error: { statusCode: 400 } });
     expect(insertedValues).toHaveLength(0);
     expect(uc.send).not.toHaveBeenCalled();
@@ -330,42 +455,86 @@ describe('AttemptService.review', () => {
 
   it('throws 404 when the attempt is missing or not the user’s', async () => {
     const { db } = fakeDb({ selects: [[]] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
-    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 404 } });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({
+      error: { statusCode: 404 },
+    });
   });
 
   it('refuses an unsubmitted attempt so the answer key cannot leak', async () => {
     const { db } = fakeDb({ selects: [[row({ ...done, completedAt: null })]] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
-    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 400 } });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({
+      error: { statusCode: 400 },
+    });
     expect(entitlements.assertCanReadLesson).not.toHaveBeenCalled();
   });
 
   it('throws 404 when the quiz no longer exists', async () => {
     const { db } = fakeDb({ selects: [[row(done, { lessonId: null })]] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
-    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 404 } });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({
+      error: { statusCode: 404 },
+    });
   });
 
   it('checks lesson access before revealing the review', async () => {
     const denied = {
-      assertCanReadLesson: jest.fn().mockRejectedValue({ error: { statusCode: 403 } }),
+      assertCanReadLesson: jest
+        .fn()
+        .mockRejectedValue({ error: { statusCode: 403 } }),
     } as unknown as CourseEntitlementService;
     const { db } = fakeDb({ selects: [[row(done)]] });
-    const service = new AttemptService(db as never, userClient() as never, denied);
-    await expect(service.review('u1', 'a1')).rejects.toMatchObject({ error: { statusCode: 403 } });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      denied,
+    );
+    await expect(service.review('u1', 'a1')).rejects.toMatchObject({
+      error: { statusCode: 403 },
+    });
     expect(denied.assertCanReadLesson).toHaveBeenCalledWith({ id: 'l1' }, 'u1');
   });
 
   it('replays the stored answers in question order with the stored score', async () => {
     const questions = [numericQ('qq2', 7, 1, 1), numericQ('qq1', 3, 2, 0)];
     const answers = [
-      { questionId: 'qq1', selectedOptionId: null, answerData: { value: '3' }, isCorrect: true, pointsAwarded: 2, requiresReview: false },
-      { questionId: 'qq2', selectedOptionId: null, answerData: { value: '9' }, isCorrect: false, pointsAwarded: 0, requiresReview: false },
+      {
+        questionId: 'qq1',
+        selectedOptionId: null,
+        answerData: { value: '3' },
+        isCorrect: true,
+        pointsAwarded: 2,
+        requiresReview: false,
+      },
+      {
+        questionId: 'qq2',
+        selectedOptionId: null,
+        answerData: { value: '9' },
+        isCorrect: false,
+        pointsAwarded: 0,
+        requiresReview: false,
+      },
     ];
     // Query order: attempt row → questions → options (none for numeric) → answers.
     const { db } = fakeDb({ selects: [[row(done)], questions, [], answers] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
 
     const res = await service.review('u1', 'a1');
 
@@ -375,15 +544,31 @@ describe('AttemptService.review', () => {
     expect(res.total).toBe(2);
     expect(res.earnedPoints).toBe(2);
     expect(res.totalPoints).toBe(3);
-    expect(res.attempt).toMatchObject({ quizTitle: 'Quiz', courseSlug: 'course', lessonId: 'l1' });
+    expect(res.attempt).toMatchObject({
+      quizTitle: 'Quiz',
+      courseSlug: 'course',
+      lessonId: 'l1',
+    });
     expect(res.review.map((r) => r.questionId)).toEqual(['qq1', 'qq2']);
-    expect(res.review[0]).toMatchObject({ isCorrect: true, yourAnswer: { answerData: { value: '3' } } });
-    expect(res.review[1]).toMatchObject({ isCorrect: false, correctAnswer: { value: 7 } });
+    expect(res.review[0]).toMatchObject({
+      isCorrect: true,
+      yourAnswer: { answerData: { value: '3' } },
+    });
+    expect(res.review[1]).toMatchObject({
+      isCorrect: false,
+      correctAnswer: { value: 7 },
+    });
   });
 
   it('shows an unanswered question as not answered', async () => {
-    const { db } = fakeDb({ selects: [[row(done)], [numericQ('qq1', 3)], [], []] });
-    const service = new AttemptService(db as never, userClient() as never, entitlements);
+    const { db } = fakeDb({
+      selects: [[row(done)], [numericQ('qq1', 3)], [], []],
+    });
+    const service = new AttemptService(
+      db as never,
+      userClient() as never,
+      entitlements,
+    );
     const res = await service.review('u1', 'a1');
     expect(res.review[0]).toMatchObject({ yourAnswer: null, isCorrect: false });
   });

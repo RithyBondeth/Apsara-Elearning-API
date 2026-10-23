@@ -47,7 +47,9 @@ function email(overrides: Record<string, jest.Mock> = {}) {
  */
 function fakeDb(opts: { existing?: unknown[]; insertError?: unknown } = {}) {
   const valuesSpy = jest.fn((v: unknown) =>
-    opts.insertError ? Promise.reject(opts.insertError) : Promise.resolve(undefined),
+    opts.insertError
+      ? Promise.reject(opts.insertError)
+      : Promise.resolve(undefined),
   );
   const db = {
     select: () => {
@@ -64,7 +66,9 @@ function fakeDb(opts: { existing?: unknown[]; insertError?: unknown } = {}) {
 
 describe('RegisterService.register', () => {
   it('rejects a duplicate email up front with a 409', async () => {
-    const { db, valuesSpy } = fakeDb({ existing: [{ id: 'u1', email: dto.email }] });
+    const { db, valuesSpy } = fakeDb({
+      existing: [{ id: 'u1', email: dto.email }],
+    });
     const service = new RegisterService(db as never, jwt(), email(), config());
 
     await expect(service.register(dto as never)).rejects.toMatchObject({
@@ -78,15 +82,20 @@ describe('RegisterService.register', () => {
     const mailer = email();
     const service = new RegisterService(db as never, jwt(), mailer, config());
 
-    const result = await service.register(dto as never);
+    const result = await service.register(dto);
 
     expect(result.message).toMatch(/registered successfully/i);
     const stored = valuesSpy.mock.calls[0][0] as Record<string, unknown>;
     expect(stored.password).not.toBe(dto.password);
-    expect(await bcrypt.compare(dto.password, stored.password as string)).toBe(true);
+    expect(await bcrypt.compare(dto.password, stored.password as string)).toBe(
+      true,
+    );
     // The raw verification token goes in the email; only its digest is stored.
     expect(stored.emailVerificationToken).toBe(hashToken(VERIFY_TOKEN));
-    expect(mailer.sendVerificationEmail).toHaveBeenCalledWith(dto.email, VERIFY_TOKEN);
+    expect(mailer.sendVerificationEmail).toHaveBeenCalledWith(
+      dto.email,
+      VERIFY_TOKEN,
+    );
     // No session tokens are minted before verification.
     expect(stored.refreshToken).toBeUndefined();
   });
@@ -94,7 +103,9 @@ describe('RegisterService.register', () => {
   it('still succeeds when the verification email fails to send', async () => {
     const { db } = fakeDb();
     const mailer = email({
-      sendVerificationEmail: jest.fn().mockRejectedValue(new Error('smtp down')),
+      sendVerificationEmail: jest
+        .fn()
+        .mockRejectedValue(new Error('smtp down')),
     });
     const service = new RegisterService(db as never, jwt(), mailer, config());
 
@@ -104,7 +115,9 @@ describe('RegisterService.register', () => {
   });
 
   it('maps a unique-violation insert race to a 409', async () => {
-    const raceError = Object.assign(new Error('duplicate key value'), { code: '23505' });
+    const raceError = Object.assign(new Error('duplicate key value'), {
+      code: '23505',
+    });
     const { db } = fakeDb({ insertError: raceError });
     const service = new RegisterService(db as never, jwt(), email(), config());
 

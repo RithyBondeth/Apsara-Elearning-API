@@ -23,9 +23,12 @@ function fakeDb(opts: { inserts?: unknown[][]; selects?: unknown[][] } = {}) {
     select: () => {
       const idx = si++;
       const node: Record<string, unknown> = {};
-      for (const m of ['from', 'leftJoin', 'where', 'orderBy', 'limit']) node[m] = () => node;
-      node.then = (res: (v: unknown) => unknown, rej: (r: unknown) => unknown) =>
-        Promise.resolve(selects[idx] ?? []).then(res, rej);
+      for (const m of ['from', 'leftJoin', 'where', 'orderBy', 'limit'])
+        node[m] = () => node;
+      node.then = (
+        res: (v: unknown) => unknown,
+        rej: (r: unknown) => unknown,
+      ) => Promise.resolve(selects[idx] ?? []).then(res, rej);
       return node;
     },
   };
@@ -38,8 +41,12 @@ const entitlements = {
 
 function challenges() {
   return {
-    findChallenge: jest.fn().mockResolvedValue({ id: 'c1', lessonId: 'l1', xpReward: 50 }),
-    findTestCases: jest.fn().mockResolvedValue([{ input: null, expectedOutput: '1' }]),
+    findChallenge: jest
+      .fn()
+      .mockResolvedValue({ id: 'c1', lessonId: 'l1', xpReward: 50 }),
+    findTestCases: jest
+      .fn()
+      .mockResolvedValue([{ input: null, expectedOutput: '1' }]),
   } as unknown as ChallengeService;
 }
 
@@ -53,11 +60,17 @@ function executor(result: Partial<ExecutionResult>) {
     mock: true,
     ...result,
   };
-  return { grade: jest.fn().mockResolvedValue(full) } as unknown as CodeExecutionService;
+  return {
+    grade: jest.fn().mockResolvedValue(full),
+  } as unknown as CodeExecutionService;
 }
 
 function userClient(ok = true) {
-  return { send: jest.fn().mockReturnValue(ok ? of({}) : throwError(() => new Error('down'))) };
+  return {
+    send: jest
+      .fn()
+      .mockReturnValue(ok ? of({}) : throwError(() => new Error('down'))),
+  };
 }
 
 const dto = { language: 'javascript', sourceCode: 'print(1)' } as never;
@@ -114,7 +127,10 @@ describe('SubmissionService.create', () => {
   });
 
   it('does not re-award XP when the user already solved the challenge', async () => {
-    const { db } = fakeDb({ inserts: [[{ id: 's1' }]], selects: [[{ id: 'older' }]] });
+    const { db } = fakeDb({
+      inserts: [[{ id: 's1' }]],
+      selects: [[{ id: 'older' }]],
+    });
     const uc = userClient();
     const service = new SubmissionService(
       db as never,

@@ -1,4 +1,11 @@
-import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { id } from '../common/id.schema';
 import { timestamps } from '../common/timestap.schema';
 import { user } from './user.schema';
